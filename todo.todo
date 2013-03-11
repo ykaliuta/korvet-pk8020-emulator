@@ -1,0 +1,18 @@
+Migrate from allegro to sdl:
+ ☐ Create sdl tests
+   ☐ video
+   ☐ Keyboard
+   ☐ mouse
+   ☐ audio
+ ☐ Compile emulator
+   ☐ Linux
+   ☐ Mac
+   ☐ windows
+
+
+New Features:
+ ☐ GUI?
+ ☐ new CPU core
+ ☐ new RENDER (per line)
+ ☐ new PIT
+ 
