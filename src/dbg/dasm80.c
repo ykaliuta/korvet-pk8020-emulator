@@ -19,8 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <string.h>
-//#include "d_label.h"
 #include "dbg.h"
 #include "d8080.h"
 //#include "../i8080.h"

@@ -1,4 +1,4 @@
-/*
+Ôªø/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -20,7 +20,6 @@
  *
  */
 #include "korvet.h"
-#include <allegro.h>
 
 #define noKEYBOARD_DEBUG
 
@@ -57,21 +56,21 @@ int KBD0[8][12]={
 /*
  		         D0  D1  D2  D3  D4  D5  D6  D7
 		       |   |   |   |   |   |   |   |   |
-    ŒÒÌÓ‚ÌÓÂ ÔÓÎÂ:     |   |   |   |   |   |   |   |   |
+    –û—Å–Ω–æ–≤–Ω–æ–µ –ø–æ–ª–µ:     |   |   |   |   |   |   |   |   |
 
 			01  02  04  08  10  20  40  80
 
-      KB00    01H        ﬁ@  ¿a  ¡b  ÷c  ƒd  ≈e  ‘f  √g
-      KB01    02H        ’h  »i  …j   k  Àl  Ãm  Õn  Œo
-      KB02    04H        œp  ﬂq  –r  —s  “t  ”u  ∆v  ¬w
-      KB03    08H        ‹x  €y  «z  ÿ{  ›|  Ÿ}  ◊`  ˙_
+      KB00    01H        –Æ@  –êa  –ëb  –¶c  –îd  –ïe  –§f  –ìg
+      KB01    02H        –•h  –òi  –ôj  –ök  –õl  –úm  –ùn  –ûo
+      KB02    04H        –üp  –Øq  –†r  –°s  –¢t  –£u  –ñv  –íw
+      KB03    08H        –¨x  –´y  –óz  –®{  –≠|  –©}  –ß`  —ä_
       KB04    10H        0   1   2   3   4   5   6   7
       KB05    20H        8   9   *:  +;  <,  =-  >.  /?
-      KB06    40H       ¬   s“– —“œ  »«  ¬«  ¬ÿ “¿¡ œ–Œ¡≈À
+      KB06    40H       –í–ö  s–¢–† –°–¢–ü  –ò–ó  –í–ó  –í–® –¢–ê–ë –ü–†–û–ë–ï–õ
       			    CLS STO DEL INS  BS TAB SPACE
-      KB07    80H       –√À ¿À‘ √–‘ œ–‘ —≈À ”œ– ‘ — –√œ
+      KB07    80H       –†–ì–õ –ê–õ–§ –ì–†–§ –ü–†–§ –°–ï–õ –£–ü–† –§–ö–° –†–ì–ü
 			ShL ALF GRP ESC SEL CTR LOCK ShL
-    ƒÓÔÓÎÌËÚÂÎ¸ÌÓÂ ÔÓÎÂ:
+    –î–æ–ø–æ–ª–Ω–∏—Ç–µ–ª—å–Ω–æ–µ –ø–æ–ª–µ:
       KB08   101H        0   1   2   3   4   5   6   7
       KB09   102H        8   9                   .
       KB10   104H        F1  F2  F3  F4  F5  F6  F7  F8
@@ -91,7 +90,7 @@ int KBD0[8][12]={
 /*80*/{KEY_G   ,KEY_O ,KEY_W ,KEY_EQUALS    ,KEY_7 ,KEY_SLASH ,KEY_SPACE    ,KEY_RSHIFT	  ,KEY_7_PAD ,254	 ,254},
 };
 
-// …÷” ≈Õ Keyboard MAP
+// –ô–¶–£–ö–ï–ù Keyboard MAP
 int KBD1[8][12]={
 //     01        02            04         08             10     20         40             80              101       102           104
 /*01*/{KEY_STOP ,KEY_OPENBRACE,KEY_G     ,KEY_M         ,KEY_0 ,KEY_8	 ,KEY_ENTER	,KEY_LSHIFT	,KEY_0_PAD,KEY_8_PAD	,KEY_F1},
@@ -181,10 +180,10 @@ char *PrintKBD(int Addr,int y) {
  int Value=KEYBOARD_Read(Addr);
 
  char KBD_TXT[13][32]={
-                       "ﬁ@¿a¡b÷cƒd≈e‘f√g",
-                       "’h»i…j kÀlÃmÕnŒo",
-                       "œpﬂq–r—s“t”u∆v¬w",
-                       "‹x€y«zÿ{›|Ÿ}◊`˙_",
+                       "–Æ@–êa–ëb–¶c–îd–ïe–§f–ìg",
+                       "–•h–òi–ôj–ök–õl–úm–ùn–ûo",
+                       "–üp–Øq–†r–°s–¢t–£u–ñv–íw",
+                       "–¨x–´y–óz–®{–≠|–©}–ß`—ä_",
                        " 0 1 2 3 4 5 6 7",
                        " 8 9 *:+;<,=->./",
                        " C S D I B T S  ",

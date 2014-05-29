@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,9 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <stdio.h>
 #include "dbg.h"
-
 
 #define x 29 
 #define y 10 
@@ -42,7 +40,7 @@ void UpdateSymRW(int endfl) {
 
 int SymDialog(int mode) { //1 - write
 
-  char Title[2][16]={"Ä SYM  Read"," SYM  Write"};
+  char Title[2][16]={"- SYM  Read"," SYM  Write"};
   byte buf[128];
   int tmp;
   int i;
@@ -50,9 +48,9 @@ int SymDialog(int mode) { //1 - write
 
   tSetUpdate(0);
 
-  tScreenPutString("ÚÄÄÄÄÄÄÄÄ            ÄÄÄÄÄÄÄÄÄÄ¿",C_ReadWrite,x,y+0);
-  tScreenPutString("³ Name: ______________________ ³",C_ReadWrite,x,y+1);
-  tScreenPutString("ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ",C_ReadWrite,x,y+2);
+  tScreenPutString("+--------            ----------+",C_ReadWrite,x,y+0);
+  tScreenPutString("| Name: ______________________ |",C_ReadWrite,x,y+1);
+  tScreenPutString("+------------------------------+",C_ReadWrite,x,y+2);
 
   tScreenPutString(Title[mode],C_ReadWrite,x+9,y+0);
 

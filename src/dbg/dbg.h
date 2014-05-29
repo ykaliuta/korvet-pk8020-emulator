@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,6 +19,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include <allegro.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h> /* for mode definitions */
+#include <ctype.h>
+
 #ifndef __DBG__
 
 #define __DBG__
@@ -106,14 +116,14 @@ struct sFIELD {
 };
 
 struct ZONE {
-   int           Y;       // Y координата курсора в окне (0..YLine) относительно окна
-   int           YLine;   // сколько строк в текущем окне (линий в поле)
-   int           BaseY;   // строчка на экране
+   int           Y;       // Y РєРѕРѕСЂРґРёРЅР°С‚Р° РєСѓСЂСЃРѕСЂР° РІ РѕРєРЅРµ (0..YLine) РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РѕРєРЅР°
+   int           YLine;   // СЃРєРѕР»СЊРєРѕ СЃС‚СЂРѕРє РІ С‚РµРєСѓС‰РµРј РѕРєРЅРµ (Р»РёРЅРёР№ РІ РїРѕР»Рµ)
+   int           BaseY;   // СЃС‚СЂРѕС‡РєР° РЅР° СЌРєСЂР°РЅРµ
 
-   int           BaseAddr;// Базовый адрес окна (т.е. адрес в левом окне)
+   int           BaseAddr;// Р‘Р°Р·РѕРІС‹Р№ Р°РґСЂРµСЃ РѕРєРЅР° (С‚.Рµ. Р°РґСЂРµСЃ РІ Р»РµРІРѕРј РѕРєРЅРµ)
 
-   int           Cursor;  // номер поля Field
-   int           MaxField;// сколько реально записей в след. поле.
+   int           Cursor;  // РЅРѕРјРµСЂ РїРѕР»СЏ Field
+   int           MaxField;// СЃРєРѕР»СЊРєРѕ СЂРµР°Р»СЊРЅРѕ Р·Р°РїРёСЃРµР№ РІ СЃР»РµРґ. РїРѕР»Рµ.
    struct sFIELD Field[1+1+16+1+16+1]; // Label Addr 16hex stopfiled 16dmp (MAX variant)
 };
 
@@ -164,6 +174,6 @@ _Label *FindNameLabel(char *Name);
 void WriteSYM(void);
 void ReadSYM(void);
 
-extern int scr_Second_Font;	// Флаг выбора второго знакогенератора ViReg:00000x00
+extern int scr_Second_Font;	// Р¤Р»Р°Рі РІС‹Р±РѕСЂР° РІС‚РѕСЂРѕРіРѕ Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂР° ViReg:00000x00
 
 #endif

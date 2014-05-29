@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,7 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <allegro.h>
 #include "dbg.h"
 
 extern DATAFILE data[];
@@ -36,7 +35,7 @@ int  DoUpdateFlag=1;                // if = 0 skip update
 void tDoUpdate(void) {
   int x,y;
   int addr=0;
-  int SaveAttr=text_mode(0);
+  // int SaveAttr=text_mode(0);
   byte chs[]=" ";
 
   if (!DoUpdateFlag) return;
@@ -47,13 +46,16 @@ void tDoUpdate(void) {
           font = data[tScrBufFnt[addr]].dat;
 
           *chs=(tScrBufChr[addr]==0)?' ':tScrBufChr[addr];
-          text_mode(0x20+(tScrBufAtr[addr]>>4));
-          textout(screen,font,chs,x*8,y*16,0x20+(tScrBufAtr[addr]&0x0f));
+
+          // text_mode(0x20+(tScrBufAtr[addr]>>4));
+          // void textout_ex(BITMAP *bmp, const FONT *f, const char *s, int x, int y, int color, int bg);
+          // textout(screen,font,chs,x*8,y*16,0x20+(tScrBufAtr[addr]&0x0f));
+          textout_ex(screen,font,chs,x*8,y*16,0x20+(tScrBufAtr[addr]&0x0f),tScrBufAtr[addr]>>4);
           tScrUpdateFlag[addr]=0;
       }
    addr++;
   }
-  text_mode(SaveAttr);
+  // text_mode(SaveAttr);
 }
 
 // PUBLIC routines
@@ -213,4 +215,4 @@ void DBG_Pallete_Pasive(void) {
 }
 
 
-// 2003-11-23: теперь фонт в дампе зависит от шрифта эмулятора scr_Second_Font
+// 2003-11-23: С‚РµРїРµСЂСЊ С„РѕРЅС‚ РІ РґР°РјРїРµ Р·Р°РІРёСЃРёС‚ РѕС‚ С€СЂРёС„С‚Р° СЌРјСѓР»СЏС‚РѕСЂР° scr_Second_Font

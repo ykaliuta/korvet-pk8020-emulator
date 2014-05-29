@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,20 +19,20 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <allegro.h>
+
 #include "dbg.h"
 
 extern struct CPUREG dbg_REG;
-extern int           dbg_TRACE;   //если =1 то остановится ПЕРЕД выполнением комманды
-extern word          dbg_HERE;    //адрес остановки при нажатии клавиши F4 (HERE)
+extern int           dbg_TRACE;   //РµСЃР»Рё =1 С‚Рѕ РѕСЃС‚Р°РЅРѕРІРёС‚СЃСЏ РџР•Р Р•Р” РІС‹РїРѕР»РЅРµРЅРёРµРј РєРѕРјРјР°РЅРґС‹
+extern word          dbg_HERE;    //Р°РґСЂРµСЃ РѕСЃС‚Р°РЅРѕРІРєРё РїСЂРё РЅР°Р¶Р°С‚РёРё РєР»Р°РІРёС€Рё F4 (HERE)
 
 /*
-   int           Y;       // Y координата курсора в окне (0..YLine) относительно окна
-   int           YLine;   // сколько строк в текущем окне (линий в поле)
-   int           BaseY;   // строчка на экране
-   int           BaseAddr;// Базовый адрес окна (т.е. адрес в левом окне)
-   int           Cursor;  // номер поля Field
-   int           MaxField;// сколько реально записей в след. поле.
+   int           Y;       // Y РєРѕРѕСЂРґРёРЅР°С‚Р° РєСѓСЂСЃРѕСЂР° РІ РѕРєРЅРµ (0..YLine) РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РѕРєРЅР°
+   int           YLine;   // СЃРєРѕР»СЊРєРѕ СЃС‚СЂРѕРє РІ С‚РµРєСѓС‰РµРј РѕРєРЅРµ (Р»РёРЅРёР№ РІ РїРѕР»Рµ)
+   int           BaseY;   // СЃС‚СЂРѕС‡РєР° РЅР° СЌРєСЂР°РЅРµ
+   int           BaseAddr;// Р‘Р°Р·РѕРІС‹Р№ Р°РґСЂРµСЃ РѕРєРЅР° (С‚.Рµ. Р°РґСЂРµСЃ РІ Р»РµРІРѕРј РѕРєРЅРµ)
+   int           Cursor;  // РЅРѕРјРµСЂ РїРѕР»СЏ Field
+   int           MaxField;// СЃРєРѕР»СЊРєРѕ СЂРµР°Р»СЊРЅРѕ Р·Р°РїРёСЃРµР№ РІ СЃР»РµРґ. РїРѕР»Рµ.
    struct sFIELD Field[1+1+16+1+16+1]; // Label Addr 16hex stopfiled 16dmp (MAX variant)
 */
 struct ZONE DASM_ZONE={ 0,20-6-1,2+3,0,

@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,15 +19,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <allegro.h>
+
 #include "dbg.h"
 /*
-   int           Y;       // Y координата курсора в окне (0..YLine) относительно окна
-   int           YLine;   // сколько строк в текущем окне (линий в поле)
-   int           BaseY;   // строчка на экране
-   int           BaseAddr;// Базовый адрес окна (т.е. адрес в левом окне)
-   int           Cursor;  // номер поля Field
-   int           MaxField;// сколько реально записей в след. поле.
+   int           Y;       // Y РєРѕРѕСЂРґРёРЅР°С‚Р° РєСѓСЂСЃРѕСЂР° РІ РѕРєРЅРµ (0..YLine) РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РѕРєРЅР°
+   int           YLine;   // СЃРєРѕР»СЊРєРѕ СЃС‚СЂРѕРє РІ С‚РµРєСѓС‰РµРј РѕРєРЅРµ (Р»РёРЅРёР№ РІ РїРѕР»Рµ)
+   int           BaseY;   // СЃС‚СЂРѕС‡РєР° РЅР° СЌРєСЂР°РЅРµ
+   int           BaseAddr;// Р‘Р°Р·РѕРІС‹Р№ Р°РґСЂРµСЃ РѕРєРЅР° (С‚.Рµ. Р°РґСЂРµСЃ РІ Р»РµРІРѕРј РѕРєРЅРµ)
+   int           Cursor;  // РЅРѕРјРµСЂ РїРѕР»СЏ Field
+   int           MaxField;// СЃРєРѕР»СЊРєРѕ СЂРµР°Р»СЊРЅРѕ Р·Р°РїРёСЃРµР№ РІ СЃР»РµРґ. РїРѕР»Рµ.
    struct sFIELD Field[1+1+16+1+16+1]; // Label Addr 16hex stopfiled 16dmp (MAX variant)
 */
 
@@ -83,12 +83,12 @@ void Update_DUMP(void) {
 
        Addr++;
      }
-     tScreenPutChar('¦',C_Border,70,DUMP_ZONE.BaseY+y);
-     tScreenPutChar('¦',C_Border,70+16+1,DUMP_ZONE.BaseY+y);
+     tScreenPutChar('|',C_Border,70,DUMP_ZONE.BaseY+y);
+     tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY+y);
   }
                                                                                            
-  tScreenPutString("----------------------------------------------------------------------¦",C_Border,0,DUMP_ZONE.BaseY-1);
-  tScreenPutChar('¦',C_Border,70+16+1,DUMP_ZONE.BaseY-1);
+  tScreenPutString("----------------------------------------------------------------------|",C_Border,0,DUMP_ZONE.BaseY-1);
+  tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY-1);
 //  tScreenPutString("----------------------------------------------------------------------+----------------+",C_Border,0,DUMP_ZONE.BaseY-1);
   tScreenPutString("----------------------------------------------------------------------+-----------------",C_Border,0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine);
 }       

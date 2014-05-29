@@ -1,5 +1,4 @@
-#include <string.h>
-#include <stdio.h>
+#include "korvet.h"
 
 //#include "config.h"
 #include "i8080.h"

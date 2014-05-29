@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -21,48 +21,44 @@
  */
 #include "korvet.h"
 
-#ifdef DBG
- #include <allegro.h>
-#endif
-
 #define PIC_DEBUG
 
-#define PICMODE_V 0                     //Полного вложения
-#define PICMODE_A 1                     //Сдвиг приоритетов А
-#define PICMODE_B 2                     //                  Б
-#define PICMODE_S 3                     //Спец маскирования
-#define PICMODE_P 4                     //Программирования
+#define PICMODE_V 0                     //РџРѕР»РЅРѕРіРѕ РІР»РѕР¶РµРЅРёСЏ
+#define PICMODE_A 1                     //РЎРґРІРёРі РїСЂРёРѕСЂРёС‚РµС‚РѕРІ Рђ
+#define PICMODE_B 2                     //                  Р‘
+#define PICMODE_S 3                     //РЎРїРµС† РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ
+#define PICMODE_P 4                     //РџСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ
 
-void InitPIC(void);                     // Инициализация при старте
-byte RdPIC  (int Addr);                 // Чтение из ПКП
-void WrPIC  (int Addr,byte Value);      // Запись в ПКП
-void ShowPIC(void);                     // Показать состояние
-void IntRequest(int IntNum);            // Запрос на прерывание.
-int DoPIC  (void);                      // Обработка запросов.
+void InitPIC(void);                     // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїСЂРё СЃС‚Р°СЂС‚Рµ
+byte RdPIC  (int Addr);                 // Р§С‚РµРЅРёРµ РёР· РџРљРџ
+void WrPIC  (int Addr,byte Value);      // Р—Р°РїРёСЃСЊ РІ РџРљРџ
+void ShowPIC(void);                     // РџРѕРєР°Р·Р°С‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ
+void IntRequest(int IntNum);            // Р—Р°РїСЂРѕСЃ РЅР° РїСЂРµСЂС‹РІР°РЅРёРµ.
+int DoPIC  (void);                      // РћР±СЂР°Р±РѕС‚РєР° Р·Р°РїСЂРѕСЃРѕРІ.
 
-//extern In_DBG;                          // =1 работа в отладчике
-int    picOldScrMode=0;                 // =0 надо перересовать окружение
+//extern In_DBG;                          // =1 СЂР°Р±РѕС‚Р° РІ РѕС‚Р»Р°РґС‡РёРєРµ
+int    picOldScrMode=0;                 // =0 РЅР°РґРѕ РїРµСЂРµСЂРµСЃРѕРІР°С‚СЊ РѕРєСЂСѓР¶РµРЅРёРµ
 
-int    IRR;                             // Регистр запросов
-int    ISR;                             // регистр состояния
-int    IMR;                             // регистр маскирования OCW A0=1
-int    picRUS;                          // регистр управляющих слов.
-int    picHIGH;                         // старший байт адреса
+int    IRR;                             // Р РµРіРёСЃС‚СЂ Р·Р°РїСЂРѕСЃРѕРІ
+int    ISR;                             // СЂРµРіРёСЃС‚СЂ СЃРѕСЃС‚РѕСЏРЅРёСЏ
+int    IMR;                             // СЂРµРіРёСЃС‚СЂ РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ OCW A0=1
+int    picRUS;                          // СЂРµРіРёСЃС‚СЂ СѓРїСЂР°РІР»СЏСЋС‰РёС… СЃР»РѕРІ.
+int    picHIGH;                         // СЃС‚Р°СЂС€РёР№ Р±Р°Р№С‚ Р°РґСЂРµСЃР°
 
-int    LastInt;                         // последнее прерывание.
-int    picPRG;                          // флаг режима программирования.
-int    picMODE;                         // режим работы
+int    LastInt;                         // РїРѕСЃР»РµРґРЅРµРµ РїСЂРµСЂС‹РІР°РЅРёРµ.
+int    picPRG;                          // С„Р»Р°Рі СЂРµР¶РёРјР° РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ.
+int    picMODE;                         // СЂРµР¶РёРј СЂР°Р±РѕС‚С‹
 
-int    picSMM;                          // флаг режима спецмаскирования
-int    picReadSR;                       // Что читается из A0=0
-int    picOPROS;                        // флаг режима опроса
+int    picSMM;                          // С„Р»Р°Рі СЂРµР¶РёРјР° СЃРїРµС†РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ
+int    picReadSR;                       // Р§С‚Рѕ С‡РёС‚Р°РµС‚СЃСЏ РёР· A0=0
+int    picOPROS;                        // С„Р»Р°Рі СЂРµР¶РёРјР° РѕРїСЂРѕСЃР°
 
-int    picLowINT;                       // Прерывание с наименьшим приоритетом
+int    picLowINT;                       // РџСЂРµСЂС‹РІР°РЅРёРµ СЃ РЅР°РёРјРµРЅСЊС€РёРј РїСЂРёРѕСЂРёС‚РµС‚РѕРј
 
 byte   FindBitTable[9][0x100];
 
 /**************************************************************************
-** найти старший бит с учетом приоритета
+** РЅР°Р№С‚Рё СЃС‚Р°СЂС€РёР№ Р±РёС‚ СЃ СѓС‡РµС‚РѕРј РїСЂРёРѕСЂРёС‚РµС‚Р°
 ** ret: 0-7 if found, 8 if not
 **************************************************************************/
 
@@ -82,7 +78,7 @@ int FindMaxBit_Ini(int SR)
      realint=0;
    }
  }
- return 8;              // нет бита
+ return 8;              // РЅРµС‚ Р±РёС‚Р°
 }
 
 void InitMaxBit(void) {
@@ -104,20 +100,20 @@ int FindMaxBit(int SR) {
 
 void PIC_init(void)
 {
- picOldScrMode=0;                 // =0 надо перересовать окружение
+ picOldScrMode=0;                 // =0 РЅР°РґРѕ РїРµСЂРµСЂРµСЃРѕРІР°С‚СЊ РѕРєСЂСѓР¶РµРЅРёРµ
 
- IRR=0;                           // Регистр запросов
- ISR=0;                           // регистр состояния
- IMR=0xff;                           // регистр маскирования OCW A0=1
- picRUS=0;                        // регистры управляющих слов.
+ IRR=0;                           // Р РµРіРёСЃС‚СЂ Р·Р°РїСЂРѕСЃРѕРІ
+ ISR=0;                           // СЂРµРіРёСЃС‚СЂ СЃРѕСЃС‚РѕСЏРЅРёСЏ
+ IMR=0xff;                           // СЂРµРіРёСЃС‚СЂ РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ OCW A0=1
+ picRUS=0;                        // СЂРµРіРёСЃС‚СЂС‹ СѓРїСЂР°РІР»СЏСЋС‰РёС… СЃР»РѕРІ.
  picHIGH=0;
  picMODE=PICMODE_V;
 
- picPRG=0;                        // флаг режима программирования.
- picSMM=0;                        // флаг режима спецмаскирования
- picReadSR=0;                     // Что читается из A0=0
- picOPROS=0;                      // флаг режима опроса
- picLowINT=7;                     // Прерывание с наименьшим приоритетом
+ picPRG=0;                        // С„Р»Р°Рі СЂРµР¶РёРјР° РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ.
+ picSMM=0;                        // С„Р»Р°Рі СЂРµР¶РёРјР° СЃРїРµС†РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ
+ picReadSR=0;                     // Р§С‚Рѕ С‡РёС‚Р°РµС‚СЃСЏ РёР· A0=0
+ picOPROS=0;                      // С„Р»Р°Рі СЂРµР¶РёРјР° РѕРїСЂРѕСЃР°
+ picLowINT=7;                     // РџСЂРµСЂС‹РІР°РЅРёРµ СЃ РЅР°РёРјРµРЅСЊС€РёРј РїСЂРёРѕСЂРёС‚РµС‚РѕРј
  InitMaxBit();
 }
 
@@ -129,7 +125,7 @@ void PIC_Write(int Addr,byte Value)
 
  switch (Addr&1) {
    case 0: {
-        if (Value & 0x10) {                     // ICW Режим программирования
+        if (Value & 0x10) {                     // ICW Р РµР¶РёРј РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ
           picPRG=1;
           picMODE=PICMODE_P;
           picRUS=Value;
@@ -142,58 +138,58 @@ void PIC_Write(int Addr,byte Value)
 
           if (!(Value & 0x02)) SlavePrg=2;
         } else                                 // OCW
-        if (Value & 0x08) {                         // Спец режимы (OCW3)
-          if (Value & 0x40) {                       // режим спецмаскирования
+        if (Value & 0x08) {                         // РЎРїРµС† СЂРµР¶РёРјС‹ (OCW3)
+          if (Value & 0x40) {                       // СЂРµР¶РёРј СЃРїРµС†РјР°СЃРєРёСЂРѕРІР°РЅРёСЏ
             picSMM=(Value & 0x20)?1:0;
           }
-          if (Value & 0x02) {                       // Режим чтения SR
+          if (Value & 0x02) {                       // Р РµР¶РёРј С‡С‚РµРЅРёСЏ SR
             picReadSR=(Value & 0x01)?0:1;           // IRR:ISR
           }
-          if (Value & 0x04) {                       // Режим опроса
+          if (Value & 0x04) {                       // Р РµР¶РёРј РѕРїСЂРѕСЃР°
             picOPROS=1;
           }
-        } else {                                    // Окончания INT (OCW2)
+        } else {                                    // РћРєРѕРЅС‡Р°РЅРёСЏ INT (OCW2)
          switch ((Value >> 5) & 0x07)
            {
-            case 0:                         // NOP для 8059
+            case 0:                         // NOP РґР»СЏ 8059
             case 2:
             case 4: {break;}
 
-            case 1: {                        // ENDINT, переход в режим полного волжения
-                                             // сброс разряда с наивысши приоритетом
+            case 1: {                        // ENDINT, РїРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј РїРѕР»РЅРѕРіРѕ РІРѕР»Р¶РµРЅРёСЏ
+                                             // СЃР±СЂРѕСЃ СЂР°Р·СЂСЏРґР° СЃ РЅР°РёРІС‹СЃС€Рё РїСЂРёРѕСЂРёС‚РµС‚РѕРј
 
                   i=FindMaxBit(ISR);
-                  if (i != 8) {              // сбросим бит в ISR
+                  if (i != 8) {              // СЃР±СЂРѕСЃРёРј Р±РёС‚ РІ ISR
                    ISR&=~(1<<i);
                   }
                   picLowINT=7;
                   picMODE=PICMODE_V;
                   break;
             }
-            case 3: {                        // SPECENDINT, переход в режим полного волжения
-                                             // сброс разряда в битах 0-2
+            case 3: {                        // SPECENDINT, РїРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј РїРѕР»РЅРѕРіРѕ РІРѕР»Р¶РµРЅРёСЏ
+                                             // СЃР±СЂРѕСЃ СЂР°Р·СЂСЏРґР° РІ Р±РёС‚Р°С… 0-2
                   ISR&=~(1<<(Value&7));
                   picLowINT=7;
                   picMODE=PICMODE_V;
                   break;
             }
-            case 5: {                        // ENDINT, переход в режим сдвига приоритетов А
-                                             // сброс последнего итах 0-2
+            case 5: {                        // ENDINT, РїРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј СЃРґРІРёРіР° РїСЂРёРѕСЂРёС‚РµС‚РѕРІ Рђ
+                                             // СЃР±СЂРѕСЃ РїРѕСЃР»РµРґРЅРµРіРѕ РёС‚Р°С… 0-2
                   i=FindMaxBit(ISR);
-                  if (i != 8) {              // сбросим бит в ISR
+                  if (i != 8) {              // СЃР±СЂРѕСЃРёРј Р±РёС‚ РІ ISR
                    ISR&=~(1<<i);
                    picLowINT=i;
                   }
                   picMODE=PICMODE_A;
                   break;
             }
-            case 6: {                        // переход в режим сдвига приоритетов Б
+            case 6: {                        // РїРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј СЃРґРІРёРіР° РїСЂРёРѕСЂРёС‚РµС‚РѕРІ Р‘
                   picLowINT=Value&7;
                   picMODE=PICMODE_B;
                   break;
             }
-            case 7: {                        // ENDINT, переход в режим сдвига приоритетов Б
-                                             // сброс последнего итах 0-2
+            case 7: {                        // ENDINT, РїРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј СЃРґРІРёРіР° РїСЂРёРѕСЂРёС‚РµС‚РѕРІ Р‘
+                                             // СЃР±СЂРѕСЃ РїРѕСЃР»РµРґРЅРµРіРѕ РёС‚Р°С… 0-2
                   i=Value&7;
                   ISR&=~(1<<i);
                   picLowINT=i;
@@ -206,9 +202,9 @@ void PIC_Write(int Addr,byte Value)
 
    } // case A0=0
    case 1: {
-        if (picPRG) {                           //  режим программирования
+        if (picPRG) {                           //  СЂРµР¶РёРј РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ
           if      (SlavePrg==2) picHIGH=Value;
-          else if (SlavePrg==1) {picPRG=0;}     // маска slaves
+          else if (SlavePrg==1) {picPRG=0;}     // РјР°СЃРєР° slaves
           else {                                // Slave == 0
             picHIGH=Value;
             picPRG=0;
@@ -216,7 +212,7 @@ void PIC_Write(int Addr,byte Value)
 
           if (SlavePrg) SlavePrg--;
           if (!picPRG) picMODE=PICMODE_V;
-        } else IMR=Value;                       // Установка маски
+        } else IMR=Value;                       // РЈСЃС‚Р°РЅРѕРІРєР° РјР°СЃРєРё
    } // case A0=1
  } // switch A&1
 //printf("%04X: PIC_W: %04x=%02x %04x\n",Z80_GetPC(),Addr,Value,picHIGH<<8|picRUS&0xf0);
@@ -233,7 +229,7 @@ byte PIC_Read(int Addr)
 
  switch (Addr&1) {
    case 0: {
-        if (picOPROS) {                 // Режим опроса
+        if (picOPROS) {                 // Р РµР¶РёРј РѕРїСЂРѕСЃР°
           picOPROS=0;
           i=FindMaxBit(IRR);
           if (i != 8) RetValue=i|0x80;
@@ -253,18 +249,18 @@ byte PIC_Read(int Addr)
  }
 }
 
-void PIC_IntRequest(int IntNum)             // Запрос на прерывание.
+void PIC_IntRequest(int IntNum)             // Р—Р°РїСЂРѕСЃ РЅР° РїСЂРµСЂС‹РІР°РЅРёРµ.
 {
  IRR|=1<<IntNum;
  //ShowPIC();
 }
 
-int CheckPIC  (void)                      // Проверка, есть запрос.
+int CheckPIC  (void)                      // РџСЂРѕРІРµСЂРєР°, РµСЃС‚СЊ Р·Р°РїСЂРѕСЃ.
 {
  byte i;
  byte Low;
-// Биты в рег. запроса & то чего нет в маске | то что есть в работе
- i=FindMaxBit(IRR & ~IMR | ISR);       // найти максиммальный запрос с учетом маски
+// Р‘РёС‚С‹ РІ СЂРµРі. Р·Р°РїСЂРѕСЃР° & С‚Рѕ С‡РµРіРѕ РЅРµС‚ РІ РјР°СЃРєРµ | С‚Рѕ С‡С‚Рѕ РµСЃС‚СЊ РІ СЂР°Р±РѕС‚Рµ
+ i=FindMaxBit(IRR & ~IMR | ISR);       // РЅР°Р№С‚Рё РјР°РєСЃРёРјРјР°Р»СЊРЅС‹Р№ Р·Р°РїСЂРѕСЃ СЃ СѓС‡РµС‚РѕРј РјР°СЃРєРё
 
  if ( (i == 8) || (i == FindMaxBit(ISR)))  return 0; // NOP
 // return 1;
@@ -272,18 +268,18 @@ int CheckPIC  (void)                      // Проверка, есть запрос.
 }
 
 
-int DoPIC  (void)                      // Обработка запросов.
+int DoPIC  (void)                      // РћР±СЂР°Р±РѕС‚РєР° Р·Р°РїСЂРѕСЃРѕРІ.
                                        // If error return -1; else addr
 {
  byte i;
  byte Low;
-// Биты в рег. запроса & то чего нет в маске | то что есть в работе
- i=FindMaxBit(IRR & ~IMR | ISR);       // найти максиммальный запрос с учетом маски
+// Р‘РёС‚С‹ РІ СЂРµРі. Р·Р°РїСЂРѕСЃР° & С‚Рѕ С‡РµРіРѕ РЅРµС‚ РІ РјР°СЃРєРµ | С‚Рѕ С‡С‚Рѕ РµСЃС‚СЊ РІ СЂР°Р±РѕС‚Рµ
+ i=FindMaxBit(IRR & ~IMR | ISR);       // РЅР°Р№С‚Рё РјР°РєСЃРёРјРјР°Р»СЊРЅС‹Р№ Р·Р°РїСЂРѕСЃ СЃ СѓС‡РµС‚РѕРј РјР°СЃРєРё
 
  if ( (i == 8) || (i == FindMaxBit(ISR)))  return -1; // NOP
 
- IRR &= ~(1<<i);                        // сбросить запрос
- ISR |=   1<<i;                         // установить флаг обработки
+ IRR &= ~(1<<i);                        // СЃР±СЂРѕСЃРёС‚СЊ Р·Р°РїСЂРѕСЃ
+ ISR |=   1<<i;                         // СѓСЃС‚Р°РЅРѕРІРёС‚СЊ С„Р»Р°Рі РѕР±СЂР°Р±РѕС‚РєРё
 
  Low=(picRUS & ((picRUS & 0x04)?0xe0:0xc0)) | // 0b1110000:0b1100000
      ( i <<    ((picRUS & 0x04)?0x02:0x03)) ;
@@ -320,13 +316,13 @@ void ShowPIC(void)
                    "Programming"};
  return;
 
- Byte2Bin(MASKA,IMR);textprintf(screen,font,50,360,15,"PIC: (IMR) : %s",MASKA);
- Byte2Bin(MASKA,IRR);textprintf(screen,font,50,370,15,"PIC: (IRR) : %s",MASKA);
- Byte2Bin(MASKA,ISR);textprintf(screen,font,50,380,15,"PIC: (ISR) : %s",MASKA);
- textprintf(screen,font,50,390,15,"PIC: Mode  : %s",MODE[picMODE]);
- textprintf(screen,font,50,400,15,"PIC: SMM=%d Read=%d OPROS=%d LowINT=%d",picSMM,picReadSR,picOPROS,picLowINT);
- textprintf(screen,font,50,410,15,"PIC: Step       : %s",(picRUS&0x04)?"4":"8");
- textprintf(screen,font,50,420,15,"PIC: Addr %04x",picHIGH<<8|picRUS&0xf0);
+ Byte2Bin(MASKA,IMR);textprintf_ex(screen,font,50,360,15,0,"PIC: (IMR) : %s",MASKA);
+ Byte2Bin(MASKA,IRR);textprintf_ex(screen,font,50,370,15,0,"PIC: (IRR) : %s",MASKA);
+ Byte2Bin(MASKA,ISR);textprintf_ex(screen,font,50,380,15,0,"PIC: (ISR) : %s",MASKA);
+ textprintf_ex(screen,font,50,390,15,0,"PIC: Mode  : %s",MODE[picMODE]);
+ textprintf_ex(screen,font,50,400,15,0,"PIC: SMM=%d Read=%d OPROS=%d LowINT=%d",picSMM,picReadSR,picOPROS,picLowINT);
+ textprintf_ex(screen,font,50,410,15,0,"PIC: Step       : %s",(picRUS&0x04)?"4":"8");
+ textprintf_ex(screen,font,50,420,15,0,"PIC: Addr %04x",picHIGH<<8|picRUS&0xf0);
 }
 
 void ShowPICdbg(void)
@@ -344,16 +340,16 @@ void ShowPICdbg(void)
  int y=623;
 
  rect(screen,x-3,y-3,x+15*8+3,y+16*8+3,0x20+0xf);
- textprintf(screen,font,x+48,y-20,0x20+0x0f,"PIC");
+ textprintf_ex(screen,font,x+48,y-20,0x20+0x0f,0,"PIC");
 
- Byte2Bin(MASKA,IMR);textprintf(screen,font,x,y+16*0,0x20+0x07,"IMR  : %s",MASKA);
- Byte2Bin(MASKA,IRR);textprintf(screen,font,x,y+16*1,0x20+0x07,"IRR  : %s",MASKA);
- Byte2Bin(MASKA,ISR);textprintf(screen,font,x,y+16*2,0x20+0x07,"ISR  : %s",MASKA);
- textprintf(screen,font,x,y+16*3,0x20+0x07,"Mode : %s  ",MODE[picMODE]);
- textprintf(screen,font,x,y+16*4,0x20+0x07,"Step : %s  ",(picRUS&0x04)?"4":"8");
- textprintf(screen,font,x,y+16*5,0x20+0x07,"Addr : %04x  ",picHIGH<<8|picRUS&0xf0);
- textprintf(screen,font,x,y+16*6,0x20+0x07,"SMM  : %d  Rd:%d",picSMM,picReadSR);
- textprintf(screen,font,x,y+16*7,0x20+0x07,"OP   : %d  LI:%d",picOPROS,picLowINT);
+ Byte2Bin(MASKA,IMR);textprintf_ex(screen,font,x,y+16*0,0x20+0x07,0,"IMR  : %s",MASKA);
+ Byte2Bin(MASKA,IRR);textprintf_ex(screen,font,x,y+16*1,0x20+0x07,0,"IRR  : %s",MASKA);
+ Byte2Bin(MASKA,ISR);textprintf_ex(screen,font,x,y+16*2,0x20+0x07,0,"ISR  : %s",MASKA);
+ textprintf_ex(screen,font,x,y+16*3,0x20+0x07,0,"Mode : %s  ",MODE[picMODE]);
+ textprintf_ex(screen,font,x,y+16*4,0x20+0x07,0,"Step : %s  ",(picRUS&0x04)?"4":"8");
+ textprintf_ex(screen,font,x,y+16*5,0x20+0x07,0,"Addr : %04x  ",picHIGH<<8|picRUS&0xf0);
+ textprintf_ex(screen,font,x,y+16*6,0x20+0x07,0,"SMM  : %d  Rd:%d",picSMM,picReadSR);
+ textprintf_ex(screen,font,x,y+16*7,0x20+0x07,0,"OP   : %d  LI:%d",picOPROS,picLowINT);
 }
 #endif
 

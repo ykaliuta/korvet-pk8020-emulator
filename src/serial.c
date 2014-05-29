@@ -20,7 +20,6 @@
  *
  */
 #include "korvet.h"
-#include  <allegro.h>
 
 #define MAXQ232 30*3
 

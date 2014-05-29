@@ -19,12 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/stat.h> /* for mode definitions */
 
-#include <allegro.h>
 
 #include "korvet.h"
 #include "vg.h"
@@ -33,7 +28,7 @@
  #include "dbg/dbg.h"
 #endif
 
-char AboutMSG[]="Korvet Emulator by Sergey Erokhin & Korvet Team| esl@pisem.net|08.05.2005|V0.9.2";
+const char AboutMSG[]="Korvet Emulator by Sergey Erokhin & Korvet Team| esl@pisem.net|08.05.2005|V0.9.2";
 
 // GetOpt external variables
 extern char *optarg;
@@ -281,9 +276,9 @@ void PrintDecor() {
   InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
 
   if (Current_Scr_Mode != SCR_DBG) {
-     textprintf(screen,font,15,SCREEN_H-33,255,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-FullScr/Win, F6-Turbo, F10-Mono, F9-dbg");
+     textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-FullScr/Win, F6-Turbo, F10-Mono, F9-dbg");
      rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
-     textprintf(screen,font,0,SCREEN_H-16,255,AboutMSG);
+     textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
   }
 }
 
@@ -338,7 +333,10 @@ int main(int argc,char **argv) {
      close(TempValue);
   }
 
-  if (j) getch();
+  if (j) {
+    printf("Press Enter to continue\n");
+    getchar();
+  }
 
 #ifdef TRACETIMER
   F_TIMER=fopen("_timer.log","wb");
@@ -458,13 +456,13 @@ int main(int argc,char **argv) {
          MuteFlag=0;
          MakeSound(); // timer
 
-         while (!(p = get_audio_stream_buffer(stream))) yield_timeslice();;
+         while (!(p = get_audio_stream_buffer(stream)))  rest(0);
          memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
 #ifdef WAV
          AddWAV(p,AUDIO_BUFFER_SIZE);
 #endif
          free_audio_stream_buffer(stream);
-         while (!Counter50hz) yield_timeslice();   
+         while (!Counter50hz) rest(0);
        } else {
          MuteFlag=1;
          MakeSound(); // timer
@@ -520,16 +518,13 @@ int main(int argc,char **argv) {
        if (OSD_FDD_Flag && InUseFDD[2]) {InUseFDD[2]--;PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OFFY+260,VG.TrackReal[2],InUseFDD[2]);} 
        if (OSD_FDD_Flag && InUseFDD[3]) {InUseFDD[3]--;PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OFFY+260,VG.TrackReal[3],InUseFDD[3]);} 
 
-       if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,0, 0,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");} 
+       // if (JoystickUseFlag) {JoystickUseFlag--;textprintf_ex(screen,font,0, 0,255,0,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");} 
 
-//       textprintf(screen,font,0, 0,255," %s",RAM[0xf72d]?"low"  :"HIGH");
-//       textprintf(screen,font,0,40,255," %s",RAM[0xf72f]?"GRP " :"    ");
 
        // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken) 
        if ((RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2)) != KBD_LED) {
             KBD_LED=(RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2));
             KeyboadUpdateFlag=1;
-//            textprintf(screen,font,0,20,255,"0xf72e [%02x]:%s:%d",KBD_LED,KBD_LED?"LAT " :"RUS ",KeyboardLayout);
        }
 
     }

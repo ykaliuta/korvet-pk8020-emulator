@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -21,9 +21,8 @@
  */
 // Game TOOLS
 #include "dbg.h"
-#include <allegro.h>
 
-extern byte    RAM[];           // RAM эмулятора
+extern byte    RAM[];           // RAM СЌРјСѓР»СЏС‚РѕСЂР°
 
 int GT_Pass=0;
 

@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,7 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <stdio.h>
+
 #include "dbg.h"
 
 
@@ -46,7 +46,7 @@ void UpdateRW(int endfl) {
 
 int RWDialog(int mode) { //1 - write
 
-  char Title[2][16]={"Ä Read memory"," Write memory"};
+  char Title[2][16]={"- Read memory"," Write memory"};
   byte buf[128];
   int tmp;
   int i;
@@ -54,11 +54,11 @@ int RWDialog(int mode) { //1 - write
 
   tSetUpdate(0);
 
-  tScreenPutString("ÚÄÄÄÄÄÄÄÄ              ÄÄÄÄÄÄÄÄ¿",C_ReadWrite,x,y+0);
-  tScreenPutString("³ Name: ______________________ ³",C_ReadWrite,x,y+1);
-  tScreenPutString("³                              ³",C_ReadWrite,x,y+2);
-  tScreenPutString("³  Start:                      ³",C_ReadWrite,x,y+3);
-  tScreenPutString("ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ",C_ReadWrite,x,y+4);
+  tScreenPutString("+--------              --------+",C_ReadWrite,x,y+0);
+  tScreenPutString("| Name: ______________________ |",C_ReadWrite,x,y+1);
+  tScreenPutString("|                              |",C_ReadWrite,x,y+2);
+  tScreenPutString("|  Start:                      |",C_ReadWrite,x,y+3);
+  tScreenPutString("+------------------------------+",C_ReadWrite,x,y+4);
 
   tScreenPutString(Title[mode],C_ReadWrite,x+9,y+0);
 

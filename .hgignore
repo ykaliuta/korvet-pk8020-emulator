@@ -1,0 +1,7 @@
+syntax: glob
+objs/*
+objs/**/*
+printer.txt
+kdbg
+kdbg.exe
+

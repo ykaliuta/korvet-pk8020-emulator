@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -23,11 +23,6 @@
 
 #define noPPI_DEBUG
 
-//extern screen,font;
-#ifdef DBG
- #include <allegro.h>
-#endif
-
 #ifdef TRACETIMER
 extern int Takt;
 extern F_TIMER;
@@ -37,29 +32,29 @@ extern int SYSREG;
 extern int NCREG;
 
 // --------------------------------------------------------------------------
-// переменные из модуля экрана, собиракм и разбираем
-// прямо при записи, чтении.
-extern int scr_Page_Acces;       // Страница для достуап к видеопамяти   ViReg:xx000000
-extern int scr_Page_Show;        // Страница для отображения             ViReg:000000xx
-// АЦЗУ
-extern int scr_Attr_Write;       // Атрибут для записи в АЦЗУ	         ViReg:00xx0000
-extern int scr_Wide_Mode;        // Флаг режима 32 символа в строке      ViReg:0000x000
-extern int scr_Second_Font;      // Флаг выбора второго знакогенератора  ViReg:00000x00
+// РїРµСЂРµРјРµРЅРЅС‹Рµ РёР· РјРѕРґСѓР»СЏ СЌРєСЂР°РЅР°, СЃРѕР±РёСЂР°РєРј Рё СЂР°Р·Р±РёСЂР°РµРј
+// РїСЂСЏРјРѕ РїСЂРё Р·Р°РїРёСЃРё, С‡С‚РµРЅРёРё.
+extern int scr_Page_Acces;       // РЎС‚СЂР°РЅРёС†Р° РґР»СЏ РґРѕСЃС‚СѓР°Рї Рє РІРёРґРµРѕРїР°РјСЏС‚Рё   ViReg:xx000000
+extern int scr_Page_Show;        // РЎС‚СЂР°РЅРёС†Р° РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ             ViReg:000000xx
+// РђР¦Р—РЈ
+extern int scr_Attr_Write;       // РђС‚СЂРёР±СѓС‚ РґР»СЏ Р·Р°РїРёСЃРё РІ РђР¦Р—РЈ	         ViReg:00xx0000
+extern int scr_Wide_Mode;        // Р¤Р»Р°Рі СЂРµР¶РёРјР° 32 СЃРёРјРІРѕР»Р° РІ СЃС‚СЂРѕРєРµ      ViReg:0000x000
+extern int scr_Second_Font;      // Р¤Р»Р°Рі РІС‹Р±РѕСЂР° РІС‚РѕСЂРѕРіРѕ Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂР°  ViReg:00000x00
 
-extern int scr_Attr_Read;        // Значени Инверсии при чтении 	 VisST:0000x000
+extern int scr_Attr_Read;        // Р—РЅР°С‡РµРЅРё РРЅРІРµСЂСЃРёРё РїСЂРё С‡С‚РµРЅРёРё 	 VisST:0000x000
 
-extern int AllScreenUpdateFlag;  // Флаг необходимости обновть весь экран
-extern int scr_GZU_Size_Mask;	 // маска размера ГЗУ, =0x0f - 4*48, =0 - 1x 48k
+extern int AllScreenUpdateFlag;  // Р¤Р»Р°Рі РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РѕР±РЅРѕРІС‚СЊ РІРµСЃСЊ СЌРєСЂР°РЅ
+extern int scr_GZU_Size_Mask;	 // РјР°СЃРєР° СЂР°Р·РјРµСЂР° Р“Р—РЈ, =0x0f - 4*48, =0 - 1x 48k
 // -------------------------------------------------------------------------
-// Переменная из модуля
-extern int DRVREG;               // см. в модуле контролера дисковода
+// РџРµСЂРµРјРµРЅРЅР°СЏ РёР· РјРѕРґСѓР»СЏ
+extern int DRVREG;               // СЃРј. РІ РјРѕРґСѓР»Рµ РєРѕРЅС‚СЂРѕР»РµСЂР° РґРёСЃРєРѕРІРѕРґР°
 
 // -------------------------------------------------------------------------
-// Переменная из модуля Звука (Флаг разрешения звука)
+// РџРµСЂРµРјРµРЅРЅР°СЏ РёР· РјРѕРґСѓР»СЏ Р—РІСѓРєР° (Р¤Р»Р°Рі СЂР°Р·СЂРµС€РµРЅРёСЏ Р·РІСѓРєР°)
 extern int SoundEnable;
 
 // -------------------------------------------------------------------------
-// Переменная из модуля Синхронизация.
+// РџРµСЂРµРјРµРЅРЅР°СЏ РёР· РјРѕРґСѓР»СЏ РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ.
 extern int VBLANK;
 extern int Takt;
 
@@ -68,20 +63,20 @@ extern int k_mousey;
 extern int k_mouseb;
 
 // -------------------------------------------------------------------------
-// Переменная из модуля Принтера.
-//extern int LSTSTS; // Признак готовности принтера PPI1, port A, Bit 00000x00
-//extern int LSTCTL; // Строб записи
+// РџРµСЂРµРјРµРЅРЅР°СЏ РёР· РјРѕРґСѓР»СЏ РџСЂРёРЅС‚РµСЂР°.
+//extern int LSTSTS; // РџСЂРёР·РЅР°Рє РіРѕС‚РѕРІРЅРѕСЃС‚Рё РїСЂРёРЅС‚РµСЂР° PPI1, port A, Bit 00000x00
+//extern int LSTCTL; // РЎС‚СЂРѕР± Р·Р°РїРёСЃРё
 
 //
 int PPI1_A,PPI1_B,PPI1_C,PPI1_RUS;
 int PPI2_A,PPI2_B,PPI2_C,PPI2_RUS;
 int PPI3_A,PPI3_B,PPI3_C,PPI3_RUS;
 
-// Все управляющие сигналы в собственных переменных,
+// Р’СЃРµ СѓРїСЂР°РІР»СЏСЋС‰РёРµ СЃРёРіРЅР°Р»С‹ РІ СЃРѕР±СЃС‚РІРµРЅРЅС‹С… РїРµСЂРµРјРµРЅРЅС‹С…,
 // Assemble
-//             - Собираем значение байта из отдельных переменных.
+//             - РЎРѕР±РёСЂР°РµРј Р·РЅР°С‡РµРЅРёРµ Р±Р°Р№С‚Р° РёР· РѕС‚РґРµР»СЊРЅС‹С… РїРµСЂРµРјРµРЅРЅС‹С….
 // Disassemble
-//             - Разбираем байт на отедльные переменные.
+//             - Р Р°Р·Р±РёСЂР°РµРј Р±Р°Р№С‚ РЅР° РѕС‚РµРґР»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ.
 //
 
 byte Assemble_PPI1A(void)
@@ -93,7 +88,6 @@ byte Assemble_PPI1A(void)
    Value|=(GetPrinterStatus()&0x01)<<2; // 00000x00
    Value|=((Takt<VBLANK_TAKT)?1:0 )<<1; // 000000x0
 //   Value|=(TapeIN  &0x01)<<0;        // 0000000x
-//  textprintf(screen,font,500,60,15,"R_38: %02x",Value);
    return Value;
 }
 
@@ -107,17 +101,12 @@ void DisassembleVIREG_PPI1C(byte Value)
    scr_Second_Font=(Value&0x04)>>2;    // ViReg:00000x00
    scr_Page_Show  =(Value&0x03)>>0;    // ViReg:000000xx
 
-   // Обновить весь экран если установлен режим влияет на весь
-   // экран. (ширина символов, знакогенератор, стр. отображения графики)
+   // РћР±РЅРѕРІРёС‚СЊ РІРµСЃСЊ СЌРєСЂР°РЅ РµСЃР»Рё СѓСЃС‚Р°РЅРѕРІР»РµРЅ СЂРµР¶РёРј РІР»РёСЏРµС‚ РЅР° РІРµСЃСЊ
+   // СЌРєСЂР°РЅ. (С€РёСЂРёРЅР° СЃРёРјРІРѕР»РѕРІ, Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂ, СЃС‚СЂ. РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РіСЂР°С„РёРєРё)
    if ( (PPI1_C&0x0f) != (Value&0x0f)) AllScreenUpdateFlag=1;
 
    scr_Page_Acces &= scr_GZU_Size_Mask;
    scr_Page_Show  &= scr_GZU_Size_Mask;
-
-//   textprintf(screen,font,0,60,255,"W:Vi %3d",cntr++);
-#ifndef EGA
-//   textprintf(screen,font,0,60,255,"A:%d S:%d",scr_Page_Acces,scr_Page_Show);
-#endif
 
 }
 
@@ -338,10 +327,6 @@ void ShowPPIdbg(void) {
                        "      |    |C000|    |    |    ",
                       };
 
-
-// rect(screen,x-3,y-3,x+15*8+3,y+16*8+3,0x20+0xf);
-// textprintf(screen,font,x+48,y-20,0x20+0x0f,"PIC");
-
  if (NCREG & 0x80) { // Color MODE
    sprintf(tncreg,"COLOR: Read:%d (%s) Write:%d (%s)            ",
                  (NCREG>>4)&0x7,nc_rd[(NCREG>>4)&0x7],
@@ -353,21 +338,21 @@ void ShowPPIdbg(void) {
                  ,NCREG&1,nc_rd[(NCREG>>4)&0x7],nc_rd[((~NCREG)>>1)&0x7]);
  }
 
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"           | ROM  |ACZU|GZU |RG  |PB  |KEY ");
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"           | ROM  |ACZU|GZU |RG  |PB  |KEY ");
 
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"SysReg: %02x >%s",SYSREG<<2,tsysreg[SYSREG]);
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"NCREG : %02x >%s",NCREG,tncreg);
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"ViREG : %02x >GZU PAGE (Acess :%d Show:%d)",
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"SysReg: %02x >%s",SYSREG<<2,tsysreg[SYSREG]);
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"NCREG : %02x >%s",NCREG,tncreg);
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"ViREG : %02x >GZU PAGE (Acess :%d Show:%d)",
                                              AssembleVIREG_PPI1C(),
                                              scr_Page_Acces,
                                              scr_Page_Show
            );
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"            ACZU     (Attr:%d Wide:%d FONT2:%d)",
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"            ACZU     (Attr:%d Wide:%d FONT2:%d)",
                                              scr_Attr_Write,
                                              scr_Wide_Mode,
                                              scr_Second_Font
            );
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"VBlank: %d",VBLANK);
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"VBlank: %d",VBLANK);
 }
 
 #endif

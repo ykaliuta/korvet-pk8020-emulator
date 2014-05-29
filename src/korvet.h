@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,6 +19,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include <allegro.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h> /* for mode definitions */
+#include <ctype.h>
+
 #ifndef _KORVET_H
 #define _KORVET_H
 
@@ -33,11 +43,11 @@
 
 #define OK 		0
 #define ERROR		1
-#define LANADDR         0x0f       // Адрес РМУ в сети ^0x0f
+#define LANADDR         0x0f       // РђРґСЂРµСЃ Р РњРЈ РІ СЃРµС‚Рё ^0x0f
 
-#define CPU_CLK         2500000    // частота ЦПУ в герцах
-#define ALL_TAKT        50000      // кол-во тактов в одном VBLANK
-#define VBLANK_TAKT     8170       // кол-во тактов обрптного хода луча
+#define CPU_CLK         2500000    // С‡Р°СЃС‚РѕС‚Р° Р¦РџРЈ РІ РіРµСЂС†Р°С…
+#define ALL_TAKT        50000      // РєРѕР»-РІРѕ С‚Р°РєС‚РѕРІ РІ РѕРґРЅРѕРј VBLANK
+#define VBLANK_TAKT     8170       // РєРѕР»-РІРѕ С‚Р°РєС‚РѕРІ РѕР±СЂРїС‚РЅРѕРіРѕ С…РѕРґР° Р»СѓС‡Р°
 
 #define KBD_QWERTY	0
 #define KBD_JCUKEN	1

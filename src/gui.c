@@ -19,9 +19,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <stdio.h>
+#include <korvet.h>
 
-#include "allegro.h"
 #include "vg.h"
 
 extern char Disks[4][1024];

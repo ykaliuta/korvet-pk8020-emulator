@@ -1,4 +1,4 @@
-/*
+п»ї/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -23,13 +23,10 @@
 // (c) 2000-2003 Sergey Erokhin aka ESL
 // (c) 2003      Korvet Team.
 
-#include <stdio.h>
-#include <conio.h>
-#include <allegro.h>
-
-#include "PlaneMask.h"      // Arrays for Plane MASK optimization
 
 #include "korvet.h"
+
+#include "PlaneMask.h"      // Arrays for Plane MASK optimization
 
 #define nouseSLOWBITMAPCONVERT
 
@@ -47,8 +44,8 @@ void (*ShowScreen)(void);
 
 // GZU defines
 
-#define COLORMD 0x80	// 10000000
-#define WRMSK   0x0E	// 00001110
+#define COLORMD 0x80	  // 10000000
+#define WRMSK   0x0E	  // 00001110
 #define RDMSK   0x70    // 01110000
 #define WBIT    0x01    // 00000001
 #define WSEL0   0xfd    // 11111101
@@ -63,49 +60,49 @@ void (*ShowScreen)(void);
 unsigned int NCREG=0;
 // ================================================================ EXT VAR
 
-// Переменные 
-// Биты продставленны в виде байтов, разбока и сборка для чтения
-// и записи в порты делаем только при необходимости
+// РџРµСЂРµРјРµРЅРЅС‹Рµ 
+// Р‘РёС‚С‹ РїСЂРѕРґСЃС‚Р°РІР»РµРЅРЅС‹ РІ РІРёРґРµ Р±Р°Р№С‚РѕРІ, СЂР°Р·Р±РѕРєР° Рё СЃР±РѕСЂРєР° РґР»СЏ С‡С‚РµРЅРёСЏ
+// Рё Р·Р°РїРёСЃРё РІ РїРѕСЂС‚С‹ РґРµР»Р°РµРј С‚РѕР»СЊРєРѕ РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё
 
-// Vireg : xx3A  - запись
-// VistST: xx38  - чтение
+// Vireg : xx3A  - Р·Р°РїРёСЃСЊ
+// VistST: xx38  - С‡С‚РµРЅРёРµ
 
-// ГЗУ
-int scr_Page_Acces;     // Страница для достуап к видеопамяти  ViReg:xx000000
-int scr_Page_Show;      // Страница для отображения            ViReg:000000xx
-int scr_GZU_Size_Mask=0x0f;  // маска размера ГЗУ, =0x0f - 4*48, =0 - 1x 48k
+// Р“Р—РЈ
+int scr_Page_Acces;     // РЎС‚СЂР°РЅРёС†Р° РґР»СЏ РґРѕСЃС‚СѓР°Рї Рє РІРёРґРµРѕРїР°РјСЏС‚Рё  ViReg:xx000000
+int scr_Page_Show;      // РЎС‚СЂР°РЅРёС†Р° РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ            ViReg:000000xx
+int scr_GZU_Size_Mask=0x0f;  // РјР°СЃРєР° СЂР°Р·РјРµСЂР° Р“Р—РЈ, =0x0f - 4*48, =0 - 1x 48k
 
-// АЦЗУ
-int scr_Attr_Write;	// Атрибут для записи в АЦЗУ	       ViReg:00xx0000
-int scr_Wide_Mode;	// Флаг режима 32 символа в строке     ViReg:0000x000
-int scr_Second_Font;	// Флаг выбора второго знакогенератора ViReg:00000x00
+// РђР¦Р—РЈ
+int scr_Attr_Write;	// РђС‚СЂРёР±СѓС‚ РґР»СЏ Р·Р°РїРёСЃРё РІ РђР¦Р—РЈ	       ViReg:00xx0000
+int scr_Wide_Mode;	// Р¤Р»Р°Рі СЂРµР¶РёРјР° 32 СЃРёРјРІРѕР»Р° РІ СЃС‚СЂРѕРєРµ     ViReg:0000x000
+int scr_Second_Font;	// Р¤Р»Р°Рі РІС‹Р±РѕСЂР° РІС‚РѕСЂРѕРіРѕ Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂР° ViReg:00000x00
 
-int scr_Attr_Read;	// Значени Инверсии при чтении 	       VisST:0000x000
+int scr_Attr_Read;	// Р—РЅР°С‡РµРЅРё РРЅРІРµСЂСЃРёРё РїСЂРё С‡С‚РµРЅРёРё 	       VisST:0000x000
 
-// Масивы памяти
+// РњР°СЃРёРІС‹ РїР°РјСЏС‚Рё
 
-byte ACZU[1024*2];	      // 1К памяти АЦЗУ плюс атрибуты (INV)
-//byte ACZU[1024];	// 1К памяти АЦЗУ
-//byte ACZU_INV[1024];    // 1К флагов атрибута АЦЗУ
+byte ACZU[1024*2];	      // 1Рљ РїР°РјСЏС‚Рё РђР¦Р—РЈ РїР»СЋСЃ Р°С‚СЂРёР±СѓС‚С‹ (INV)
+//byte ACZU[1024];	// 1Рљ РїР°РјСЏС‚Рё РђР¦Р—РЈ
+//byte ACZU_INV[1024];    // 1Рљ С„Р»Р°РіРѕРІ Р°С‚СЂРёР±СѓС‚Р° РђР¦Р—РЈ
 //byte ACZU_Frame[PLANESIZE];
 int  ACZU_Update_Flag;
-int  ACZU_TouchFlag[1024];// флаг изменения байта, для оптимизации
+int  ACZU_TouchFlag[1024];// С„Р»Р°Рі РёР·РјРµРЅРµРЅРёСЏ Р±Р°Р№С‚Р°, РґР»СЏ РѕРїС‚РёРјРёР·Р°С†РёРё
 
-byte KFONT[FONTSIZE];   // Знакогенератор для режима 64 символа в строке
-byte KFONT2[FONTSIZE*2];// Знакогенератор для режима 32 символа в строке
+byte KFONT[FONTSIZE];   // Р—РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂ РґР»СЏ СЂРµР¶РёРјР° 64 СЃРёРјРІРѕР»Р° РІ СЃС‚СЂРѕРєРµ
+byte KFONT2[FONTSIZE*2];// Р—РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂ РґР»СЏ СЂРµР¶РёРјР° 32 СЃРёРјРІРѕР»Р° РІ СЃС‚СЂРѕРєРµ
 char FontFileName[1024]="data/korvet2.fnt";
 
-byte GZU[4][PLANESIZE*(3+1)]; // 3 слоя ГЗУ (4 страницы) + слой АЦЗУ
+byte GZU[4][PLANESIZE*(3+1)]; // 3 СЃР»РѕСЏ Р“Р—РЈ (4 СЃС‚СЂР°РЅРёС†С‹) + СЃР»РѕР№ РђР¦Р—РЈ
 
-// Таблица LUT
+// РўР°Р±Р»РёС†Р° LUT
 byte LUT[16]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
 int  LutUpdateFlag;
 PALLETE pallete;
 extern int OSD_LUT_Flag;
 
 //
-int LineUpdateFlag[256];// Таблица флагов необходимости обновления строки
-int AllScreenUpdateFlag;// Флаг необходимости обновть весь экран
+int LineUpdateFlag[256];// РўР°Р±Р»РёС†Р° С„Р»Р°РіРѕРІ РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РѕР±РЅРѕРІР»РµРЅРёСЏ СЃС‚СЂРѕРєРё
+int AllScreenUpdateFlag;// Р¤Р»Р°Рі РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РѕР±РЅРѕРІС‚СЊ РІРµСЃСЊ СЌРєСЂР°РЅ
 
 // ------------------------------------------------------------------
 int SCREEN_OFFX=0;
@@ -116,10 +113,10 @@ int WindowedFlag=0;
 // ================================================================== Variables
 
 // ------------------------------------------------------------------ ACZU
-// работа с текстовым экраном АЦЗУ
+// СЂР°Р±РѕС‚Р° СЃ С‚РµРєСЃС‚РѕРІС‹Рј СЌРєСЂР°РЅРѕРј РђР¦Р—РЈ
 
-// Прочитать из файла образ шрифта
-// сгенерировать образ для широкого знакогенератора 
+// РџСЂРѕС‡РёС‚Р°С‚СЊ РёР· С„Р°Р№Р»Р° РѕР±СЂР°Р· С€СЂРёС„С‚Р°
+// СЃРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РѕР±СЂР°Р· РґР»СЏ С€РёСЂРѕРєРѕРіРѕ Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂР° 
 int ACZU_InitFont(char *FileName) 
 {
  FILE *F=fopen(FileName,"rb");
@@ -156,8 +153,8 @@ int ACZU_InitFont(char *FileName)
  return OK;
 }
 
-// Сформировать образ битовых плоскостей в Frame_ACZU
-// используя знакогенератор и в зависимости от установленых флагов режимов
+// РЎС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РѕР±СЂР°Р· Р±РёС‚РѕРІС‹С… РїР»РѕСЃРєРѕСЃС‚РµР№ РІ Frame_ACZU
+// РёСЃРїРѕР»СЊР·СѓСЏ Р·РЅР°РєРѕРіРµРЅРµСЂР°С‚РѕСЂ Рё РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СѓСЃС‚Р°РЅРѕРІР»РµРЅС‹С… С„Р»Р°РіРѕРІ СЂРµР¶РёРјРѕРІ
 // fixed by Eduard Kalinovsky 
 
 void ACZU_MakeFrameBuffer(void){
@@ -341,8 +338,8 @@ int GZU_Init(void) {
 // ================================================================== GZU
 
 // ------------------------------------------------------------------ LUT
-// Используя таблицу LUT сформировать палитру для VGA
-// возможно чернобелую
+// РСЃРїРѕР»СЊР·СѓСЏ С‚Р°Р±Р»РёС†Сѓ LUT СЃС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РїР°Р»РёС‚СЂСѓ РґР»СЏ VGA
+// РІРѕР·РјРѕР¶РЅРѕ С‡РµСЂРЅРѕР±РµР»СѓСЋ
 
 void LUT_Update(int BWFlag) {
    int i;
@@ -396,12 +393,13 @@ int SCREEN_SetGraphics(int ScrMode) {
     if (ScrMode == SCR_DBG) {
       SCREEN_OFFX=(1024-512-4);
       SCREEN_OFFY=(2+5);
-      set_gfx_mode(GFX_AUTODETECT, 1024, 768, 0, 0);
+      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
 //      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0);
       WindowedFlag=0;
     }else{
 //      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
-      tmp=(WindowedFlag)?GFX_AUTODETECT_WINDOWED:GFX_AUTODETECT;
+      // tmp=(WindowedFlag)?GFX_AUTODETECT_WINDOWED:GFX_AUTODETECT;
+      tmp=GFX_AUTODETECT_WINDOWED;
       set_gfx_mode(tmp, 640, 480, 0, 0);
       SCREEN_OFFX=((640-512)/2);
       SCREEN_OFFY=((480-256-70)/2); // 70 - fullscreen shift for bottom text
@@ -443,7 +441,7 @@ int SCREEN_SetText(void) {
 }
 
 // ------------------------------------------------------------------ MAIN
-// Продцедура вывода экрана Корвета на реальный экран ПК
+// РџСЂРѕРґС†РµРґСѓСЂР° РІС‹РІРѕРґР° СЌРєСЂР°РЅР° РљРѕСЂРІРµС‚Р° РЅР° СЂРµР°Р»СЊРЅС‹Р№ СЌРєСЂР°РЅ РџРљ
 //void ShowSCREEN(void) {
 
 void SCREEN_ShowScreen(void) {
@@ -455,13 +453,13 @@ void SCREEN_ShowScreen(void) {
 
  byte 		VGA_Frame[512*256];
 
- byte 		*GZU_Ptr;	// Указатель на область ГЗУ
- byte 		*ACZU_Ptr;      // Указатель на область АЦЗУ
+ byte 		*GZU_Ptr;	// РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕР±Р»Р°СЃС‚СЊ Р“Р—РЈ
+ byte 		*ACZU_Ptr;      // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕР±Р»Р°СЃС‚СЊ РђР¦Р—РЈ
 
 #ifdef SLOWBITMAPCONVERT
- byte 		*VGA_Ptr;       // Указатель на область буфера виртуального экрана
+ byte 		*VGA_Ptr;       // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕР±Р»Р°СЃС‚СЊ Р±СѓС„РµСЂР° РІРёСЂС‚СѓР°Р»СЊРЅРѕРіРѕ СЌРєСЂР°РЅР°
 #else
- unsigned int  	*d_VGA_Ptr;     // Указатель на область буфера виртуального экрана
+ unsigned int  	*d_VGA_Ptr;     // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РѕР±Р»Р°СЃС‚СЊ Р±СѓС„РµСЂР° РІРёСЂС‚СѓР°Р»СЊРЅРѕРіРѕ СЌРєСЂР°РЅР°
 #endif
 
  static BITMAP  *BITMAP_KORVET = NULL;
@@ -484,7 +482,7 @@ void SCREEN_ShowScreen(void) {
 // scare_mouse();
 
  for (y=0;y<256;y++) {
-   //  Ввыводим на экран только строки которые нужно обновить
+   //  Р’РІС‹РІРѕРґРёРј РЅР° СЌРєСЂР°РЅ С‚РѕР»СЊРєРѕ СЃС‚СЂРѕРєРё РєРѕС‚РѕСЂС‹Рµ РЅСѓР¶РЅРѕ РѕР±РЅРѕРІРёС‚СЊ
    if (LineUpdateFlag[y] || AllScreenUpdateFlag) {
      LineUpdateFlag[y]=0;
 

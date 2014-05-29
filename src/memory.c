@@ -1,4 +1,4 @@
-/*
+﻿/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -19,9 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include <stdio.h>
-#include <stdlib.h>
-
 
 #include "korvet.h"
 
@@ -66,7 +63,7 @@ extern int TraceCause;
 extern int CauseAddr;
 extern int InDBG;
 
-extern screen,font;
+// extern screen,font;
 #ifdef DEBUG_MEMORY_LOW
 // EXTERNAL !!!!!!!!!!!!!!!!!!!!!!!
 int NCREG;
