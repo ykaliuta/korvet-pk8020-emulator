@@ -22,7 +22,15 @@
 #include "dbg.h"
 #include "../korvet.h"
 
+
+extern int SCREEN_OFFX;
+extern int SCREEN_OFFY;
+extern int OSD_LUT_Flag;
+
+void MUTE_BUF(void);
+
 extern int AllScreenUpdateFlag;
+extern int main_loop_run_flag;
 
 extern byte BreakPoint[0xffff];
 
@@ -114,6 +122,8 @@ void SetDBGLut(int Flag) {
   }
   AllScreenUpdateFlag=1;
   LUT_Update(BW_Flag);
+
+  if (OSD_LUT_Flag) for (i=0;i<16;i++) LUT_Write((Save_LUT[i]<<4)+i);
 }
 
 void UpdateHARDWARE(void){
@@ -152,8 +162,8 @@ void Update_Screen(void) {
   Update_HISTORY();
   UpdateHARDWARE();
   UpdateCOMNAME();
-  AllScreenUpdateFlag=1;
-  SCREEN_ShowScreen();
+  // AllScreenUpdateFlag=1;
+  // SCREEN_ShowScreen();
   UpdateGameTool();
 }
 
@@ -177,24 +187,53 @@ void doDBG(void) {
   dbg_GetREG();
   while (keypressed()) readkey();
 
+  AddKorvetLabel();
   NormPC();
   Update_Screen();
   _dbg[dbgMODE](-1);
 
+  for (i=0;i<10;i++) {
+    // printf("Mute: %d\n",i);
+    MUTE_BUF();
+  }
+
+
+  AllScreenUpdateFlag=1;
+  SCREEN_ShowScreen();
+
   while (!Exit) {
 
-    AddKorvetLabel();
+    // AddKorvetLabel();
 
     SetDBGLut(Flag_DBG_LUT);
 
+
+    tDoUpdate();
     Key=readkey();
+
+    Key&=0xff00;
+
+    if (key_shifts & KB_ALT_FLAG) {Key+=KK_Alt;}
+    if (key_shifts & KB_CTRL_FLAG) {Key+=KK_Ctrl;}
+    if (key_shifts & KB_SHIFT_FLAG) {Key+=KK_Shift;}
+
+    switch (Key) {
+       case KEY_8_PAD<<8: {Key=KEY_UP<<8;break;}                      
+       case KEY_9_PAD<<8: {Key=KEY_PGUP<<8;break;}                      
+       case KEY_4_PAD<<8: {Key=KEY_LEFT<<8;break;}                      
+       case KEY_6_PAD<<8: {Key=KEY_RIGHT<<8;break;}                      
+       case KEY_2_PAD<<8: {Key=KEY_DOWN<<8;break;}                      
+       case KEY_3_PAD<<8: {Key=KEY_PGDN<<8;break;}                      
+    }
 
     switch (Key) {
 
        case (KEY_UP  <<8)+KK_Ctrl : {if (dbgMODE != 0 )       dbgMODE--;Key=-1;break;}
        case (KEY_DOWN<<8)+KK_Ctrl : {if (dbgMODE != MAXDBG-1) dbgMODE++;Key=-1;break;}
 
-       case (KEY_L   <<8)+KEY_L   : {tShowAll();Update_Screen();        Key=-1;break;}
+       case (KEY_L   <<8)         :
+       case (KEY_L   <<8)+KK_Ctrl : {tShowAll();Update_Screen();SCREEN_ShowScreen(); Key=-1;break;}
+
        case (KEY_F5  <<8)         : {Flag_DBG_LUT^=1;                   Key=-1;break;}
        case (KEY_F5  <<8)+KK_Ctrl : {Flag_DBG_LUT_Mode^=1;              Key=-1;break;}
 
@@ -202,9 +241,12 @@ void doDBG(void) {
        case (KEY_R   <<8)+KK_Alt  : {ReadMEM();Update_Screen();         Key=-1;break;}
 
        case (KEY_Y   <<8)+KK_Alt  : {WriteSYM();Update_Screen();        Key=-1;break;}
-       case (KEY_Y   <<8)+KEY_Y   : {ReadSYM();Update_Screen();         Key=-1;break;}
+       case (KEY_Y   <<8)+KK_Ctrl : {ReadSYM();Update_Screen();         Key=-1;break;}
 
-       case (KEY_Z   <<8)+KEY_Z   : {GameTools();Update_Screen();       Key=-1;break;}
+       case (KEY_Z   <<8)         :
+       case (KEY_Z   <<8)+KK_Ctrl : {GameTools();Update_Screen();       Key=-1;break;}
+       
+       case (KEY_F12 <<8)+KK_Ctrl : {Exit=1;main_loop_run_flag=0;break;}
     }
 
     Key=_dbg[dbgMODE](Key);
@@ -217,6 +259,7 @@ void doDBG(void) {
                                      Exit=1;break;
                                     }
        case (KEY_F9  <<8)         : {Exit=1;break;}
+       case (KEY_F10 <<8)         : {BW_Flag^=1;break;}
     }
 //    if (Key>>8 == KEY_ESC) Exit=1;
   }

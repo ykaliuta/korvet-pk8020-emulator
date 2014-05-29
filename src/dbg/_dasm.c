@@ -206,14 +206,14 @@ int _DASM(int Key) {
                        break;   
                       }
        case KEY_K:   { 
-                       if ( (Key&0xff) == KEY_K ) {
+                       if ( (Key&0xff) == KK_Ctrl ) {
                          int tmp=GetCmdLen(Addr);
                          for(i=0;i<tmp;i++) Emulator_Write(Addr+i,0);
                        }
                        break;   
                       }
        case KEY_N:   { 
-                       if ( (Key&0xff) == KEY_N ) {
+                       if ( (Key&0xff) == KK_Ctrl ) {
                          dbg_REG.PC=Addr;
                        }
                        break;   

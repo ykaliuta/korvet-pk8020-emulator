@@ -36,7 +36,6 @@ int PrevTakt;
 int MuteFlag=0;
 
 // -------------------------------------------------------------------------
-#define MAXBUF 50000
 byte TIMERBUF[MAXBUF*2];
 int  BytePtr=0;
 

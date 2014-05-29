@@ -1,11 +1,12 @@
 CC       = gcc.exe 
 # LIBS     = -mwindows -lalleg -liberty
+
 LIBS     = -lalleg
-# BIN      = a.exe
-# CFLAGS   = -O7 -MMD -fomit-frame-pointer -mcpu=pentium3 -funroll-loops -ISRC
-#CFLAGS   = -O7 -MMD -fomit-frame-pointer 
-#CFLAGS   = -O7 -MMD -mcpu=pentium
-CFLAGS   = -MMD -g -Isrc
+#CFLAGS   = -MMD -g -Isrc
+CFLAGS   = -O7 -MMD -fomit-frame-pointer -funroll-loops -Isrc
+#LIBS     = -lalleg -pg -g 
+#CFLAGS   = -pg -g -fno-omit-frame-pointer -MMD -Isrc
+
 sources = _main.c \
 			vg.c \
 			floppy.c \

@@ -58,6 +58,10 @@ extern byte LUT[];
 
 extern int SCREEN_OFFX;
 extern int SCREEN_OFFY;
+extern int SCREEN_XMAX;
+extern int SCREEN_YMAX;
+extern int SCREEN_OSDY;
+
 extern int WindowedFlag;
 extern int Current_Scr_Mode;
 
@@ -87,12 +91,12 @@ unsigned char op;
 
 extern int MuteFlag;
 
-
 extern int JoystickFlag;
 extern int JoystickUseFlag;
 
 int BW_Flag=0;
 
+int main_loop_run_flag=1;
 int FPS=0;
 int FPS_Scr=0;
 int FPS_LED=0;
@@ -103,6 +107,7 @@ extern int KeyboardLayout;
 PALLETE pallete;
 
 int BMP_NUM=0;
+AUDIOSTREAM *stream;
 
 #ifdef TRACETIMER
 FILE *F_TIMER;
@@ -259,17 +264,17 @@ void ReadConfig(void) {
 
 void PrintDecor() {
 
-  rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+512+1,SCREEN_OFFY+256+1,255);
+  rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_OFFY+SCREEN_YMAX+1,255);
 //delete corner
-  putpixel(screen,SCREEN_OFFX-2    ,SCREEN_OFFY-2,254);
-  putpixel(screen,SCREEN_OFFX+512+1,SCREEN_OFFY-2,254);
-  putpixel(screen,SCREEN_OFFX-2    ,SCREEN_OFFY+256+1,254);
-  putpixel(screen,SCREEN_OFFX+512+1,SCREEN_OFFY+256+1,254);
+  // putpixel(screen,SCREEN_OFFX-2    ,SCREEN_YMAX+SCREEN_OFFY-2,254);
+  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_YMAX+SCREEN_OFFY-2,254);
+  // putpixel(screen,SCREEN_OFFX-2    ,SCREEN_YMAX+SCREEN_OFFY+1,254);
+  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_YMAX+SCREEN_OFFY+1,254);
 //add dot 
-  putpixel(screen,SCREEN_OFFX-1  ,SCREEN_OFFY-1,255);
-  putpixel(screen,SCREEN_OFFX+512,SCREEN_OFFY-1,255);
-  putpixel(screen,SCREEN_OFFX-1  ,SCREEN_OFFY+256,255);
-  putpixel(screen,SCREEN_OFFX+512,SCREEN_OFFY+256,255);
+  // putpixel(screen,SCREEN_OFFX-1  ,SCREEN_YMAX+SCREEN_OFFY-1,255);
+  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX,SCREEN_YMAX+SCREEN_OFFY-1,255);
+  // putpixel(screen,SCREEN_OFFX-1  ,SCREEN_YMAX+SCREEN_OFFY+1,255);
+  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX,SCREEN_YMAX+SCREEN_OFFY+1,255);
 
 
 //init InUseFlag for screen update 
@@ -282,6 +287,20 @@ void PrintDecor() {
   }
 }
 
+void MUTE_BUF(void) {
+  int i;
+  unsigned char *p;
+  
+  for(i=0;i<AUDIO_BUFFER_SIZE;i++) {
+    SOUNDBUF[i]=0;
+  }
+
+  while (!(p = get_audio_stream_buffer(stream))) rest(0);
+  memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
+  free_audio_stream_buffer(stream);
+}
+
+
 int main(int argc,char **argv) {
 
   int i,j;
@@ -290,7 +309,6 @@ int main(int argc,char **argv) {
 
   int skip;
 
-  AUDIOSTREAM *stream;
   unsigned char *p;
   int TickCntr;
   int outptr;
@@ -358,6 +376,8 @@ int main(int argc,char **argv) {
   install_keyboard();
   install_timer();
   install_mouse();
+  enable_hardware_cursor();
+  show_os_cursor(MOUSE_CURSOR_QUESTION);
 
 
 #ifdef SOUND
@@ -378,7 +398,7 @@ int main(int argc,char **argv) {
    }
 #endif
 
-//  set_gfx_mode(GFX_AUTODETECT, 640, 480, 0, 0);
+//  set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
   SCREEN_SetGraphics(SCR_EMULATOR);
 
   LOCK_FUNCTION(Timer_50hz);
@@ -503,7 +523,7 @@ int main(int argc,char **argv) {
 //       textprintf(screen,font,0,0,255,"fps: %d SL:%d slavg:%d cnt50:%d  ",FPS_Scr,ShowedLines_Scr/((FPS_Scr)?FPS_Scr:1),ShowedLinesTotal/((FPS_Scr)?FPS_Scr:1)/ShowedLinesCnt,Counter50hz);
        Takt-=ALL_TAKT;
 
-         if (getpixel(screen,SCREEN_OFFX-1,SCREEN_OFFY-1) != 255) {
+         if (getpixel(screen,SCREEN_OFFX-2,SCREEN_OFFY-2) != 255) {
             PrintDecor();
             AllScreenUpdateFlag=1;
          }
@@ -511,14 +531,14 @@ int main(int argc,char **argv) {
        // ТОЛЬКО если есть необходимость обновить индикаторы, 
        // иначе будут мигать, да и FPS падает ;-)
        // FPS
-       if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {PutLED_FPS(SCREEN_OFFX,SCREEN_OFFY+260,FPS_Scr);FPS_LED=FPS_Scr;};
+       if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY,FPS_Scr);FPS_LED=FPS_Scr;};
        // Floppy Disk TRACK
-       if (OSD_FDD_Flag && InUseFDD[0]) {InUseFDD[0]--;PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OFFY+260,VG.TrackReal[0],InUseFDD[0]);} 
-       if (OSD_FDD_Flag && InUseFDD[1]) {InUseFDD[1]--;PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OFFY+260,VG.TrackReal[1],InUseFDD[1]);} 
-       if (OSD_FDD_Flag && InUseFDD[2]) {InUseFDD[2]--;PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OFFY+260,VG.TrackReal[2],InUseFDD[2]);} 
-       if (OSD_FDD_Flag && InUseFDD[3]) {InUseFDD[3]--;PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OFFY+260,VG.TrackReal[3],InUseFDD[3]);} 
+       if (OSD_FDD_Flag && InUseFDD[0]) {InUseFDD[0]--;PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);} 
+       if (OSD_FDD_Flag && InUseFDD[1]) {InUseFDD[1]--;PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);} 
+       if (OSD_FDD_Flag && InUseFDD[2]) {InUseFDD[2]--;PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OSDY,VG.TrackReal[2],InUseFDD[2]);} 
+       if (OSD_FDD_Flag && InUseFDD[3]) {InUseFDD[3]--;PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OSDY,VG.TrackReal[3],InUseFDD[3]);} 
 
-       // if (JoystickUseFlag) {JoystickUseFlag--;textprintf_ex(screen,font,0, 0,255,0,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");} 
+       // if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,SCREEN_OFFX+512,SCREEN_OSDY,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");} 
 
 
        // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken) 

@@ -92,7 +92,7 @@ typedef signed char    offset;
 
 #define KK_Shift 1
 #define KK_Ctrl  2
-#define KK_Alt   0
+#define KK_Alt   4
 
 void tScrInit(void);
 void tSetUpdate(int i);

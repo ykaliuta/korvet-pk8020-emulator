@@ -4,4 +4,7 @@ objs/**/*
 printer.txt
 kdbg
 kdbg.exe
+profile
+profiler/*
+gmon.out
 

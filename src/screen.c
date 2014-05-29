@@ -107,6 +107,11 @@ int AllScreenUpdateFlag;// Флаг необходимости обновть в
 // ------------------------------------------------------------------
 int SCREEN_OFFX=0;
 int SCREEN_OFFY=0;
+int SCREEN_XMAX=0;
+int SCREEN_YMAX=0;
+int SCREEN_OSDY=0;
+
+
 int Current_Scr_Mode=0;
 int WindowedFlag=0;
 
@@ -384,6 +389,7 @@ void LUT_Init(void) {
 int SCREEN_SetGraphics(int ScrMode) {
   int tmp;
   static int oldWindowed=0;
+  int response=0;
 
   if (oldWindowed != WindowedFlag) Current_Scr_Mode=-1;
   if (ScrMode != Current_Scr_Mode) {
@@ -393,47 +399,30 @@ int SCREEN_SetGraphics(int ScrMode) {
     if (ScrMode == SCR_DBG) {
       SCREEN_OFFX=(1024-512-4);
       SCREEN_OFFY=(2+5);
-      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
+
+      SCREEN_XMAX=512;
+      SCREEN_YMAX=256;
+      SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
+
+      response=set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
 //      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0);
       WindowedFlag=0;
     }else{
 //      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
       // tmp=(WindowedFlag)?GFX_AUTODETECT_WINDOWED:GFX_AUTODETECT;
       tmp=GFX_AUTODETECT_WINDOWED;
-      set_gfx_mode(tmp, 640, 480, 0, 0);
+      response=set_gfx_mode(tmp, 640, 480, 0, 0);
       SCREEN_OFFX=((640-512)/2);
       SCREEN_OFFY=((480-256-70)/2); // 70 - fullscreen shift for bottom text
+      SCREEN_XMAX=512;
+      SCREEN_YMAX=256;
+      SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
     }
     AllScreenUpdateFlag=1;
     LutUpdateFlag=1;
   }
   Current_Scr_Mode=ScrMode;
   oldWindowed = WindowedFlag;
-
-//  show_mouse(screen);
-
-/*
-   int w,h,bpp=8;
-   int gfxmode=GFX_AUTODETECT_WINDOWED;
-
-   request_refresh_rate(50);
-
-   set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 400, 0, 0);
-
-   w  =SCREEN_W;
-   h  =SCREEN_H;
-   bpp=bitmap_color_depth(screen);
-//   if (!gfx_mode_select_ex(&gfxmode,&w,&h,&bpp)) {
-   if (!gfx_mode_select(&gfxmode,&w,&h)) {
-     allegro_exit();
-     return 1;
-   }
-   
-   set_color_depth(bpp);
-
-   request_refresh_rate(50);
-   set_gfx_mode(gfxmode,w,h,0,0);
-*/
 }
 
 int SCREEN_SetText(void) {

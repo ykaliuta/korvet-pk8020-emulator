@@ -108,7 +108,7 @@ void  tScreenPutChar(int ch, int attr, int col, int row) {
   if (tScrBufFnt[addr] != tFont) {tScrUpdateFlag[addr]=1;update=1;}
   tScrBufFnt[addr++] = tFont;
   
-  if (update) tDoUpdate();
+  // if (update) tDoUpdate();
 }
 
 void  tScreenPutString(byte *str, int attr, int col, int row) {
@@ -126,7 +126,7 @@ void  tScreenPutString(byte *str, int attr, int col, int row) {
     tScrBufFnt[addr++] = tFont;
   }
   
-  if (update) tDoUpdate();
+  // if (update) tDoUpdate();
 }
 
 void tScreenClear(void) {

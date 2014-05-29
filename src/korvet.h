@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -48,6 +48,9 @@
 #define CPU_CLK         2500000    // частота ЦПУ в герцах
 #define ALL_TAKT        50000      // кол-во тактов в одном VBLANK
 #define VBLANK_TAKT     8170       // кол-во тактов обрптного хода луча
+
+#define MAXBUF 50000				// SOUND BUFFER SIZE
+
 
 #define KBD_QWERTY	0
 #define KBD_JCUKEN	1
