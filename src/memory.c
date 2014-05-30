@@ -63,7 +63,6 @@ extern int TraceCause;
 extern int CauseAddr;
 extern int InDBG;
 
-// extern screen,font;
 #ifdef DEBUG_MEMORY_LOW
 // EXTERNAL !!!!!!!!!!!!!!!!!!!!!!!
 int NCREG;
@@ -97,14 +96,18 @@ byte    BreakPoint[RAMSIZE];    // DBG:: Флаги ловушек
 // Прочитать из файла таблички SYSREGa
 int Mapper_Init(void) {
  int i;
+ int retflag=OK;
  FILE *MFILE;
- if ((MFILE=fopen(MapperFileName,"rb")) == NULL) return ERROR;
+ if ((MFILE=fopen(MapperFileName,"rb")) == NULL) retflag=ERROR;
  for (i=0;i<32;i++) {
-   if (fread(MemMapper[i],1,256,MFILE) != 256) return ERROR;
+   if (fread(MemMapper[i],1,256,MFILE) != 256) retflag=ERROR;
  }
  fclose(MFILE);
  SYSREG=0;
- return OK;
+ if (retflag == ERROR) {
+  printf("ERROR: can't read memorymap file '%s'\n",MapperFileName);
+ }
+ return retflag;
 }
 // ================================================================================= SYSREG part
 
@@ -112,11 +115,15 @@ int Mapper_Init(void) {
 // Прочитать из файла Образ ПЗУ
 int ROM_Init(char *RomFileName) {
  int i;
+ int retflag=OK;
  FILE *MFILE;
- if ((MFILE=fopen(RomFileName,"rb")) == NULL) return ERROR;
- fread(ROM,1,ROMSIZE,MFILE);
+ if ((MFILE=fopen(RomFileName,"rb")) == NULL) retflag=ERROR;
+ if ((i=fread(ROM,1,ROMSIZE,MFILE)) != ROMSIZE) {  retflag=ERROR; } 
+ if (retflag == ERROR) {
+  printf("ERROR: read rom file '%s' : %d bytes long\n",RomFileName,i);
+ }
  fclose(MFILE);
- return OK;
+ return retflag;
 }
 // ================================================================================= ROM part
 
@@ -153,21 +160,9 @@ void Emulator_Write(int Addres,byte Value)
     case  M_REGBASE : {
            // Регистры адресуются по отедльными битами шины адреса
            // соотвествуюший бит должен быть равен 0
-           if ((Addres & (1<<2)) == 0) { LUT_Write(Value);
-#ifdef DEBUG_MEMORY
-  textprintf(screen,font,500,10,15,"LUT: = %02x",Value);
-#endif
-           };       /*A2, xxFB*/
-           if ((Addres & (1<<6)) == 0) { NCREG =Value;
-#ifdef DEBUG_MEMORY
-  textprintf(screen,font,500,20,15,"NCREG: = %02x",NCREG);
-#endif
-           };           /*A6, xxBF*/
-           if ((Addres & (1<<7)) == 0) { SYSREG=(Value>>2)&0x1f;
-#ifdef DEBUG_MEMORY
-  textprintf(screen,font,500,30,15,"SYSREG: = %02x",SYSREG<<2);
-#endif
-           }; /*A7, xx7F*/
+           if ((Addres & (1<<2)) == 0) { LUT_Write(Value);       }; /*A2, xxFB*/
+           if ((Addres & (1<<6)) == 0) { NCREG =Value;           }; /*A6, xxBF*/
+           if ((Addres & (1<<7)) == 0) { SYSREG=(Value>>2)&0x1f; }; /*A7, xx7F*/
            break;
          }
     case M_PORTBASE : {
