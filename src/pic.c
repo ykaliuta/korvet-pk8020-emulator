@@ -342,12 +342,14 @@ void ShowPICdbg(void)
  rect(screen,x-3,y-3,x+15*8+3,y+16*8+3,0x20+0xf);
  textprintf_ex(screen,font,x+48,y-20,0x20+0x0f,0,"PIC");
 
+ unsigned int addr=picHIGH<<8 | (picRUS & ((picRUS & 0x04)?0xe0:0xc0));
+
  Byte2Bin(MASKA,IMR);textprintf_ex(screen,font,x,y+16*0,0x20+0x07,0,"IMR  : %s",MASKA);
  Byte2Bin(MASKA,IRR);textprintf_ex(screen,font,x,y+16*1,0x20+0x07,0,"IRR  : %s",MASKA);
  Byte2Bin(MASKA,ISR);textprintf_ex(screen,font,x,y+16*2,0x20+0x07,0,"ISR  : %s",MASKA);
  textprintf_ex(screen,font,x,y+16*3,0x20+0x07,0,"Mode : %s  ",MODE[picMODE]);
  textprintf_ex(screen,font,x,y+16*4,0x20+0x07,0,"Step : %s  ",(picRUS&0x04)?"4":"8");
- textprintf_ex(screen,font,x,y+16*5,0x20+0x07,0,"Addr : %04x  ",picHIGH<<8|picRUS&0xf0);
+ textprintf_ex(screen,font,x,y+16*5,0x20+0x07,0,"Addr : %04x  ",addr);
  textprintf_ex(screen,font,x,y+16*6,0x20+0x07,0,"SMM  : %d  Rd:%d",picSMM,picReadSR);
  textprintf_ex(screen,font,x,y+16*7,0x20+0x07,0,"OP   : %d  LI:%d",picOPROS,picLowINT);
 }
