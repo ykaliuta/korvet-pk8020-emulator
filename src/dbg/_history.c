@@ -22,7 +22,7 @@
 
 #include "dbg.h"
 
-#define HISTORYLEN 19+5
+#define HISTORYLEN 19+9
 
 word dbg_HISTORY[HISTORYLEN+1];
 int dbg_HISTORYPTR=0;
