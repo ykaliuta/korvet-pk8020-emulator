@@ -217,12 +217,12 @@ void doDBG(void) {
     if (key_shifts & KB_SHIFT_FLAG) {Key+=KK_Shift;}
 
     switch (Key) {
-       case KEY_8_PAD<<8: {Key=KEY_UP<<8;break;}                      
-       case KEY_9_PAD<<8: {Key=KEY_PGUP<<8;break;}                      
-       case KEY_4_PAD<<8: {Key=KEY_LEFT<<8;break;}                      
-       case KEY_6_PAD<<8: {Key=KEY_RIGHT<<8;break;}                      
-       case KEY_2_PAD<<8: {Key=KEY_DOWN<<8;break;}                      
-       case KEY_3_PAD<<8: {Key=KEY_PGDN<<8;break;}                      
+       case KEY_8_PAD<<8: {Key = KEY_UP    <<8;break;}                      
+       case KEY_9_PAD<<8: {Key = KEY_PGUP  <<8;break;}                      
+       case KEY_4_PAD<<8: {Key = KEY_LEFT  <<8;break;}                      
+       case KEY_6_PAD<<8: {Key = KEY_RIGHT <<8;break;}                      
+       case KEY_2_PAD<<8: {Key = KEY_DOWN  <<8;break;}                      
+       case KEY_3_PAD<<8: {Key = KEY_PGDN  <<8;break;}                      
     }
 
     switch (Key) {
