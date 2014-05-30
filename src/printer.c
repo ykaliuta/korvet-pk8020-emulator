@@ -104,8 +104,13 @@ int StatusDelay=0;
 
 void FlushPrinterBuf(void) {
     static int iter=0;
-    textprintf_ex(screen,font,20,20,255,0,"PRN: %d",iter++);
-    if (PrintBufCntr) fwrite(PrinterBuffer,1,PrintBufCntr,PrinterFILE);
+    if (PrintBufCntr) {
+      if (PrinterFILE == NULL) {
+          PrinterFILE=fopen(FileNamePrinter,"ab");        
+      }
+      fwrite(PrinterBuffer,1,PrintBufCntr,PrinterFILE);
+      textprintf_ex(screen,font,20,20,255,0,"PRN: %d",iter++);
+    }
     PrintBufCntr=0;
 }
 
@@ -115,14 +120,15 @@ void AddToPrinter(unsigned char C) {
 }
 
 int InitPrinter(void) {
-     PrinterFILE=fopen(FileNamePrinter,"ab");
+     PrinterFILE=NULL;
      PrintBufCntr=0;
      return 1;
 }
 
 void DestroyPrinter(void) {
     FlushPrinterBuf();
-    fclose(PrinterFILE);
+    if (PrinterFILE) 
+      fclose(PrinterFILE);
 }
 
 int GetPrinterStatus(void) {
