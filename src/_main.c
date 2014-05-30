@@ -483,6 +483,15 @@ int main(int argc,char **argv) {
          free_audio_stream_buffer(stream);
          while (!Counter50hz) rest(0);
        } else {
+         if (MuteFlag == 0) {
+          // mute sund
+          MUTE_BUF();
+          MUTE_BUF();
+          MUTE_BUF();
+          MUTE_BUF();
+          MUTE_BUF();
+          MUTE_BUF();
+         }
          MuteFlag=1;
          MakeSound(); // timer
 //         free_audio_stream_buffer(stream);
