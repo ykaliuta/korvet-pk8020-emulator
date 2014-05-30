@@ -103,7 +103,7 @@ void  tScreenPutChar(int ch, int attr, int col, int row) {
   if (tScrBufFnt[addr] != tFont) {tScrUpdateFlag[addr]=1;update=1;}
   tScrBufFnt[addr++] = tFont;
   
-  // if (update) tDoUpdate();
+  if (update) tDoUpdate();
 }
 
 void  tScreenPutString(byte *str, int attr, int col, int row) {
@@ -121,7 +121,7 @@ void  tScreenPutString(byte *str, int attr, int col, int row) {
     tScrBufFnt[addr++] = tFont;
   }
   
-  // if (update) tDoUpdate();
+  if (update) tDoUpdate();
 }
 
 void tScreenClear(void) {
@@ -209,5 +209,13 @@ void DBG_Pallete_Pasive(void) {
    set_palette_range(pallete,StartColor,StartColor+16,1);
 }
 
+
+void draw_hline(int x,int y,int len,int color) {
+  hline(screen,x*8+4,y*16+8,(x+len)*8+7-4,color);
+}
+
+void draw_vline(int x,int y,int len,int color) {
+  vline(screen,x*8+4,y*16-8,(y+len)*16-8,color);
+}
 
 // 2003-11-23: теперь фонт в дампе зависит от шрифта эмулятора scr_Second_Font

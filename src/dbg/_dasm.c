@@ -116,7 +116,8 @@ void Update_DASM(void)
 
      Addr+=len;
   }
-  tScreenPutString("---------------------------------------------------------------",C_Border,0,4);
+  //tScreenPutString("---------------------------------------------------------------",C_Border,0,4);
+  draw_hline(0,4,63-1,C_Border);
 }
 word FixWalker() {
     word Addr;

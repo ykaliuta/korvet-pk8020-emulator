@@ -98,7 +98,8 @@ void UpdateGameTool(void) {
        tScreenPutString(" too many values ... ",C_Default,45,GT_Y+4);
   }
 
-  tScreenPutString("----------------------------------------------------------------------------------------",C_Border,0,GT_Y+7);
+  // tScreenPutString("----------------------------------------------------------------------------------------",C_Border,0,GT_Y+7);
+  draw_hline(0+5,GT_Y+7,88-1-5,C_Border);
 
   sprintf(BUF,"SM:%2d ",SearchMode);
 

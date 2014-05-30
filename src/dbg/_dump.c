@@ -83,14 +83,22 @@ void Update_DUMP(void) {
 
        Addr++;
      }
-     tScreenPutChar('|',C_Border,70,DUMP_ZONE.BaseY+y);
-     tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY+y);
+     // tScreenPutChar('|',C_Border,70,DUMP_ZONE.BaseY+y);
+     // tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY+y);
   }
-                                                                                           
-  tScreenPutString("----------------------------------------------------------------------|",C_Border,0,DUMP_ZONE.BaseY-1);
-  tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY-1);
+
+  tDoUpdate();
+
+  draw_vline(70,DUMP_ZONE.BaseY,DUMP_ZONE.YLine+1,C_Border);
+  draw_vline(70+16+1,DUMP_ZONE.BaseY,DUMP_ZONE.YLine+1,C_Border);
+
+  //tScreenPutString("----------------------------------------------------------------------|",C_Border,0,DUMP_ZONE.BaseY-1);
+  draw_hline(4,DUMP_ZONE.BaseY-1,71-1-4,C_Border);
+
+  // tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY-1);
 //  tScreenPutString("----------------------------------------------------------------------+----------------+",C_Border,0,DUMP_ZONE.BaseY-1);
-  tScreenPutString("----------------------------------------------------------------------+-----------------",C_Border,0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine);
+  // tScreenPutString("----------------------------------------------------------------------+-----------------",C_Border,0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine);
+  draw_hline(0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine,88-1,C_Border);
 }       
 
 int _DUMP(int Key){
@@ -171,8 +179,9 @@ int _DUMP(int Key){
     tScreenPutString(BUF,C_Default,0,zone->BaseY-1);
 
     i=RD_BreakPoint(Addr);
+    tScreenPutString("                  ",C_Default,10,zone->BaseY-1);
     if (i & bpRDMEM) tScreenPutString("[C_Read]",C_BPRD,10,zone->BaseY-1);
-    if (i & bpWRMEM) tScreenPutString("[S_Write]",C_BPRW,19,zone->BaseY-1);
+    if (i & bpWRMEM) tScreenPutString("[S_Write]",C_BPWR,19,zone->BaseY-1);
 
     if (Key1>>8 == zEDIT) {
         tSetUpdate(1);
