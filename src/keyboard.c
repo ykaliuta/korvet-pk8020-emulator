@@ -27,7 +27,6 @@ int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
 int KeyAlias[256];
-#define MAXKEY 115
 
 extern int KBD_LED;
 
@@ -83,8 +82,8 @@ int KBD0[8][12]={
 /*01*/{KEY_PGDN,KEY_H ,KEY_P ,KEY_X 	    ,KEY_0 ,KEY_8     ,KEY_ENTER    ,KEY_LSHIFT	  ,KEY_0_PAD ,KEY_8_PAD	 ,KEY_F1},
 /*02*/{KEY_A   ,KEY_I ,KEY_Q ,KEY_Y	    ,KEY_1 ,KEY_9     ,KEY_HOME	    ,KEY_ALT	  ,KEY_1_PAD ,KEY_9_PAD	 ,KEY_F2},
 /*04*/{KEY_B   ,KEY_J ,KEY_R ,KEY_Z	    ,KEY_2 ,KEY_COLON ,KEY_PGUP	    ,KEY_ALTGR	  ,KEY_2_PAD ,254        ,KEY_F3},
-/*08*/{KEY_C   ,KEY_K ,KEY_S ,KEY_OPENBRACE ,KEY_3 ,KEY_TILDE ,KEY_INSERT   ,KEY_ESC	  ,KEY_3_PAD ,254 	 ,KEY_F4},
-/*10*/{KEY_D   ,KEY_L ,KEY_T ,KEY_BACKSLASH ,KEY_4 ,KEY_COMMA ,KEY_DEL	    ,KEY_RCONTROL ,KEY_4_PAD ,254	 ,KEY_F5},
+/*08*/{KEY_C   ,KEY_K ,KEY_S ,KEY_OPENBRACE ,KEY_3 ,KEY_TILDE ,KEY_DEL      ,KEY_ESC	  ,KEY_3_PAD ,254 	 ,KEY_F4},
+/*10*/{KEY_D   ,KEY_L ,KEY_T ,KEY_BACKSLASH ,KEY_4 ,KEY_COMMA ,KEY_INSERT   ,KEY_RCONTROL ,KEY_4_PAD ,254	 ,KEY_F5},
 /*20*/{KEY_E   ,KEY_M ,KEY_U ,KEY_CLOSEBRACE,KEY_5 ,KEY_MINUS ,KEY_BACKSPACE,KEY_LCONTROL ,KEY_5_PAD ,254	 ,254},
 /*40*/{KEY_F   ,KEY_N ,KEY_V ,KEY_END	    ,KEY_6 ,KEY_STOP  ,KEY_TAB	    ,KEY_CAPSLOCK ,KEY_6_PAD ,KEY_DEL_PAD,254},
 /*80*/{KEY_G   ,KEY_O ,KEY_W ,KEY_EQUALS    ,KEY_7 ,KEY_SLASH ,KEY_SPACE    ,KEY_RSHIFT	  ,KEY_7_PAD ,254	 ,254},
@@ -95,12 +94,12 @@ int KBD1[8][12]={
 //     01        02            04         08             10     20         40             80              101       102           104
 /*01*/{KEY_STOP ,KEY_OPENBRACE,KEY_G     ,KEY_M         ,KEY_0 ,KEY_8	 ,KEY_ENTER	,KEY_LSHIFT	,KEY_0_PAD,KEY_8_PAD	,KEY_F1},
 /*02*/{KEY_F	,KEY_B        ,KEY_Z     ,KEY_S         ,KEY_1 ,KEY_9	 ,KEY_PGUP	,KEY_ALT	,KEY_1_PAD,KEY_9_PAD	,KEY_F2},
-/*04*/{KEY_COMMA,KEY_Q        ,KEY_H     ,KEY_P         ,KEY_2 ,0         ,KEY_HOME	,KEY_ALTGR	,KEY_2_PAD,0		,KEY_F3},
-/*08*/{KEY_W	,KEY_R        ,KEY_C     ,KEY_I         ,KEY_3 ,KEY_TILDE ,KEY_INSERT	,KEY_ESC	,KEY_3_PAD,0		,KEY_F4},
-/*10*/{KEY_L	,KEY_K        ,KEY_N     ,KEY_QUOTE     ,KEY_4 ,0	 ,KEY_DEL	,KEY_RCONTROL	,KEY_4_PAD,0		,KEY_F5},
-/*20*/{KEY_T	,KEY_V        ,KEY_E     ,KEY_O         ,KEY_5 ,KEY_MINUS ,KEY_BACKSPACE	,KEY_LCONTROL	,KEY_5_PAD,0		,},
+/*04*/{KEY_COMMA,KEY_Q        ,KEY_H     ,KEY_P         ,KEY_2 ,0        ,KEY_HOME	,KEY_ALTGR	,KEY_2_PAD,0		,KEY_F3},
+/*08*/{KEY_W	,KEY_R        ,KEY_C     ,KEY_I         ,KEY_3 ,KEY_TILDE,KEY_DEL	,KEY_ESC	,KEY_3_PAD,0		,KEY_F4},
+/*10*/{KEY_L	,KEY_K        ,KEY_N     ,KEY_QUOTE     ,KEY_4 ,0	 ,KEY_INSERT	,KEY_RCONTROL	,KEY_4_PAD,0		,KEY_F5},
+/*20*/{KEY_T	,KEY_V        ,KEY_E     ,KEY_O         ,KEY_5 ,KEY_MINUS,KEY_BACKSPACE	,KEY_LCONTROL	,KEY_5_PAD,0		,},
 /*40*/{KEY_A	,KEY_Y        ,KEY_COLON ,KEY_X         ,KEY_6 ,0	 ,KEY_TAB	,KEY_CAPSLOCK	,KEY_6_PAD,KEY_DEL_PAD	,},
-/*80*/{KEY_U	,KEY_J        ,KEY_D     ,KEY_CLOSEBRACE,KEY_7 ,KEY_SLASH ,KEY_SPACE	,KEY_RSHIFT	,KEY_7_PAD,0		,},
+/*80*/{KEY_U	,KEY_J        ,KEY_D     ,KEY_CLOSEBRACE,KEY_7 ,KEY_SLASH,KEY_SPACE	,KEY_RSHIFT	,KEY_7_PAD,0		,},
 };
 
 int KBD[8][12];
@@ -150,7 +149,7 @@ int KEYBOARD_Read(int Addr) {
 
   if (KeyboadUpdateFlag) {KBD_Select();}
 
-  for (i=0;i<MAXKEY;i++)      {KeyAlias[i]=key[i];}
+  for (i=0;i<KEY_MAX;i++)      {KeyAlias[i]=key[i];}
   for (i=0;i<MAXALIAS*2;i+=2) {if (KeyAlias[AliasTab[i]]) KeyAlias[AliasTab[i+1]]=1;}
 
   if (Addr&0x100) Line=8;
