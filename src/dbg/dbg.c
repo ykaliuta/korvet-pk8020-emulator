@@ -180,7 +180,6 @@ void doDBG(void) {
   if (DBG_scr_Page_Show != -1) scr_Page_Show=DBG_scr_Page_Show;
 
   for (i=0;i<16;i++) {Save_LUT[i]=LUT[i];}
-//  SetDBGLut(Flag_DBG_LUT);
 
   SCREEN_SetGraphics(SCR_DBG);
   DBG_Pallete_Active();
@@ -193,7 +192,7 @@ void doDBG(void) {
   _dbg[dbgMODE](-1);
 
   for (i=0;i<10;i++) {
-    // printf("Mute: %d\n",i);
+    //TODO check if 10 required
     MUTE_BUF();
   }
 

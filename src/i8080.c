@@ -164,7 +164,7 @@ void DoINT()
   IntREQ=0;
   if (Emulator_Read(PC) == 0x76) PC++;    // if Halt
   a=DoPIC();
-  if (a<0) return;                      // Такого быть не должно !!!
+  if (a<0) return;                      // РўР°РєРѕРіРѕ Р±С‹С‚СЊ РЅРµ РґРѕР»Р¶РЅРѕ !!!
   PUSH(PC);
   PC=a;
   Tstates+=11;

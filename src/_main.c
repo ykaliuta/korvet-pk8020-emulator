@@ -256,7 +256,7 @@ void ReadConfig(void) {
     OSD_FPS_Flag         =get_config_hex(section,"OSD_FPS",0);
     OSD_FDD_Flag         =get_config_hex(section,"OSD_FDD",0);
 
-    // FlagScreenScale      =get_config_hex(section,"WINDOWED",0);
+    // FlagWindowed      =get_config_hex(section,"WINDOWED",0); // removed
     FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
 
     KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
@@ -397,7 +397,7 @@ int main(int argc,char **argv) {
       return 1;
    }
 #endif
-
+  fflush(stdout);
   SCREEN_SetGraphics(SCR_EMULATOR);
 
   LOCK_FUNCTION(Timer_50hz);

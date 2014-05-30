@@ -35,7 +35,6 @@ int  DoUpdateFlag=1;                // if = 0 skip update
 void tDoUpdate(void) {
   int x,y;
   int addr=0;
-  // int SaveAttr=text_mode(0);
   byte chs[]=" ";
 
   if (!DoUpdateFlag) return;
@@ -47,15 +46,11 @@ void tDoUpdate(void) {
 
           *chs=(tScrBufChr[addr]==0)?' ':tScrBufChr[addr];
 
-          // text_mode(0x20+(tScrBufAtr[addr]>>4));
-          // void textout_ex(BITMAP *bmp, const FONT *f, const char *s, int x, int y, int color, int bg);
-          // textout(screen,font,chs,x*8,y*16,0x20+(tScrBufAtr[addr]&0x0f));
           textout_ex(screen,font,chs,x*8,y*16,0x20+(tScrBufAtr[addr]&0x0f),tScrBufAtr[addr]>>4);
           tScrUpdateFlag[addr]=0;
       }
    addr++;
   }
-  // text_mode(SaveAttr);
 }
 
 // PUBLIC routines

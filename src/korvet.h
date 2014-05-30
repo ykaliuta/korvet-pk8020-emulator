@@ -49,9 +49,6 @@
 #define ALL_TAKT        50000      // кол-во тактов в одном VBLANK
 #define VBLANK_TAKT     8170       // кол-во тактов обрптного хода луча
 
-#define MAXBUF 50000				// SOUND BUFFER SIZE
-
-
 #define KBD_QWERTY	0
 #define KBD_JCUKEN	1
 #define KBD_AUTO	2
@@ -61,6 +58,11 @@
 
 #define SOUNDFREQ (44100/2)
 #define AUDIO_BUFFER_SIZE (SOUNDFREQ/50)
+
+#define MAXBUF 50000 	//audio buffer size
+
+#define LUT_BASE_COLOR 0x80
+
 
 #ifndef _TYPEDEF_
 typedef unsigned char  byte;

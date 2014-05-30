@@ -21,8 +21,6 @@
  */
 #include "korvet.h"
 
-// extern screen,font;
-
 #include "vg.h"
 int InUseFDD[4];
 
