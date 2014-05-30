@@ -20,7 +20,6 @@
  *
  */
 
-
 #include "korvet.h"
 #include "vg.h"
 
@@ -28,7 +27,7 @@
  #include "dbg/dbg.h"
 #endif
 
-const char AboutMSG[]="Korvet Emulator by Sergey Erokhin & Korvet Team| esl@pisem.net|08.05.2005|V0.9.2";
+const char AboutMSG[]="Korvet Emulator by Sergey Erokhin & Korvet Team|pk8020@narod.ru|2012-05-30|V1.?.1";
 
 // GetOpt external variables
 extern char *optarg;
@@ -62,7 +61,7 @@ extern int SCREEN_XMAX;
 extern int SCREEN_YMAX;
 extern int SCREEN_OSDY;
 
-extern int WindowedFlag;
+extern int FlagScreenScale;
 extern int Current_Scr_Mode;
 
 extern byte OUTBUF[];
@@ -257,7 +256,8 @@ void ReadConfig(void) {
     OSD_FPS_Flag         =get_config_hex(section,"OSD_FPS",0);
     OSD_FDD_Flag         =get_config_hex(section,"OSD_FDD",0);
 
-    WindowedFlag         =get_config_hex(section,"WINDOWED",0);
+    // FlagScreenScale      =get_config_hex(section,"WINDOWED",0);
+    FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
 
     KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
 }
@@ -281,7 +281,7 @@ void PrintDecor() {
   InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
 
   if (Current_Scr_Mode != SCR_DBG) {
-     textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-FullScr/Win, F6-Turbo, F10-Mono, F9-dbg");
+     textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-Zoom, F6-Turbo, F10-Mono, F9-dbg");
      rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
      textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
   }
@@ -398,7 +398,6 @@ int main(int argc,char **argv) {
    }
 #endif
 
-//  set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
   SCREEN_SetGraphics(SCR_EMULATOR);
 
   LOCK_FUNCTION(Timer_50hz);
@@ -444,7 +443,7 @@ int main(int argc,char **argv) {
          Write_Dump();
          while (key[KEY_ALT]);
       } else {
-         WindowedFlag^=1;
+         FlagScreenScale^=1;
          SCREEN_SetGraphics(SCR_EMULATOR);
       }
       while (key[KEY_F8]);
@@ -531,7 +530,7 @@ int main(int argc,char **argv) {
        // ТОЛЬКО если есть необходимость обновить индикаторы, 
        // иначе будут мигать, да и FPS падает ;-)
        // FPS
-       if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY,FPS_Scr);FPS_LED=FPS_Scr;};
+       if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY  ,FPS_Scr);FPS_LED=FPS_Scr;};
        // Floppy Disk TRACK
        if (OSD_FDD_Flag && InUseFDD[0]) {InUseFDD[0]--;PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);} 
        if (OSD_FDD_Flag && InUseFDD[1]) {InUseFDD[1]--;PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);} 
@@ -551,19 +550,18 @@ int main(int argc,char **argv) {
 
     if (key[KEY_F9]) {
 
-       if (!key[KEY_ALT]) {
+        printf("ALT:%d\n",key[KEY_ALT]);
+      
+       if (!(key_shifts & KB_ALT_FLAG)) {
 #ifdef DBG
-      while (key[KEY_F9]);
-      dbg_TRACE=1;
-//      ShowPIC();
-//      ShowTMR();
-//#else 
+          while (key[KEY_F9]);
+          dbg_TRACE=1;
 #endif
-     } else {
-      while(key[KEY_ALT]);
-      while(key[KEY_F9]);
-      GUI();
-      while(key[KEY_ESC]);
+        } else {
+          while(key[KEY_ALT]);
+          while(key[KEY_F9]);
+          GUI();
+          while(key[KEY_ESC]);
      }
 //#endif
     }

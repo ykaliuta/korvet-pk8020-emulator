@@ -28,7 +28,7 @@
 
 #include "PlaneMask.h"      // Arrays for Plane MASK optimization
 
-#define nouseSLOWBITMAPCONVERT
+#define noSLOWBITMAPCONVERT
 
 #define LUT_BASE_COLOR 0x80
 
@@ -113,7 +113,7 @@ int SCREEN_OSDY=0;
 
 
 int Current_Scr_Mode=0;
-int WindowedFlag=0;
+int FlagScreenScale=0;
 
 // ================================================================== Variables
 
@@ -375,7 +375,7 @@ void LUT_Write(byte Value) {
 
 // show LUT value on screen
 //  textprintf(screen,font,100+(Value&0x0F)*20,40,LUT_BASE_COLOR+(Value&0x0f),"%02x",Value);
-  if (OSD_LUT_Flag) PutLED_Lut(SCREEN_OFFX+70+(Value&0x0F)*20,SCREEN_OFFY+260,Value,LUT_BASE_COLOR+(Value&0x0f));
+  if (OSD_LUT_Flag) PutLED_Lut(SCREEN_OFFX+70+(Value&0x0F)*20,SCREEN_OSDY,Value,LUT_BASE_COLOR+(Value&0x0f));
   LutUpdateFlag=1;
 }
 
@@ -390,39 +390,55 @@ int SCREEN_SetGraphics(int ScrMode) {
   int tmp;
   static int oldWindowed=0;
   int response=0;
+  int WindowSizeX=0;
+  int WindowSizeY=0;
 
-  if (oldWindowed != WindowedFlag) Current_Scr_Mode=-1;
+
+  if (oldWindowed != FlagScreenScale) Current_Scr_Mode=-1;
   if (ScrMode != Current_Scr_Mode) {
 
     set_gfx_mode(GFX_TEXT,0,0,0,0);
     set_color_depth(8);
+
     if (ScrMode == SCR_DBG) {
+
       SCREEN_OFFX=(1024-512-4);
       SCREEN_OFFY=(2+5);
 
       SCREEN_XMAX=512;
       SCREEN_YMAX=256;
-      SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
 
       response=set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
-//      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0);
-      WindowedFlag=0;
+      FlagScreenScale=0;
+
     }else{
-//      set_gfx_mode(GFX_AUTODETECT_WINDOWED, 640, 480, 0, 0);
-      // tmp=(WindowedFlag)?GFX_AUTODETECT_WINDOWED:GFX_AUTODETECT;
-      tmp=GFX_AUTODETECT_WINDOWED;
-      response=set_gfx_mode(tmp, 640, 480, 0, 0);
-      SCREEN_OFFX=((640-512)/2);
-      SCREEN_OFFY=((480-256-70)/2); // 70 - fullscreen shift for bottom text
-      SCREEN_XMAX=512;
-      SCREEN_YMAX=256;
-      SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
+
+      if (FlagScreenScale) {
+        WindowSizeX=1024+4;
+        WindowSizeY=512+4+70;
+        SCREEN_XMAX=512*2;
+        SCREEN_YMAX=256*2;
+      } else {
+        WindowSizeX=512+4;
+        WindowSizeY=256+4+70;
+        SCREEN_XMAX=512;
+        SCREEN_YMAX=256;
+      }
+
+      response=set_gfx_mode(GFX_AUTODETECT_WINDOWED, WindowSizeX, WindowSizeY, 0, 0);
+
+      SCREEN_OFFX=2;//((WindowSizeX-512)/2);
+      SCREEN_OFFY=2;//((WindowSizeY-256-70)/2); // 70 - fullscreen shift for bottom text
+
     }
+
+    SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
+
     AllScreenUpdateFlag=1;
     LutUpdateFlag=1;
   }
   Current_Scr_Mode=ScrMode;
-  oldWindowed = WindowedFlag;
+  oldWindowed = FlagScreenScale;
 }
 
 int SCREEN_SetText(void) {
@@ -436,7 +452,7 @@ int SCREEN_SetText(void) {
 void SCREEN_ShowScreen(void) {
  int 		x,y,i,j;
  int updated;
-
+ int lines_updated=0;
 
  byte 		c1,c2,c3,c4;
 
@@ -474,6 +490,8 @@ void SCREEN_ShowScreen(void) {
    //  Ввыводим на экран только строки которые нужно обновить
    if (LineUpdateFlag[y] || AllScreenUpdateFlag) {
      LineUpdateFlag[y]=0;
+     lines_updated+=1;
+
 
 #ifdef SLOWBITMAPCONVERT
      VGA_Ptr = (char *)BITMAP_PTR;
@@ -499,17 +517,13 @@ void SCREEN_ShowScreen(void) {
 #endif
           } // for (in line loop)
 
-          blit(BITMAP_KORVET, screen, 0,0,SCREEN_OFFX, y+SCREEN_OFFY,512,1);
+          if ((Current_Scr_Mode != SCR_DBG) && FlagScreenScale) {
+             stretch_blit(BITMAP_KORVET, screen, 0,0,512,1,SCREEN_OFFX, (y*2)+SCREEN_OFFY,512*2,1*1);
+             // blit(screen, screen, SCREEN_OFFX, (y*2)+SCREEN_OFFY,SCREEN_OFFX, (y*2)+SCREEN_OFFY+1,512*1,1);
+          } else {
+             blit(BITMAP_KORVET, screen, 0,0,SCREEN_OFFX, y+SCREEN_OFFY,512,1);
+          }
 
-
-// DEBUG: show updated line
-/*
-           j=(_farpeekb(screen->seg,bmp_write_line(screen, y+SCREEN_OFFY)+SCREEN_OFFX-3)+1)&0x07+128-16;
-           _farpokeb(screen->seg,bmp_write_line(screen, y+SCREEN_OFFY)+SCREEN_OFFX-3,j);
-           _farpokeb(screen->seg,bmp_write_line(screen, y+SCREEN_OFFY)+SCREEN_OFFX-5,j);
-           _farpokeb(screen->seg,bmp_write_line(screen, y+SCREEN_OFFY)+SCREEN_OFFX-7,j);
-*/
-//
          }    // if Update
          else
          {    // Skip Line
@@ -526,6 +540,7 @@ void SCREEN_ShowScreen(void) {
         AllScreenUpdateFlag=0;
         release_screen();
 //        unscare_mouse();
+        // if (lines_updated) printf("UpdatedLines:%d\n",lines_updated);
 }
 
 void SCREEN_Init(void) {
