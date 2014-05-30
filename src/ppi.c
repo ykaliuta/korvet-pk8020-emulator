@@ -123,7 +123,8 @@ byte AssembleVIREG_PPI1C(void)
 
 void Disassemble_PPI2C(int Value)
 {
-   DoTimer();
+  static int oldState_SoundEnable;
+  int tSoundEnable;
 //   XS1:32          =(Value&0x80)>>7;
 //  Reset for Analog Joystick =(Value&0x40)>>6;
 // ~SE               =(Value&0x20)>>5;
@@ -132,9 +133,16 @@ void Disassemble_PPI2C(int Value)
 //   SetPrinterStrobe((Value&0x10)>>4);
    SetPrinterStrobe((Value&0x20)>>4);
 
-   SoundEnable       =(Value&0x08)>>3;
+   tSoundEnable       =(Value&0x08)>>3;
 // Cassete Motor ON  =(Value&0x04)>>2;
 // CasseteOut level  =(Value&0x03)>>0;
+
+   if (oldState_SoundEnable != tSoundEnable) {
+     DoTimer();
+   }
+
+   SoundEnable=tSoundEnable;
+   oldState_SoundEnable=SoundEnable;
 
 #ifdef TRACETIMER
  fprintf(F_TIMER,"S: %08d %d\n",Takt,SoundEnable);
