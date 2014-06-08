@@ -1,6 +1,8 @@
 syntax: glob
-objs/*
-objs/**/*
+objs/*.d
+objs/*.o
+objs/**/*.d
+objs/**/*.o
 printer.txt
 kdbg
 kdbg.exe

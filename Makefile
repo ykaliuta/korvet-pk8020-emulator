@@ -33,7 +33,11 @@ VPATH	= src
 all:    kdbg
 
 clean: 
-	rm -rd objs/*
+	mkdir -p objs/dbg
+	rm -r objs/*.o
+	rm -r objs/*.d
+	rm -r objs/dbg/*.o
+	rm -r objs/dbg/*.d
 	mkdir -p objs/dbg
 	rm kdbg
 
