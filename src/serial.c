@@ -60,7 +60,7 @@ byte RS232_Read(int Addr) {
 void LAN_Write(int Addr,byte Value){return;}
 byte LAN_Read(int Addr){
 // fixfor KORNET work
-  return 0x4;
+  return 0x5;
 }
 
 void Serial_Init(void) {
