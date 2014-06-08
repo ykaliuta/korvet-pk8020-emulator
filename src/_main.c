@@ -22,9 +22,10 @@
 
 #include "korvet.h"
 #include "vg.h"
+#include <assert.h>
 
 #ifdef DBG
- #include "dbg/dbg.h"
+#include "dbg/dbg.h"
 #endif
 
 const char AboutMSG[]="Korvet Emulator by Sergey Erokhin & Korvet Team|pk8020@narod.ru|2012-05-30|V1.?.1";
@@ -53,6 +54,7 @@ extern int AllScreenUpdateFlag;
 extern int LutUpdateFlag;
 extern int scr_Wide_Mode;
 extern int scr_Second_Font;
+extern int scr_Page_Show;
 extern byte LUT[];
 
 extern int SCREEN_OFFX;
@@ -78,7 +80,6 @@ extern char MapperFileName[1024];
 extern int OSD_LUT_Flag;
 extern int OSD_FPS_Flag;
 extern int OSD_FDD_Flag;
-
 
 int VBLANK=0;
 int SoundEnable=0;
@@ -127,113 +128,129 @@ int TotalCPU;
 // timer routine for measuring
 void Timer_1S()
 {
-   FPS_Scr=FPS;
-   FPS=0;
+    FPS_Scr=FPS;
+    FPS=0;
 }
 END_OF_FUNCTION(Timer_1S);
 
 // timer routine for measuring
 void Timer_50hz()
 {
-   Counter50hz++;
+    Counter50hz++;
 }
 END_OF_FUNCTION(Timer_1S);
 
 void Reset(void) {
-  GZU_Init();
-  ACZU_Init();
-  Memory_Init();
-  PIC_init();
-  CPU_Init();
-  KBD_Init();
- // FDC_Init();
-  FDC_Reset();
-  Serial_Init();
-  InitTMR();
+    GZU_Init();
+    ACZU_Init();
+    Memory_Init();
+    PIC_init();
+    CPU_Init();
+    KBD_Init();
+// FDC_Init();
+    FDC_Reset();
+    Serial_Init();
+    InitTMR();
 }
 
 void Debug_LUT(int Debug_Key) {
- byte SaveLut[16];
- byte i;
- for (i=0;i<16;i++) {
-    SaveLut[i]=LUT[i];
-    LUT[i]=i;
- }
- LUT_Update(BW_Flag);
- while (key[Debug_Key]);
- for (i=0;i<16;i++) {
-    LUT[i]=SaveLut[i];
- }
- LUT_Update(BW_Flag);
+    byte SaveLut[16];
+    byte i;
+    for (i=0; i<16; i++) {
+        SaveLut[i]=LUT[i];
+        LUT[i]=i;
+    }
+    LUT_Update(BW_Flag);
+    while (key[Debug_Key]);
+    for (i=0; i<16; i++) {
+        LUT[i]=SaveLut[i];
+    }
+    LUT_Update(BW_Flag);
 }
 
-void Write_BMP(char * FileName) {
-  BITMAP *bmp=create_bitmap(512,256);
-  clear_bitmap(bmp);
-  blit(screen,bmp,SCREEN_OFFX,SCREEN_OFFY,0,0,512,256);
-  save_bmp(FileName,bmp,pallete);
+void Write_BMP(char * FileName,int page) {
+    int kx=1;
+    int saved_page=scr_Page_Show;
+    if (FlagScreenScale) kx=2;
+    BITMAP *bmp=create_bitmap(512*kx,256*kx);
+    clear_bitmap(bmp);
+
+    scr_Page_Show=page;
+    AllScreenUpdateFlag=1;
+    SCREEN_ShowScreen();
+
+    blit(screen,bmp,SCREEN_OFFX,SCREEN_OFFY,0,0,512*kx,256*kx);
+    save_bmp(FileName,bmp,pallete);
+
+    scr_Page_Show=saved_page;
+    AllScreenUpdateFlag=1;
+    SCREEN_ShowScreen();
 }
 
+
+void dump_gzu(int page) {
+    char fname[512];
+    int i;
+    byte B1[3][PLANESIZE];
+    FILE *F_DMP;
+
+    sprintf(fname,"DMP.LGZU%d",page);
+
+    F_DMP=fopen(fname,"wb");
+    for (i=0; i<PLANESIZE; i++) {
+        B1[0][i]=GZU[page][i*4+0];
+        B1[1][i]=GZU[page][i*4+1];
+        B1[2][i]=GZU[page][i*4+2];
+        //+3 - aczu
+    }
+    fwrite(B1,PLANESIZE*3,1,F_DMP);
+    fclose(F_DMP);
+}
 
 void Write_Dump(void)
 {
 
-  FILE *F_DMP;
-  byte B1[3][PLANESIZE];
-  int i,j;
-  word reg;
-  char BUF[1024];
+    FILE *F_DMP;
 
-  F_DMP=fopen("DMP.RAM","wb");
-  fwrite(RAM,0x10000,1,F_DMP);
-  fclose(F_DMP);
+    int i,j;
+    word reg;
+    char BUF[1024];
 
-  F_DMP=fopen("DMP.ACZU","wb");
-  fwrite(ACZU,1024*2,1,F_DMP);
-  fclose(F_DMP);
+    F_DMP=fopen("DMP.RAM","wb");
+    fwrite(RAM,0x10000,1,F_DMP);
+    fclose(F_DMP);
 
-//  F_DMP=fopen("DMP.ACZUI","wb");
-//  fwrite(ACZU_INV,1024,1,F_DMP);
-//  fclose(F_DMP);
+    F_DMP=fopen("DMP.ACZU","wb");
+    fwrite(ACZU,1024*2,1,F_DMP);
+    fclose(F_DMP);
 
-  F_DMP=fopen("DMP.GZU0","wb");
-  fwrite(GZU[0],PLANESIZE*3,1,F_DMP);
-  fclose(F_DMP);
+    dump_gzu(0);
+    dump_gzu(1);
+    dump_gzu(2);
+    dump_gzu(3);
 
-  F_DMP=fopen("DMP.GZU0_1","wb");
-  for (i=0;i<PLANESIZE;i++) {
-     B1[0][i]=GZU[0][i*3+0];
-     B1[1][i]=GZU[0][i*3+1];
-     B1[2][i]=GZU[0][i*3+2];
-  }
-  fwrite(B1,PLANESIZE*3,1,F_DMP);
-  fclose(F_DMP);
+    F_DMP=fopen("DMP.LUT","wb");
+    fwrite(LUT,sizeof(LUT),1,F_DMP);
+    fclose(F_DMP);
 
-  F_DMP=fopen("DMP.GZU1","wb");
-  fwrite(GZU[1],PLANESIZE*3,1,F_DMP);
-  fclose(F_DMP);
-  F_DMP=fopen("DMP.GZU2","wb");
-  fwrite(GZU[2],PLANESIZE*3,1,F_DMP);
-  fclose(F_DMP);
-  F_DMP=fopen("DMP.GZU3","wb");
-  fwrite(GZU[3],PLANESIZE*3,1,F_DMP);
-  fclose(F_DMP);
+    F_DMP=fopen("DMP.CPU","wb");
+    reg=CPU_GetPC();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    reg=CPU_GetSP();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    reg=CPU_GetAF();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    reg=CPU_GetHL();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    reg=CPU_GetDE();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    reg=CPU_GetBC();
+    fwrite(&reg,sizeof(reg),1,F_DMP);
+    fclose(F_DMP);
 
-  F_DMP=fopen("DMP.LUT","wb");
-  fwrite(LUT,sizeof(LUT),1,F_DMP);
-  fclose(F_DMP);
-
-  F_DMP=fopen("DMP.CPU","wb");
-  reg=CPU_GetPC();fwrite(&reg,sizeof(reg),1,F_DMP);
-  reg=CPU_GetSP();fwrite(&reg,sizeof(reg),1,F_DMP);
-  reg=CPU_GetAF();fwrite(&reg,sizeof(reg),1,F_DMP);
-  reg=CPU_GetHL();fwrite(&reg,sizeof(reg),1,F_DMP);
-  reg=CPU_GetDE();fwrite(&reg,sizeof(reg),1,F_DMP);
-  reg=CPU_GetBC();fwrite(&reg,sizeof(reg),1,F_DMP);
-  fclose(F_DMP);
-
-  sprintf(BUF,"DMPSC%03d.bmp",BMP_NUM++);
-  Write_BMP(BUF);
+    sprintf(BUF,"DMPSC%03d_0.bmp",BMP_NUM);
+    Write_BMP(BUF,0);
+    BMP_NUM++;
 
 }
 
@@ -256,7 +273,6 @@ void ReadConfig(void) {
     OSD_FPS_Flag         =get_config_hex(section,"OSD_FPS",0);
     OSD_FDD_Flag         =get_config_hex(section,"OSD_FDD",0);
 
-    // FlagWindowed      =get_config_hex(section,"WINDOWED",0); // removed
     FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
 
     KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
@@ -264,245 +280,247 @@ void ReadConfig(void) {
 
 void PrintDecor() {
 
-  rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_OFFY+SCREEN_YMAX+1,255);
-//delete corner
-  // putpixel(screen,SCREEN_OFFX-2    ,SCREEN_YMAX+SCREEN_OFFY-2,254);
-  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_YMAX+SCREEN_OFFY-2,254);
-  // putpixel(screen,SCREEN_OFFX-2    ,SCREEN_YMAX+SCREEN_OFFY+1,254);
-  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_YMAX+SCREEN_OFFY+1,254);
-//add dot 
-  // putpixel(screen,SCREEN_OFFX-1  ,SCREEN_YMAX+SCREEN_OFFY-1,255);
-  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX,SCREEN_YMAX+SCREEN_OFFY-1,255);
-  // putpixel(screen,SCREEN_OFFX-1  ,SCREEN_YMAX+SCREEN_OFFY+1,255);
-  // putpixel(screen,SCREEN_OFFX+SCREEN_XMAX,SCREEN_YMAX+SCREEN_OFFY+1,255);
+    rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_OFFY+SCREEN_YMAX+1,255);
 
+    //init InUseFlag for screen update
+    InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
 
-//init InUseFlag for screen update 
-  InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
-
-  if (Current_Scr_Mode != SCR_DBG) {
-     textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-Zoom, F6-Turbo, F10-Mono, F9-dbg");
-     rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
-     textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
-  }
+    if (Current_Scr_Mode != SCR_DBG) {
+        textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-Zoom, F6-Turbo, F10-Mono, F9-dbg");
+        rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
+        textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
+    }
 }
 
 void MUTE_BUF(void) {
-  int i;
-  unsigned char *p;
-  
-  for(i=0;i<AUDIO_BUFFER_SIZE;i++) {
-    SOUNDBUF[i]=0;
-  }
+    int i;
+    unsigned char *p;
 
-  while (!(p = get_audio_stream_buffer(stream))) rest(0);
-  memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
-  free_audio_stream_buffer(stream);
+    for(i=0; i<AUDIO_BUFFER_SIZE; i++) {
+        SOUNDBUF[i]=0;
+    }
+
+    while (!(p = get_audio_stream_buffer(stream))) rest(0);
+    memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
+    free_audio_stream_buffer(stream);
 }
 
 
 int main(int argc,char **argv) {
 
-  int i,j;
+    int i,j;
 
-  FILE *FTMP;
+    FILE *FTMP;
 
-  int skip;
+    int skip;
 
-  unsigned char *p;
-  int TickCntr;
-  int outptr;
-  int TempValue;
-  int SndCnt=1;
-  int SndAvg=1;
+    unsigned char *p;
+    int TickCntr;
+    int outptr;
+    int TempValue;
+    int SndCnt=1;
+    int SndAvg=1;
 
-  char BUFFER[2048];
-// debug tools ;-))
+    char BUFFER[2048];
 
-//  for (i=0;i<256;i++) CPU_DBG[i]=0;
-//  TotalCPU=0;
+    //LUT_BASE_COLOR = 0x80
+    assert(LUT_BASE_COLOR == 0x80); //very important for SCREEN_ShowScreen
 
+    allegro_init();
 
-  allegro_init();
+    ReadConfig(); // Read KORVET.CFG file and set default values ...
 
-  ReadConfig(); // Read KORVET.CFG file and set default values ...
+    InitOSD();
+    InitPrinter();
+    Init_Joystick();
 
-  InitOSD();
-  InitPrinter();
-  Init_Joystick();
-
-  // parse command line option -A filename -B filename
-  while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:")) != -1) {
-    switch (tolower(i)) {
-      case 'a': strcpy(Disks[0],optarg);break;
-      case 'b': strcpy(Disks[1],optarg);break;
-      case 'c': strcpy(Disks[2],optarg);break;
-      case 'd': strcpy(Disks[3],optarg);break;
+    // parse command line option -A filename -B filename
+    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:")) != -1) {
+        switch (tolower(i)) {
+        case 'a':
+            strcpy(Disks[0],optarg);
+            break;
+        case 'b':
+            strcpy(Disks[1],optarg);
+            break;
+        case 'c':
+            strcpy(Disks[2],optarg);
+            break;
+        case 'd':
+            strcpy(Disks[3],optarg);
+            break;
+        }
     }
-  }
 
-  j=0;
-  for (i=0;i<4;i++) {
-     TempValue=open(Disks[i],O_RDONLY);
-     if (TempValue<0) {
-       printf("Warning: Can't open drive '%c' file: %s\n",'A'+i,Disks[i]);
-       j++;
-     }
-     close(TempValue);
-  }
+    j=0;
+    for (i=0; i<4; i++) {
+        TempValue=open(Disks[i],O_RDONLY);
+        if (TempValue<0) {
+            printf("Warning: Can't open drive '%c' file: %s\n",'A'+i,Disks[i]);
+            j++;
+        }
+        close(TempValue);
+    }
 
-  if (j) {
-    printf("Press Enter to continue\n");
-    getchar();
-  }
+    if (j) {
+        printf("Press Enter to continue\n");
+        getchar();
+    }
 
 #ifdef TRACETIMER
-  F_TIMER=fopen("_timer.log","wb");
+    F_TIMER=fopen("_timer.log","wb");
 #endif
 
 #ifdef WAV
-  OpenWAV("korvet.wav");
+    OpenWAV("korvet.wav");
 #endif
 
 
 #ifdef DBG
-  dbg_INIT();
+    dbg_INIT();
 #endif
 
-  SCREEN_Init();
+    SCREEN_Init();
 
-  set_uformat(U_ASCII);
+    set_uformat(U_ASCII);
 
-  install_keyboard();
-  install_timer();
-  install_mouse();
-  enable_hardware_cursor();
-  show_os_cursor(MOUSE_CURSOR_QUESTION);
+    install_keyboard();
+    install_timer();
+    install_mouse();
+    enable_hardware_cursor();
+    show_os_cursor(MOUSE_CURSOR_QUESTION);
 
 
 #ifdef SOUND
-//    install a digital sound driver 
-   if (install_sound(DIGI_AUTODETECT, MIDI_NONE, NULL) != 0) {
-      allegro_message("Error initialising sound system\n%s\n", allegro_error);
-      return 1;
-   }
-   printf("Driver: %s", digi_driver->name);
+//    install a digital sound driver
+    if (install_sound(DIGI_AUTODETECT, MIDI_NONE, NULL) != 0) {
+        allegro_message("Error initialising sound system\n%s\n", allegro_error);
+        return 1;
+    }
+    printf("Audio driver: %s\n", digi_driver->name);
 
-
-//    create an audio stream 
-   stream = play_audio_stream(AUDIO_BUFFER_SIZE, 8, FALSE, SOUNDFREQ, 255, 128);
-   if (!stream) {
-      set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
-      allegro_message("Error creating audio stream!\n");
-      return 1;
-   }
+//    create an audio stream
+    stream = play_audio_stream(AUDIO_BUFFER_SIZE, 8, FALSE, SOUNDFREQ, 255, 128);
+    if (!stream) {
+        set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
+        allegro_message("Error creating audio stream!\n");
+        return 1;
+    }
 #endif
-  fflush(stdout);
-  SCREEN_SetGraphics(SCR_EMULATOR);
+    fflush(stdout);
+    SCREEN_SetGraphics(SCR_EMULATOR);
 
-  LOCK_FUNCTION(Timer_50hz);
-  LOCK_VARIABLE(Counter50hz);
+    LOCK_FUNCTION(Timer_50hz);
+    LOCK_VARIABLE(Counter50hz);
 
-  LOCK_FUNCTION(Timer_1S);
-  LOCK_VARIABLE(FPS);
-  LOCK_VARIABLE(FPS_Scr);
+    LOCK_FUNCTION(Timer_1S);
+    LOCK_VARIABLE(FPS);
+    LOCK_VARIABLE(FPS_Scr);
 
-  LOCK_VARIABLE(ShowedLines_Scr);
-  LOCK_VARIABLE(ShowedLines);
-  LOCK_VARIABLE(ShowedLinesTotal);
-  LOCK_VARIABLE(ShowedLinesCnt);
+    LOCK_VARIABLE(ShowedLines_Scr);
+    LOCK_VARIABLE(ShowedLines);
+    LOCK_VARIABLE(ShowedLinesTotal);
+    LOCK_VARIABLE(ShowedLinesCnt);
 
-  install_int_ex(Timer_1S, SECS_TO_TIMER(1));
-  install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
+    install_int_ex(Timer_1S, SECS_TO_TIMER(1));
+    install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
 
 // Screen texts
 //                                   ________________________________________________________________________________
-  clear_to_color(screen, 254);
-  PrintDecor();
+    clear_to_color(screen, 254);
+    PrintDecor();
 // end screen texts
 
 //
-  Reset();
-  LUT_Init();
-  LUT_Update(BW_Flag);
+    Reset();
+    LUT_Init();
+    LUT_Update(BW_Flag);
 
-  SCREEN_ShowScreen();
+    SCREEN_ShowScreen();
 
-  Takt=0;
-  while (!key[KEY_F12]) {
+    Takt=0;
+    while (!key[KEY_F12]) {
 
-    if (key[KEY_F11]) {
-      Takt=0;
-      Reset();
-      while(key[KEY_F11]);
-    }
+        if (key[KEY_F11]) {
+            Takt=0;
+            Reset();
+            while(key[KEY_F11]);
+        }
 
-    if (key[KEY_F10]) {BW_Flag^=1;LutUpdateFlag=1;while (key[KEY_F10]);}
-    if (key[KEY_F8]) {
-      if (key[KEY_ALT]) {
-         Write_Dump();
-         while (key[KEY_ALT]);
-      } else {
-         FlagScreenScale^=1;
-         SCREEN_SetGraphics(SCR_EMULATOR);
-      }
-      while (key[KEY_F8]);
-    }
-    if (key[KEY_F7]) {Debug_LUT(KEY_F7);}
+        if (key[KEY_F10]) {
+            BW_Flag^=1;
+            LutUpdateFlag=1;
+            while (key[KEY_F10]);
+        }
+        if (key[KEY_F8]) {
+            if ((key_shifts & KB_ALT_FLAG)) {
+                Write_Dump();
+                while ((key_shifts & KB_ALT_FLAG));
+            } else {
+                FlagScreenScale^=1;
+                SCREEN_SetGraphics(SCR_EMULATOR);
+            }
+            while (key[KEY_F8]);
+        }
+        if (key[KEY_F7]) {
+            Debug_LUT(KEY_F7);
+        }
 
 #ifdef DBG
-    word  __PC=CPU_GetPC();
+        word  __PC=CPU_GetPC();
 
-    if (__PC == 0x0000) CheckROM();
-    else if (__PC == 0xc75c) CheckCCP();
-    else if (__PC == 0xcade) CheckComEXEC();
+        if (__PC == 0x0000) CheckROM();
+        else if (__PC == 0xc75c) CheckCCP();
+        else if (__PC == 0xcade) CheckComEXEC();
 
-    if (__PC == dbg_HERE) dbg_TRACE=1;
+        if (__PC == dbg_HERE) dbg_TRACE=1;
 
-    if (RD_BreakPoint(__PC)&bpCPU) {dbg_TRACE=1;/*TraceCause=4;CauseAddr=CPU_GetPC()*/;}
-    if (dbg_TRACE) doDBG();
+        if (RD_BreakPoint(__PC)&bpCPU) {
+            dbg_TRACE=1;/*TraceCause=4;CauseAddr=CPU_GetPC()*/;
+        }
+        if (dbg_TRACE) doDBG();
 
-    AddPC(__PC);
+        AddPC(__PC);
 
 #endif
 
-    Takt+=CPU_Exec1step();
+        Takt+=CPU_Exec1step();
 
-    if (Takt>=ALL_TAKT) {
+        if (Takt>=ALL_TAKT) {
 #ifdef SOUND
 //       MakeSound(); // timer
-       if (!key[KEY_F6]) {
-         MuteFlag=0;
-         MakeSound(); // timer
+            if (!key[KEY_F6]) {
+                MuteFlag=0;
+                MakeSound(); // timer
 
-         while (!(p = get_audio_stream_buffer(stream)))  rest(0);
-         memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
+                while (!(p = get_audio_stream_buffer(stream)))  rest(0);
+                memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
 #ifdef WAV
-         AddWAV(p,AUDIO_BUFFER_SIZE);
+                AddWAV(p,AUDIO_BUFFER_SIZE);
 #endif
-         free_audio_stream_buffer(stream);
-         while (!Counter50hz) rest(0);
-       } else {
-         if (MuteFlag == 0) {
-          // mute sund
-          MUTE_BUF();
-          MUTE_BUF();
-          MUTE_BUF();
-          MUTE_BUF();
-          MUTE_BUF();
-          MUTE_BUF();
-         }
-         MuteFlag=1;
-         MakeSound(); // timer
+                free_audio_stream_buffer(stream);
+                while (!Counter50hz) rest(0);
+            } else {
+                if (MuteFlag == 0) {
+                    // mute sund
+                    MUTE_BUF();
+                    MUTE_BUF();
+                    MUTE_BUF();
+                    MUTE_BUF();
+                    MUTE_BUF();
+                    MUTE_BUF();
+                }
+                MuteFlag=1;
+                MakeSound(); // timer
 //         free_audio_stream_buffer(stream);
-       }
+            }
 #endif
-       Counter50hz=0;
+            Counter50hz=0;
 
-       PIC_IntRequest(4);
+            PIC_IntRequest(4);
 //       DoCH(2);
 
-        ChkMouse();
+            ChkMouse();
 //        ChkMouse_MouseSystem();
 
 //       IntREQ=CheckPIC();
@@ -512,85 +530,97 @@ int main(int argc,char **argv) {
 #ifndef SOUND
 //       else if (!key[KEY_F6]) vsync();
 //       if (!key[KEY_F6]) {
-//            while (!Counter50hz) yield_timeslice();   
+//            while (!Counter50hz) yield_timeslice();
 //            Counter50hz=0;
 //       };
 #endif
 
 
 #ifdef TRACETIMER
-       fprintf(F_TIMER,"V: %08d\n",Takt);
+            fprintf(F_TIMER,"V: %08d\n",Takt);
 #endif
-       if (LutUpdateFlag) LUT_Update(BW_Flag);
-       SCREEN_ShowScreen();
+            if (LutUpdateFlag) LUT_Update(BW_Flag);
+            SCREEN_ShowScreen();
 
 
-       FPS++;
+            FPS++;
 
 //       textprintf(screen,font,0,60,255,"fps: %d SL:%d slavg:%d cnt50:%d %%%3d            ",FPS_Scr,ShowedLines_Scr/((FPS_Scr)?FPS_Scr:1),ShowedLinesTotal/((FPS_Scr)?FPS_Scr:1)/ShowedLinesCnt,Counter50hz,FPS_Scr*100/50);
 //       textprintf(screen,font,0,0,255,"fps: %d SL:%d slavg:%d cnt50:%d  ",FPS_Scr,ShowedLines_Scr/((FPS_Scr)?FPS_Scr:1),ShowedLinesTotal/((FPS_Scr)?FPS_Scr:1)/ShowedLinesCnt,Counter50hz);
-       Takt-=ALL_TAKT;
+            Takt-=ALL_TAKT;
 
-         if (getpixel(screen,SCREEN_OFFX-2,SCREEN_OFFY-2) != 255) {
-            PrintDecor();
-            AllScreenUpdateFlag=1;
-         }
-       // выводим OnScreen LED
-       // ТОЛЬКО если есть необходимость обновить индикаторы, 
-       // иначе будут мигать, да и FPS падает ;-)
-       // FPS
-       if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY  ,FPS_Scr);FPS_LED=FPS_Scr;};
-       // Floppy Disk TRACK
-       if (OSD_FDD_Flag && InUseFDD[0]) {InUseFDD[0]--;PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);} 
-       if (OSD_FDD_Flag && InUseFDD[1]) {InUseFDD[1]--;PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);} 
-       if (OSD_FDD_Flag && InUseFDD[2]) {InUseFDD[2]--;PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OSDY,VG.TrackReal[2],InUseFDD[2]);} 
-       if (OSD_FDD_Flag && InUseFDD[3]) {InUseFDD[3]--;PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OSDY,VG.TrackReal[3],InUseFDD[3]);} 
+            if (getpixel(screen,SCREEN_OFFX-2,SCREEN_OFFY-2) != 255) {
+                PrintDecor();
+                AllScreenUpdateFlag=1;
+            }
+            // выводим OnScreen LED
+            // ТОЛЬКО если есть необходимость обновить индикаторы,
+            // иначе будут мигать, да и FPS падает ;-)
+            // FPS
+            if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {
+                PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY  ,FPS_Scr);
+                FPS_LED=FPS_Scr;
+            };
+            // Floppy Disk TRACK
+            if (OSD_FDD_Flag && InUseFDD[0]) {
+                InUseFDD[0]--;
+                PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);
+            }
+            if (OSD_FDD_Flag && InUseFDD[1]) {
+                InUseFDD[1]--;
+                PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);
+            }
+            if (OSD_FDD_Flag && InUseFDD[2]) {
+                InUseFDD[2]--;
+                PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OSDY,VG.TrackReal[2],InUseFDD[2]);
+            }
+            if (OSD_FDD_Flag && InUseFDD[3]) {
+                InUseFDD[3]--;
+                PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OSDY,VG.TrackReal[3],InUseFDD[3]);
+            }
 
-       // if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,SCREEN_OFFX+512,SCREEN_OSDY,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");} 
+            // if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,SCREEN_OFFX+512,SCREEN_OSDY,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");}
 
 
-       // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken) 
-       if ((RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2)) != KBD_LED) {
-            KBD_LED=(RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2));
-            KeyboadUpdateFlag=1;
-       }
+            // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken)
+            if ((RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2)) != KBD_LED) {
+                KBD_LED=(RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2));
+                KeyboadUpdateFlag=1;
+            }
 
-    }
+        }
 
-    if (key[KEY_F9]) {
+        if (key[KEY_F9]) {
 
-        printf("ALT:%d\n",key[KEY_ALT]);
-      
-       if (!(key_shifts & KB_ALT_FLAG)) {
+            if (!(key_shifts & KB_ALT_FLAG)) {
 #ifdef DBG
-          while (key[KEY_F9]);
-          dbg_TRACE=1;
+                while (key[KEY_F9]);
+                dbg_TRACE=1;
 #endif
-        } else {
-          while(key[KEY_ALT]);
-          while(key[KEY_F9]);
-          GUI();
-          while(key[KEY_ESC]);
-     }
-//#endif
+            } else {
+                while(key[KEY_ALT]);
+                while(key[KEY_F9]);
+                GUI();
+                while(key[KEY_ESC]);
+            }
+        }
     }
-  }
 
 #ifdef WAV
-  CloseWAV();
+    CloseWAV();
 #endif
 
-  DestroyOSD();
-  DestroyPrinter();
-  SCREEN_SetText();
+    DestroyOSD();
+    DestroyPrinter();
+    SCREEN_SetText();
 
-  printf("\n\n\n%s\n",AboutMSG);
+    printf("\n\n\n%s\n",AboutMSG);
 
 #ifdef TRACETIMER
-  fclose(F_TIMER);
+    fclose(F_TIMER);
 #endif
 
-  return 0;
+    return 0;
 }
 END_OF_MAIN();
 
