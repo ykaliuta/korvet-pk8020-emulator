@@ -8,6 +8,7 @@ CFLAGS   = -MMD -g -Isrc
 #CFLAGS   = -pg -g -fno-omit-frame-pointer -MMD -Isrc
 
 sources = _main.c \
+			tools.c \
 			vg.c \
 			floppy.c \
 			i8080.c \

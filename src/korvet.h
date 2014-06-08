@@ -40,6 +40,8 @@
 
 #define RAMSIZE         (64*1024)
 
+#define PLANESIZE 	16384
+
 
 #define OK 		0
 #define ERROR		1
