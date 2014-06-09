@@ -235,16 +235,10 @@ byte PIC_Read(int Addr)
           if (i != 8) RetValue=i|0x80;
           else RetValue=(picLowINT+1)&0x07;
         } else RetValue=(picReadSR)?IRR:ISR;
-//        } else RetValue=(picReadSR)?ISR:IRR;
-
-
-//printf("%04X: PIC_R: %04x=%02x %04x\n",Z80_GetPC(),Addr,RetValue,picHIGH<<8|picRUS&0xf0);
 
         return RetValue;
-   } //
+   } 
    case 1: {
-//printf("%04X: PIC_R: %04x=%02x %04x\n",Z80_GetPC(),Addr,IMR,picHIGH<<8|picRUS&0xf0);
-
         return IMR;break;} //IMR
  }
 }
@@ -252,7 +246,6 @@ byte PIC_Read(int Addr)
 void PIC_IntRequest(int IntNum)             // Запрос на прерывание.
 {
  IRR|=1<<IntNum;
- //ShowPIC();
 }
 
 int CheckPIC  (void)                      // Проверка, есть запрос.
@@ -263,7 +256,6 @@ int CheckPIC  (void)                      // Проверка, есть запр
  i=FindMaxBit(IRR & ~IMR | ISR);       // найти максиммальный запрос с учетом маски
 
  if ( (i == 8) || (i == FindMaxBit(ISR)))  return 0; // NOP
-// return 1;
  return i;
 }
 
@@ -300,29 +292,6 @@ void Byte2Bin(char *str,byte b)
  str[5]=(b & 0x04)?'1':'0';
  str[6]=(b & 0x02)?'1':'0';
  str[7]=(b & 0x01)?'1':'0';
-}
-
-void ShowPIC(void)
-{
-
- int i;
- char BUF[1024];
- char PICADDR[17]="00000000000xxx00";
- char MASKA[9]   ="00000000";
- char MODE[5][30]={"Full In     ",
-                   "Shift A   ",
-                   "Shift B     ",
-                   "Special Mask",
-                   "Programming"};
- return;
-
- Byte2Bin(MASKA,IMR);textprintf_ex(screen,font,50,360,15,0,"PIC: (IMR) : %s",MASKA);
- Byte2Bin(MASKA,IRR);textprintf_ex(screen,font,50,370,15,0,"PIC: (IRR) : %s",MASKA);
- Byte2Bin(MASKA,ISR);textprintf_ex(screen,font,50,380,15,0,"PIC: (ISR) : %s",MASKA);
- textprintf_ex(screen,font,50,390,15,0,"PIC: Mode  : %s",MODE[picMODE]);
- textprintf_ex(screen,font,50,400,15,0,"PIC: SMM=%d Read=%d OPROS=%d LowINT=%d",picSMM,picReadSR,picOPROS,picLowINT);
- textprintf_ex(screen,font,50,410,15,0,"PIC: Step       : %s",(picRUS&0x04)?"4":"8");
- textprintf_ex(screen,font,50,420,15,0,"PIC: Addr %04x",picHIGH<<8|picRUS&0xf0);
 }
 
 void ShowPICdbg(void)
