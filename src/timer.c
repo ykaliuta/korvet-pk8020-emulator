@@ -417,13 +417,6 @@ void MakeSound(void) {
       TempValue=0;
     }
   }
-/*
-  for (i=0;i<AUDIO_BUFFER_SIZE;i++) {
-    TempValue=0;
-    for (j=0;j<ByteInByte;j++) if (TIMERBUF[outptr++]) TempValue++;
-    SOUNDBUF[i]=(TempValue>ByteInByte/2)?255:0;
-  }
-*/
   BytePtr=0;
 }
 

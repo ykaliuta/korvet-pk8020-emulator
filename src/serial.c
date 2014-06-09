@@ -30,7 +30,6 @@ void AddSerialQueue(byte B) {
   if (Q232Len == MAXQ232) return;
   Q232[Q232Len++]=B;
   PIC_IntRequest(1);
-//  textprintf(screen,font,50,50,255," %3d A",Q232Len);
 }
 
 byte GetSerialQueue(void) {
@@ -40,7 +39,6 @@ byte GetSerialQueue(void) {
    Q232Len--;
    Q232[0]=0;
    for(i=1;i<MAXQ232;i++) Q232[i-1]=Q232[i];
-//   textprintf(screen,font,50,50,255," %3d R",Q232Len);
    PIC_IntRequest(1);
   }
   return ret;
@@ -60,7 +58,7 @@ byte RS232_Read(int Addr) {
 void LAN_Write(int Addr,byte Value){return;}
 byte LAN_Read(int Addr){
 // fixfor KORNET work
-  return 0x5;
+  return 0x85;
 }
 
 void Serial_Init(void) {
