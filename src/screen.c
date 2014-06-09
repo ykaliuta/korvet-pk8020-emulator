@@ -465,14 +465,10 @@ void SCREEN_ShowScreen(void) {
     int updated;
     int lines_updated=0;
 
-    byte 		c1,c2,c3,c4;
-
-    byte 		VGA_Frame[512*256];
-
-    byte 		*GZU_Ptr;	// Указатель на область ГЗУ
-    byte 		*ACZU_Ptr;      // Указатель на область АЦЗУ
-
-    unsigned int  	*d_VGA_Ptr;     // Указатель на область буфера виртуального экрана
+    byte 		     c1,c2,c3,c4;
+    byte 		     VGA_Frame[512*256];
+    byte            *GZU_Ptr;            // Указатель на область ГЗУ
+    unsigned int  	*d_VGA_Ptr;          // Указатель на область буфера виртуального экрана
 
     int y_min=500;
     int y_max=0;
@@ -483,6 +479,7 @@ void SCREEN_ShowScreen(void) {
     static BITMAP  *BITMAP_KORVET = NULL;
     static BITMAP  *BITMAP_KORVET2x = NULL;
     static unsigned int *BITMAP_PTR;
+    static unsigned int *BITMAP_PTR2X;
 
     if (!BITMAP_KORVET) {
         BITMAP_KORVET=create_bitmap_ex(8,512,256);
@@ -524,24 +521,32 @@ void SCREEN_ShowScreen(void) {
             } // for (in line loop)
 
             bmp_unwrite_line(BITMAP_KORVET);
+            
             //update 2x bitmat if required
             if (blit2x_flag) {
-                stretch_blit(BITMAP_KORVET, BITMAP_KORVET2x, 
-                              0, y  , 512,1,
-                              0, y*2, 512*2,2
-                            );
+                // scele line to 2x
+                byte c;
+                byte *src =(unsigned char*) BITMAP_PTR;
+                byte *dst =(unsigned char*) bmp_write_line(BITMAP_KORVET2x,y*2);
+                byte *dst2=(unsigned char*) bmp_write_line(BITMAP_KORVET2x,y*2+1);
+
+                for (x=0;x<512;x++) {
+                    c=*src++;
+                    *dst++=c;
+                    *dst++=c;
+                    *dst2++=c;
+                    *dst2++=c;
+                }
             }
-        }    // if Update
+        }   // if Update
         else
         {   // Skip Line
-            GZU_Ptr	+=4*64;
+            GZU_Ptr	    +=4*64;
             d_VGA_Ptr	+=2*64;
         };
     } // scr update loop
 
-
     if (lines_updated>0) {
-      
       y_lines_to_scr=y_max-y_min+1;
 
       // void blit(BITMAP *source, BITMAP *dest, int source_x, int source_y, int dest_x, int dest_y, int width, int height);
