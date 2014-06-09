@@ -125,15 +125,10 @@ void PutLED_Lut(int x,int y,int i,int c) {
 void PutLED_FPS(int x,int y,int i) {
   int d0,d1,d2,d3;
 
-//  textprintf(screen,font,x,y+16,255,"%4d",i);
-//  return;
-
   d0=i%   10;i-=d0;
   d1=i%  100;i-=d1;d1/=  10;
   d2=i% 1000;i-=d2;d2/= 100;
   d3=i%10000;i-=d3;d3/=1000;
-
-//  textprintf(screen,font,x,y+16+10,255,"%d%d%d%d",d3,d2,d1,d0);
 
   rectfill(screen,x,y,x+4*(7+2)-1,y+10,makecol8(200,0,0) );
 
