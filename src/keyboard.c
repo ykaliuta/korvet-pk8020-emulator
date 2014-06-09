@@ -21,8 +21,6 @@
  */
 #include "korvet.h"
 
-#define noKEYBOARD_DEBUG
-
 int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
@@ -140,8 +138,6 @@ int ChkMattrixLine(int N)
   return Value;
 }
 
-
-
 int KEYBOARD_Read(int Addr) {
   int Value=0;
   int Line=0;
@@ -162,10 +158,6 @@ int KEYBOARD_Read(int Addr) {
   if (Addr&0x0020) Value|=ChkMattrixLine(Line);Line++;
   if (Addr&0x0040) Value|=ChkMattrixLine(Line);Line++;
   if (Addr&0x0080) Value|=ChkMattrixLine(Line);Line++;
-
-#ifdef KEYBOARD_DEBUG
-  textprintf(screen,font,450,50,255,"KBD_R: %04x:%02x",Addr,Value);
-#endif
 
   return Value;
 }
@@ -208,28 +200,3 @@ char *PrintKBD(int Addr,int y) {
  return BUFFER;
 }
 
-#ifdef nDBG
-void ShowKBDdbg(void) {
-
- int i=0;
- int x=850;
- int y=550;
-
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf801,0));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf802,1));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf804,2));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf808,3));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf810,4));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf820,5));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf840,6));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf880,7));
- i++;
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf901,8));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf902,9));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf904,10));
- textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf908,11));
- i++;
-// textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf8ff,12));
-// textprintf(screen,font,x,y+16*i++,0x20+0x07,"%s",PrintKBD(0xf9ff,12));
-}
-#endif
