@@ -167,7 +167,6 @@ int _DASM(int Key) {
   struct ZONE  *zone=&DASM_ZONE;
 
   tSetUpdate(0);
-//    Key=readkey();
   Addr=FixWalker();
 
     switch (Key>>8) {

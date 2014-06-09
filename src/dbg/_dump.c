@@ -96,7 +96,7 @@ void Update_DUMP(void) {
   draw_hline(4,DUMP_ZONE.BaseY-1,71-1-4,C_Border);
 
   // tScreenPutChar('|',C_Border,70+16+1,DUMP_ZONE.BaseY-1);
-//  tScreenPutString("----------------------------------------------------------------------+----------------+",C_Border,0,DUMP_ZONE.BaseY-1);
+  // tScreenPutString("----------------------------------------------------------------------+----------------+",C_Border,0,DUMP_ZONE.BaseY-1);
   // tScreenPutString("----------------------------------------------------------------------+-----------------",C_Border,0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine);
   draw_hline(0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine,88-1,C_Border);
 }       
@@ -124,9 +124,6 @@ int _DUMP(int Key){
     Addr=zone->BaseAddr+(zone->Y*16);
     if (zone->Field[zone->Cursor].Type == zHEX) Addr+=zone->Cursor-2;
     if (zone->Field[zone->Cursor].Type == zASC) Addr+=zone->Cursor-19;
-
-//    Key=readkey();
-//    tSetUpdate(0);
 
     switch (Key>>8) {
        case KEY_UP  : {
@@ -236,7 +233,6 @@ int _DUMP(int Key){
                               } else {
                                 simulate_keypress(KEY_RIGHT<<8);
                               }
-//                              simulate_keypress(KEY_ENTER<<8);
                            }
                            break;
           }
@@ -244,7 +240,6 @@ int _DUMP(int Key){
                            Emulator_Write(Addr,Key&0xff);
                            if (zone->Field[zone->Cursor+1].Type == zBRK) {
                              zone->Cursor-=15;
-//                             for(i=0;i<15;i++) simulate_keypress(KEY_LEFT<<8);
                              simulate_keypress(KEY_DOWN<<8);
                            } else {
                              simulate_keypress(KEY_RIGHT<<8);
@@ -258,12 +253,5 @@ int _DUMP(int Key){
        DBG_Walker(0,zone,zone->BaseY+zone->Y);
        tSetUpdate(1);
     }
-//
-//    if ((Key>>8) == KEY_ESC) {
-//      tSetUpdate(1);
-//      Update_Screen();
-//      break;
-//    }
-//  }
     return Key;
 }
