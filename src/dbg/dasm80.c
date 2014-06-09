@@ -63,10 +63,9 @@ int DASM(char *S,word A)
   word W;
   int  C;
   int  CC;
-_Label *L;
+  _Label *L;
   int  cond;
   int  cond_dir;
-
 
   B=A;
 
@@ -85,7 +84,6 @@ _Label *L;
          W=Emulator_Read(B++)+256*Emulator_Read(B++);
          if (L=FindAddrLabel(W)) sprintf(H,"%s:%04X",L->Name,W);  //ESL
          else sprintf(H,"%04X",W);                       //ESL
-//         sprintf(H,"%04x",W);                       //ESL
          strcat(S,H);
          break;
    }
@@ -95,8 +93,6 @@ _Label *L;
           break;
     }
   }
-//  strcat(S,"                       ");
-//  S[28]=0;
   if (dbg_REG.PC==A) {
 
     cond_dir=(C>>3)&3;
