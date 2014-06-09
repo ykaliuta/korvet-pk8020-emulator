@@ -36,9 +36,6 @@ extern int  dbg_Cause;
 extern int  dbg_CauseAddr;
 #endif
 
-//#define ROM_FILE_NAME   "data/kontur.rom"
-//#define ROM_FILE_NAME   "data/korvet2.rom"
-//#define ROM_FILE_NAME   "data/korvet.rom"
 char RomFileName[1024]="data/rom.rom";
 char MapperFileName[1024]="data/mapper.mem";
 #define noDEBUG_MEMORY
@@ -46,7 +43,6 @@ char MapperFileName[1024]="data/mapper.mem";
 #define ROMSIZE         (24*1024)
 
 // Определения для маппера (как в файле обозначены типы памяти)
-
 #define M_RAM            0
 #define M_ROM0           1      // Реально ROM0 0000-1fff
 #define M_ROM1           2      // Реально ROM1 2000-3fff
@@ -63,21 +59,7 @@ extern int TraceCause;
 extern int CauseAddr;
 extern int InDBG;
 
-#ifdef DEBUG_MEMORY_LOW
-// EXTERNAL !!!!!!!!!!!!!!!!!!!!!!!
-int NCREG;
-// EXTERNAL !!!!!!!!!!!!!!!!!!!!!!!
-
-// Продцедуры Заглушки
-void GZU_Write(int Addr,byte Value){};
-void ACZU_Write(int Addr,byte Value){};
-void LUT_Write(byte Value){};
-
-byte GZU_read(int Addr){};
-byte ACZU_read(int Addr){};
-#else
 extern unsigned int NCREG;
-#endif
 
 int     SYSREG;                 // Значение регистра конфигурации памяти
                                 // Прямое значение (0-31)
@@ -248,13 +230,3 @@ void Memory_Init(void)
 byte RD_BreakPoint(int Addr)           { return BreakPoint[Addr&0xffff];};
 byte WR_BreakPoint(int Addr,byte Value){ BreakPoint[Addr&0xffff]=Value;};
 
-
-#ifdef DEBUG_MEMORY_LOW
-// MAIN & test routine ----------------------------------------------- MAIN
-int main(int argc, char **argv)
-{
- Mapper_Init();
- RAM_Init();
- ROM_Init(ROM_FILE_NAME);
-}
-#endif
