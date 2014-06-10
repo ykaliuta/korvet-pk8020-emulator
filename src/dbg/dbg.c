@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
@@ -199,13 +199,11 @@ void doDBG(void) {
 
   AllScreenUpdateFlag=1;
   SCREEN_ShowScreen();
+  SetDBGLut(Flag_DBG_LUT);
 
   while (!Exit) {
 
     // AddKorvetLabel();
-
-    SetDBGLut(Flag_DBG_LUT);
-
 
     tDoUpdate();
     Key=readkey();
@@ -231,7 +229,7 @@ void doDBG(void) {
        case (KEY_DOWN<<8)+KK_Ctrl : {if (dbgMODE != MAXDBG-1) dbgMODE++;Key=-1;break;}
 
        case (KEY_L   <<8)         :
-       case (KEY_L   <<8)+KK_Ctrl : {tShowAll();Update_Screen();SCREEN_ShowScreen(); Key=-1;break;}
+       case (KEY_L   <<8)+KK_Ctrl : {tShowAll();Update_Screen();SetDBGLut(Flag_DBG_LUT);SCREEN_ShowScreen(); Key=-1;break;}
 
        case (KEY_F5  <<8)         : {Flag_DBG_LUT^=1;                   Key=-1;break;}
        case (KEY_F5  <<8)+KK_Ctrl : {Flag_DBG_LUT_Mode^=1;              Key=-1;break;}
@@ -260,7 +258,6 @@ void doDBG(void) {
        case (KEY_F9  <<8)         : {Exit=1;break;}
        case (KEY_F10 <<8)         : {BW_Flag^=1;break;}
     }
-//    if (Key>>8 == KEY_ESC) Exit=1;
   }
 
   while (keypressed()) readkey();
