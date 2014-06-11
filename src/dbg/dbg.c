@@ -165,6 +165,9 @@ void Update_Screen(void) {
   // AllScreenUpdateFlag=1;
   // SCREEN_ShowScreen();
   UpdateGameTool();
+
+  SetDBGLut(Flag_DBG_LUT);
+  SCREEN_ShowScreen();  
 }
 
 void doDBG(void) {
@@ -229,7 +232,7 @@ void doDBG(void) {
        case (KEY_DOWN<<8)+KK_Ctrl : {if (dbgMODE != MAXDBG-1) dbgMODE++;Key=-1;break;}
 
        case (KEY_L   <<8)         :
-       case (KEY_L   <<8)+KK_Ctrl : {tShowAll();Update_Screen();SetDBGLut(Flag_DBG_LUT);SCREEN_ShowScreen(); Key=-1;break;}
+       case (KEY_L   <<8)+KK_Ctrl : {tShowAll();Update_Screen(); Key=-1;break;}
 
        case (KEY_F5  <<8)         : {Flag_DBG_LUT^=1;                   Key=-1;break;}
        case (KEY_F5  <<8)+KK_Ctrl : {Flag_DBG_LUT_Mode^=1;              Key=-1;break;}
@@ -267,7 +270,7 @@ void doDBG(void) {
   while(key[KEY_F8]);
   while(key[KEY_F9]);
 
-  while(key[Key]);
+  // while(key[Key]);
 
   scr_Page_Show=Saved_scr_Page_Show;
   AllScreenUpdateFlag=1;
