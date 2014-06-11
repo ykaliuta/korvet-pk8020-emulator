@@ -24,7 +24,7 @@
 int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
-int KeyAlias[256];
+int KeyAlias[KEY_MAX];
 
 extern int KBD_LED;
 
