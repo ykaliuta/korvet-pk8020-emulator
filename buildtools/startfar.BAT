@@ -1,3 +1,3 @@
-set MINGDIR=c:\app\mingw
-set PATH=c:\app\mingw\bin;c:\app\msys\1.0\bin;%path%;
-"c:\Program Files\Far\Far"
+set MINGDIR=c:\mingw
+set PATH=%MINGDIR%\bin;%MINGDIR%\msys\1.0\bin;%path%;
+"c:\FAR_\Far\Far"

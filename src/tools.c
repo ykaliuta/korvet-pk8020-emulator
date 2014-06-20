@@ -1,6 +1,7 @@
 #include "korvet.h"
 #include "vg.h"
 #include <assert.h>
+#include <getopt.h>
 
 #ifdef DBG
 #include "dbg/dbg.h"
