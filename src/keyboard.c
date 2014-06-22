@@ -21,6 +21,7 @@
  */
 #include "korvet.h"
 
+
 int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
@@ -35,21 +36,10 @@ int AliasTab[]={
                  KEY_RIGHT     , KEY_6_PAD,
                  KEY_UP        , KEY_8_PAD,
                  KEY_ENTER_PAD , KEY_ENTER,
+                 KEY_SEMICOLON , KEY_COLON, // fix windows allegro bug (colon does'nt work under windows)
                };
-#define MAXALIAS 5
+#define MAXALIAS 6 
 
-/*
-int KBD0[8][12]={
-{0		,KEY_H,KEY_P,KEY_X	,KEY_0	,KEY_8		,KEY_ENTER	,KEY_LSHIFT	,KEY_0_PAD,KEY_8_PAD	,KEY_F1},
-{KEY_A		,KEY_I,KEY_Q,KEY_Y	,KEY_1	,KEY_9		,KEY_PGUP	,KEY_ALT	,KEY_1_PAD,KEY_9_PAD	,KEY_F2},
-{KEY_B		,KEY_J,KEY_R,KEY_Z	,KEY_2	,KEY_COLON	,KEY_HOME	,KEY_ALTGR	,KEY_2_PAD,0		,KEY_F3},
-{KEY_C		,KEY_K,KEY_S,KEY_OPENBRACE,KEY_3,KEY_TILDE	,KEY_INSERT	,KEY_ESC	,KEY_3_PAD,0		,KEY_F4},
-{KEY_D		,KEY_L,KEY_T,KEY_TILDE	,KEY_4	,KEY_COMMA	,KEY_DEL	,KEY_RCONTROL	,KEY_4_PAD,0		,KEY_F5},
-{KEY_E		,KEY_M,KEY_U,KEY_CLOSEBRACE,KEY_5,KEY_MINUS	,KEY_BACKSPACE	,KEY_LCONTROL	,KEY_5_PAD,0		,},
-{KEY_F		,KEY_N,KEY_V,KEY_COLON	,KEY_6	,KEY_STOP	,KEY_TAB	,KEY_CAPSLOCK	,KEY_6_PAD,KEY_DEL_PAD	,},
-{KEY_G		,KEY_O,KEY_W,KEY_BACKSLASH,KEY_7,KEY_SLASH	,KEY_SPACE	,KEY_RSHIFT	,KEY_7_PAD,0		,},
-};
-*/
 /*
  		         D0  D1  D2  D3  D4  D5  D6  D7
 		       |   |   |   |   |   |   |   |   |
@@ -79,12 +69,12 @@ int KBD0[8][12]={
 //     01       02     04     08             10     20         40              80            101        102         104
 /*01*/{KEY_PGDN,KEY_H ,KEY_P ,KEY_X 	    ,KEY_0 ,KEY_8     ,KEY_ENTER    ,KEY_LSHIFT	  ,KEY_0_PAD ,KEY_8_PAD	 ,KEY_F1},
 /*02*/{KEY_A   ,KEY_I ,KEY_Q ,KEY_Y	    ,KEY_1 ,KEY_9     ,KEY_HOME	    ,KEY_ALT	  ,KEY_1_PAD ,KEY_9_PAD	 ,KEY_F2},
-/*04*/{KEY_B   ,KEY_J ,KEY_R ,KEY_Z	    ,KEY_2 ,KEY_COLON ,KEY_PGUP	    ,KEY_ALTGR	  ,KEY_2_PAD ,254        ,KEY_F3},
-/*08*/{KEY_C   ,KEY_K ,KEY_S ,KEY_OPENBRACE ,KEY_3 ,KEY_TILDE ,KEY_DEL      ,KEY_ESC	  ,KEY_3_PAD ,254 	 ,KEY_F4},
-/*10*/{KEY_D   ,KEY_L ,KEY_T ,KEY_BACKSLASH ,KEY_4 ,KEY_COMMA ,KEY_INSERT   ,KEY_RCONTROL ,KEY_4_PAD ,254	 ,KEY_F5},
-/*20*/{KEY_E   ,KEY_M ,KEY_U ,KEY_CLOSEBRACE,KEY_5 ,KEY_MINUS ,KEY_BACKSPACE,KEY_LCONTROL ,KEY_5_PAD ,254	 ,254},
-/*40*/{KEY_F   ,KEY_N ,KEY_V ,KEY_END	    ,KEY_6 ,KEY_STOP  ,KEY_TAB	    ,KEY_CAPSLOCK ,KEY_6_PAD ,KEY_DEL_PAD,254},
-/*80*/{KEY_G   ,KEY_O ,KEY_W ,KEY_EQUALS    ,KEY_7 ,KEY_SLASH ,KEY_SPACE    ,KEY_RSHIFT	  ,KEY_7_PAD ,254	 ,254},
+/*04*/{KEY_B   ,KEY_J ,KEY_R ,KEY_Z	    ,KEY_2 ,KEY_COLON ,KEY_PGUP	    ,KEY_ALTGR	  ,KEY_2_PAD ,KEY_MAX    ,KEY_F3},
+/*08*/{KEY_C   ,KEY_K ,KEY_S ,KEY_OPENBRACE ,KEY_3 ,KEY_TILDE ,KEY_DEL      ,KEY_ESC	  ,KEY_3_PAD ,KEY_MAX 	 ,KEY_F4},
+/*10*/{KEY_D   ,KEY_L ,KEY_T ,KEY_BACKSLASH ,KEY_4 ,KEY_COMMA ,KEY_INSERT   ,KEY_RCONTROL ,KEY_4_PAD ,KEY_MAX	 ,KEY_F5},
+/*20*/{KEY_E   ,KEY_M ,KEY_U ,KEY_CLOSEBRACE,KEY_5 ,KEY_MINUS ,KEY_BACKSPACE,KEY_LCONTROL ,KEY_5_PAD ,KEY_MAX	 ,KEY_MAX},
+/*40*/{KEY_F   ,KEY_N ,KEY_V ,KEY_END	    ,KEY_6 ,KEY_STOP  ,KEY_TAB	    ,KEY_CAPSLOCK ,KEY_6_PAD ,KEY_DEL_PAD,KEY_MAX},
+/*80*/{KEY_G   ,KEY_O ,KEY_W ,KEY_EQUALS    ,KEY_7 ,KEY_SLASH ,KEY_SPACE    ,KEY_RSHIFT	  ,KEY_7_PAD ,KEY_MAX	 ,KEY_MAX},
 };
 
 // ЙЦУКЕН Keyboard MAP
@@ -92,12 +82,12 @@ int KBD1[8][12]={
 //     01        02            04         08             10     20         40             80              101       102           104
 /*01*/{KEY_STOP ,KEY_OPENBRACE,KEY_G     ,KEY_M         ,KEY_0 ,KEY_8	 ,KEY_ENTER	,KEY_LSHIFT	,KEY_0_PAD,KEY_8_PAD	,KEY_F1},
 /*02*/{KEY_F	,KEY_B        ,KEY_Z     ,KEY_S         ,KEY_1 ,KEY_9	 ,KEY_PGUP	,KEY_ALT	,KEY_1_PAD,KEY_9_PAD	,KEY_F2},
-/*04*/{KEY_COMMA,KEY_Q        ,KEY_H     ,KEY_P         ,KEY_2 ,0        ,KEY_HOME	,KEY_ALTGR	,KEY_2_PAD,0		,KEY_F3},
-/*08*/{KEY_W	,KEY_R        ,KEY_C     ,KEY_I         ,KEY_3 ,KEY_TILDE,KEY_DEL	,KEY_ESC	,KEY_3_PAD,0		,KEY_F4},
-/*10*/{KEY_L	,KEY_K        ,KEY_N     ,KEY_QUOTE     ,KEY_4 ,0	 ,KEY_INSERT	,KEY_RCONTROL	,KEY_4_PAD,0		,KEY_F5},
-/*20*/{KEY_T	,KEY_V        ,KEY_E     ,KEY_O         ,KEY_5 ,KEY_MINUS,KEY_BACKSPACE	,KEY_LCONTROL	,KEY_5_PAD,0		,},
-/*40*/{KEY_A	,KEY_Y        ,KEY_COLON ,KEY_X         ,KEY_6 ,0	 ,KEY_TAB	,KEY_CAPSLOCK	,KEY_6_PAD,KEY_DEL_PAD	,},
-/*80*/{KEY_U	,KEY_J        ,KEY_D     ,KEY_CLOSEBRACE,KEY_7 ,KEY_SLASH,KEY_SPACE	,KEY_RSHIFT	,KEY_7_PAD,0		,},
+/*04*/{KEY_COMMA,KEY_Q        ,KEY_H     ,KEY_P         ,KEY_2 ,KEY_MAX  ,KEY_HOME	,KEY_ALTGR	,KEY_2_PAD,KEY_MAX	,KEY_F3},
+/*08*/{KEY_W	,KEY_R        ,KEY_C     ,KEY_I         ,KEY_3 ,KEY_TILDE,KEY_DEL	,KEY_ESC	,KEY_3_PAD,KEY_MAX	,KEY_F4},
+/*10*/{KEY_L	,KEY_K        ,KEY_N     ,KEY_QUOTE     ,KEY_4 ,KEY_MAX	 ,KEY_INSERT	,KEY_RCONTROL	,KEY_4_PAD,KEY_MAX	,KEY_F5},
+/*20*/{KEY_T	,KEY_V        ,KEY_E     ,KEY_O         ,KEY_5 ,KEY_MINUS,KEY_BACKSPACE	,KEY_LCONTROL	,KEY_5_PAD,KEY_MAX	,KEY_MAX},
+/*40*/{KEY_A	,KEY_Y        ,KEY_COLON ,KEY_X         ,KEY_6 ,KEY_MAX	 ,KEY_TAB	,KEY_CAPSLOCK	,KEY_6_PAD,KEY_DEL_PAD	,KEY_MAX},
+/*80*/{KEY_U	,KEY_J        ,KEY_D     ,KEY_CLOSEBRACE,KEY_7 ,KEY_SLASH,KEY_SPACE	,KEY_RSHIFT	,KEY_7_PAD,KEY_MAX	,KEY_MAX},
 };
 
 int KBD[8][12];
