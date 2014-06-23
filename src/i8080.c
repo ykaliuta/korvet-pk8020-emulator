@@ -19,10 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-//#include "config.h"
 #include "i8080.h"
-#include "i8080dis.h"
-//#include "pkemul.h"
 #include "mem.h"
 #include "korvet.h"
 
