@@ -23,6 +23,8 @@
 // 2004-11-04 first release
 #include <allegro.h>
 
+int JoystickNumber=1;
+
 int JoystickFlag=0;
 
 int JoystickUseFlag=0; // for main.c how many tick show usejoystik indicator
@@ -32,17 +34,17 @@ int Init_Joystick(void) {
    JoystickFlag=1;
 
    if (install_joystick(JOY_TYPE_AUTODETECT) != 0) {
-	JoystickFlag=0;
+	  JoystickFlag=0;
    }
 
    /* make sure that we really do have a joystick */
    if (!num_joysticks) {
-	JoystickFlag=0;
+	  JoystickFlag=0;
    }
 
    if (joy[0].flags & JOYFLAG_CALIBRATE) {
-      if (calibrate_joystick(0) == 0) {
-	JoystickFlag=0;
+      if (calibrate_joystick(JoystickNumber) == 0) {
+	     JoystickFlag=0;
       }
    }
 }
@@ -59,13 +61,13 @@ int Read_Joystick(void) {
 
    poll_joystick();     /* we HAVE to do this to read the joystick */
 
-   for (c=0; c<joy[0].num_buttons; c++) {
-     if (joy[0].button[c].b) Port=0x10;
+   for (c=0; c<joy[JoystickNumber].num_buttons; c++) {
+     if (joy[JoystickNumber].button[c].b) Port=0x10;
    }
 
-   if (joy[0].stick[0].axis[1].d1) Port|=1; // Up
-   if (joy[0].stick[0].axis[1].d2) Port|=2; // Down
-   if (joy[0].stick[0].axis[0].d1) Port|=4; // Left
-   if (joy[0].stick[0].axis[0].d2) Port|=8; // Right
+   if (joy[JoystickNumber].stick[0].axis[1].d1) Port|=1; // Up
+   if (joy[JoystickNumber].stick[0].axis[1].d2) Port|=2; // Down
+   if (joy[JoystickNumber].stick[0].axis[0].d1) Port|=4; // Left
+   if (joy[JoystickNumber].stick[0].axis[0].d2) Port|=8; // Right
    return Port^0xff;
 }

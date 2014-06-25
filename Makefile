@@ -2,7 +2,7 @@ CC       = gcc.exe
 #LIBS     = -mwindows -lallegro-4.4.2-mt
 
 LIBS     = -lalleg
-CFLAGS   = -MMD -g -Isrc 
+CFLAGS   = -MMD -g -Isrc
 #CFLAGS   = -O7 -MMD -fomit-frame-pointer -funroll-loops -Isrc
 #LIBS     = -lalleg -pg -g 
 #CFLAGS   = -pg -g -fno-omit-frame-pointer -MMD -Isrc
@@ -17,6 +17,7 @@ sources = _main.c \
 			serial.c timer.c      \
 			wav.c gui.c osd.c \
 			mouse.c joystick.c \
+			ext_rom.c \
 			dbg/dbg.c dbg/_dasm.c dbg/dasm80.c dbg/_dump.c dbg/_regs.c dbg/_history.c dbg/dbg_tools.c dbg/scremul.c dbg/kfonts.c \
 			dbg/label.c dbg/asm80.c dbg/readwrite.c dbg/sym.c dbg/lbl_korvet.c dbg/comname.c \
 			dbg/gt_main.c
