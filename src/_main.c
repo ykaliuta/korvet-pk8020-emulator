@@ -85,6 +85,7 @@ void Reset(void) {
     CPU_Init();
     KBD_Init();
     FDC_Reset();
+    PPI_Init();    
     Serial_Init();
     InitTMR();
 }

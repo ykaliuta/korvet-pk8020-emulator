@@ -104,6 +104,8 @@ byte PPI2_Read(int Addr);
 void PPI3_Write(int Addr, byte Value);
 byte PPI3_Read(int Addr);
 
+void PPI_init();
+
 void RS232_Write(int Addr, byte Value);
 byte RS232_Read(int Addr);
 

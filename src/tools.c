@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <getopt.h>
 
+#include "ext_rom.h"
+
 #ifdef DBG
 #include "dbg/dbg.h"
 #endif
@@ -214,7 +216,7 @@ void MUTE_BUF(void) {
 void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
-    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:")) != -1) {
+    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:x:X:r:R")) != -1) {
         switch (tolower(i)) {
         case 'a':
             strcpy(Disks[0],optarg);
@@ -228,7 +230,14 @@ void parse_command_line(int argc,char **argv) {
         case 'd':
             strcpy(Disks[3],optarg);
             break;
-        }
+        case 'r':
+            strcpy(RomFileName,optarg);
+            break;
+        case 'x': 
+            strcpy(ext_rom_file_name,optarg);
+            ext_rom_mode=1;
+            break;
+       }         
     }
 }
 

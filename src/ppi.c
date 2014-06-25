@@ -20,6 +20,7 @@
  *
  */
 #include "korvet.h"
+#include "ext_rom.h"
 
 #define noPPI_DEBUG
 
@@ -71,6 +72,28 @@ extern int k_mouseb;
 int PPI1_A,PPI1_B,PPI1_C,PPI1_RUS;
 int PPI2_A,PPI2_B,PPI2_C,PPI2_RUS;
 int PPI3_A,PPI3_B,PPI3_C,PPI3_RUS;
+
+// Сброс адаптеров - все порты на вывод, значение - 0
+void PPI_Init(void) {
+
+  PPI1_A=0;
+  PPI1_B=0;
+  PPI1_C=0;
+  PPI1_RUS=0;
+  PPI2_A=0;
+  PPI2_B=0;
+  PPI2_C=0;
+  PPI2_RUS=0;
+  PPI3_A=0;
+  PPI3_B=0;
+  PPI3_C=0;
+  PPI3_RUS=0;
+
+  // PPI1_C=AssembleVIREG_PPI1C();
+  // PPI2_C=Assemble_PPI2C();
+  init_extrom();
+}
+
 
 // Все управляющие сигналы в собственных переменных,
 // Assemble
@@ -125,17 +148,19 @@ void Disassemble_PPI2C(int Value)
 {
   static int oldState_SoundEnable;
   int tSoundEnable;
-//   XS1:32          =(Value&0x80)>>7;
-//  Reset for Analog Joystick =(Value&0x40)>>6;
-// ~SE               =(Value&0x20)>>5;
 
-// ~ACK              =(Value&0x10)>>4;
-//   SetPrinterStrobe((Value&0x10)>>4);
+  if ((((Value&0x80)>>7) == 1) && (ext_rom_mode)) PIC_IntRequest(0);    // формируем запрос прерывания extrom по сигналу control
+  //   XS1:32          =(Value&0x80)>>7;
+  //  Reset for Analog Joystick =(Value&0x40)>>6;
+  // ~SE               =(Value&0x20)>>5;
+
+  // ~ACK              =(Value&0x10)>>4;
+  //   SetPrinterStrobe((Value&0x10)>>4);
    SetPrinterStrobe((Value&0x20)>>4);
 
    tSoundEnable       =(Value&0x08)>>3;
-// Cassete Motor ON  =(Value&0x04)>>2;
-// CasseteOut level  =(Value&0x03)>>0;
+  // Cassete Motor ON  =(Value&0x04)>>2;
+  // CasseteOut level  =(Value&0x03)>>0;
 
    if (oldState_SoundEnable != tSoundEnable) {
      DoTimer();
@@ -144,9 +169,9 @@ void Disassemble_PPI2C(int Value)
    SoundEnable=tSoundEnable;
    oldState_SoundEnable=SoundEnable;
 
-#ifdef TRACETIMER
- fprintf(F_TIMER,"S: %08d %d\n",Takt,SoundEnable);
-#endif
+  #ifdef TRACETIMER
+   fprintf(F_TIMER,"S: %08d %d\n",Takt,SoundEnable);
+  #endif
 }
 
 int Assemble_PPI2C(void)
@@ -233,8 +258,14 @@ void PPI3_Write(int Addr, byte Value) {
     int bit;
     switch (Addr & 0x03) {
       case 0: {PPI3_A=Value;break;}
-      case 1: {PPI3_B=Value;break;}
-      case 2: {PPI3_C=Value;break;}
+      case 1: {
+        PPI3_B=Value;
+        break;
+       }
+      case 2: {
+        PPI3_C=Value;
+        break;
+       }
       case 3: {
            if (Value & 0x80) PPI3_RUS=Value;
            else {
@@ -251,7 +282,15 @@ void PPI3_Write(int Addr, byte Value) {
 byte PPI3_Read(int Addr){
     int Value;
     switch (Addr & 0x03) {
-      case 0: {Value=PPI3_A;break;}
+      case 0: {
+       if ((!ext_rom_mode) || ((PPI2_C&0x80) == 0)) {
+          Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
+        }
+        else {
+          Value=ext_rom_read(PPI3_B,PPI3_C);
+        }  
+        break;
+      }
       case 1: {
 /*
 // k_mouse part
@@ -265,7 +304,9 @@ byte PPI3_Read(int Addr){
            break;
 */
 // deflector Joystick
-             Value=Read_Joystick();break;
+             if (ext_rom_mode) Value=PPI3_B; // загрузка из ROM - читаем что записали, это адрес
+             else Value=Read_Joystick();
+             break;
 
 //           Value=PPI3_B;break;
       }
@@ -275,11 +316,6 @@ byte PPI3_Read(int Addr){
     return Value;
 }
 
-void PPI_Init(void)
-{
- PPI1_C=AssembleVIREG_PPI1C();
- PPI2_C=Assemble_PPI2C();
-}
 
 #ifdef DBG
 void ShowPPIdbg(void) {
