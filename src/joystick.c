@@ -23,7 +23,7 @@
 // 2004-11-04 first release
 #include <allegro.h>
 
-int JoystickNumber=1;
+int JoystickNumber=0;
 
 int JoystickFlag=0;
 
