@@ -60,6 +60,9 @@ extern AUDIOSTREAM *stream;
 
 int BMP_NUM=0;
 
+extern int JoystickEnabled;
+extern int JoystickNumber;
+
 void Debug_LUT(int Debug_Key) {
     byte SaveLut[16];
     byte i;
@@ -216,7 +219,7 @@ void MUTE_BUF(void) {
 void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
-    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:x:X:r:R")) != -1) {
+    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:x:X:r:R:j:J:")) != -1) {
         switch (tolower(i)) {
         case 'a':
             strcpy(Disks[0],optarg);
@@ -236,6 +239,14 @@ void parse_command_line(int argc,char **argv) {
         case 'x': 
             strcpy(ext_rom_file_name,optarg);
             ext_rom_mode=1;
+            break;
+        case 'j':
+            if (optarg[0]>='0' && optarg[0]<'9') {
+                JoystickNumber=optarg[0]-'0';
+                JoystickEnabled=1;
+            } else {
+                printf(" Invalid joystick number '%s'\n",optarg );
+            }
             break;
        }         
     }

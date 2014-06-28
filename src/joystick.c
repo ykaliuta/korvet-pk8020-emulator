@@ -22,8 +22,11 @@
 // (c) 2004 Sergey Erokhin
 // 2004-11-04 first release
 #include <allegro.h>
+#include <stdio.h>
 
-int JoystickNumber=0;
+int JoystickEnabled=0;
+
+int JoystickNumber=1;
 
 int JoystickFlag=0;
 
@@ -31,22 +34,29 @@ int JoystickUseFlag=0; // for main.c how many tick show usejoystik indicator
 
 int Init_Joystick(void) {
 
-   JoystickFlag=1;
+   printf("Joystick support : ");
+   if (JoystickEnabled) {    
+      JoystickFlag=1;
 
-   if (install_joystick(JOY_TYPE_AUTODETECT) != 0) {
-	  JoystickFlag=0;
-   }
-
-   /* make sure that we really do have a joystick */
-   if (!num_joysticks) {
-	  JoystickFlag=0;
-   }
-
-   if (joy[0].flags & JOYFLAG_CALIBRATE) {
-      if (calibrate_joystick(JoystickNumber) == 0) {
-	     JoystickFlag=0;
+      if (install_joystick(JOY_TYPE_AUTODETECT) != 0) {
+   	  JoystickFlag=0;
       }
+
+      /* make sure that we really do have a joystick */
+      if (!num_joysticks) {
+   	  JoystickFlag=0;
+      }
+
+      if (joy[JoystickNumber].flags & JOYFLAG_CALIBRATE) {
+         if (calibrate_joystick(JoystickNumber) == 0) {
+   	     JoystickFlag=0;
+         }
+      }
+      printf("%d - %s",JoystickNumber, JoystickFlag ? "enabled" : "not suppored");
+   } else {
+      printf("not enabled (-j for enable)");
    }
+   printf("\n");
 }
 
 
@@ -57,17 +67,21 @@ int Read_Joystick(void) {
    int c;
    JoystickUseFlag=50*0.5;
 
+   if (!JoystickEnabled) return 0;
+
    if (!JoystickFlag) return 0^0xff;
 
    poll_joystick();     /* we HAVE to do this to read the joystick */
 
    for (c=0; c<joy[JoystickNumber].num_buttons; c++) {
-     if (joy[JoystickNumber].button[c].b) Port=0x10;
+     if (joy[JoystickNumber].button[c].b) Port=0xf0;
    }
 
    if (joy[JoystickNumber].stick[0].axis[1].d1) Port|=1; // Up
    if (joy[JoystickNumber].stick[0].axis[1].d2) Port|=2; // Down
    if (joy[JoystickNumber].stick[0].axis[0].d1) Port|=4; // Left
    if (joy[JoystickNumber].stick[0].axis[0].d2) Port|=8; // Right
+
+
    return Port^0xff;
 }

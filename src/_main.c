@@ -275,14 +275,15 @@ int main(int argc,char **argv) {
 
     ReadConfig(); // Read KORVET.CFG file and set default values ...
 
-    InitOSD();
-    InitPrinter();
-    Init_Joystick();
-
     // parse command line option -A filename -B filename
     parse_command_line(argc,argv);
 
     check_missing_images();
+
+
+    InitOSD();
+    InitPrinter();
+    Init_Joystick();
 
     #ifdef TRACETIMER
     F_TIMER=fopen("_timer.log","wb");
