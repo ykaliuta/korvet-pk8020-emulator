@@ -11,3 +11,5 @@ profiler/*
 gmon.out
 work/*
 1kdi/*
+DMP.*
+DMPSC*.*
