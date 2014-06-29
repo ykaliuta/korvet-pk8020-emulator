@@ -14,7 +14,9 @@ sources = _main.c \
 			i8080.c \
 			keyboard.c memory.c   \
 			pic.c ppi.c printer.c screen.c  \
-			serial.c timer.c      \
+			serial.c \
+			lan.c \
+			timer.c \
 			wav.c gui.c osd.c \
 			mouse.c joystick.c \
 			ext_rom.c \

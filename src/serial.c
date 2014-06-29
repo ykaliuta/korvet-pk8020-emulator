@@ -55,12 +55,6 @@ byte RS232_Read(int Addr) {
  else return GetSerialQueue(); // Data
 }
 
-void LAN_Write(int Addr,byte Value){return;}
-byte LAN_Read(int Addr){
-// fixfor KORNET work
-  return 0x85;
-}
-
 void Serial_Init(void) {
   InitSerialQueue();
 }

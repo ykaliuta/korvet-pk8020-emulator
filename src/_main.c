@@ -78,9 +78,12 @@ void Timer_50hz()
 END_OF_FUNCTION(Timer_1S);
 
 void Reset(void) {
+    printf("Reset\n");
     GZU_Init();
     ACZU_Init();
     Memory_Init();
+    FDC_Init();
+    FDC_Reset();
     PIC_init();
     CPU_Init();
     KBD_Init();
@@ -158,6 +161,10 @@ int main_loop(void) {
     #endif
 
         Takt+=CPU_Exec1step();
+
+    #ifdef LAN_SUPPORT
+        LAN_poll();  
+    #endif
 
         if (Takt>=ALL_TAKT) {
     #ifdef SOUND
@@ -271,6 +278,8 @@ int main(int argc,char **argv) {
     //LUT_BASE_COLOR = 0x80
     assert(LUT_BASE_COLOR == 0x80); //very important for SCREEN_ShowScreen
 
+    printf("%s\n",AboutMSG);
+
     allegro_init();
 
     ReadConfig(); // Read KORVET.CFG file and set default values ...
@@ -284,6 +293,10 @@ int main(int argc,char **argv) {
     InitOSD();
     InitPrinter();
     Init_Joystick();
+
+    #ifdef LAN_SUPPORT  
+    LAN_Init();
+    #endif
 
     #ifdef TRACETIMER
     F_TIMER=fopen("_timer.log","wb");

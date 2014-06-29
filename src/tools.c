@@ -189,6 +189,14 @@ void ReadConfig(void) {
     FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
 
     KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
+
+    #ifdef LAN_SUPPORT
+    // Секция [lan]    
+    LANADDR              =get_config_hex("lan","ADDR",0);  
+    LANADDR=(~LANADDR)&0xf;
+    strcpy(LAN_ttdev     ,get_config_string("lan","DEVICE",""));
+    //strcpy(LAN_logfile   ,get_config_string("lan","LOG",""));
+    #endif
 }
 
 void PrintDecor() {
@@ -219,7 +227,6 @@ void MUTE_BUF(void) {
 }
 
 void help(void) {
-    printf(AboutMSG);
     printf("\nAvailable keys\n\n");
 
     printf("Disk Images\n");
@@ -241,12 +248,30 @@ void help(void) {
 
     printf("\t-j <joystick num> emulate physical joystick <joystick num> to korvet joystick (attached to EXT port)\n");
     printf("\t\t\ttry -j 9 to show all available joysticks in system\n");
+
+    #ifdef LAN_SUPPORT
+    printf("\tLAN support\n");
+    printf("\t-s - имя устройства последовательного порта для эмуляции локальной сети\n");
+    printf("\t\t\t -s/dev/ttyS0 - use real ttyS0 (aka COM1: ) for connect to real PK8010\n");
+    printf("\t\t\t -s/dev/ptmx  - attach to virtual pesudoterminal (emulate network), see pseudeterminal id in output\n");
+    printf("\t\t\t -s/dev/pts/2 - on rmu (see /dev/pttmx output)\n");
+    printf("\t\t\t sample\n");
+    printf("\t\t\t\tRMP ./kdbg -n0 -s/dev/ptmx\n");
+    printf("\t\t\t\tRMU ./kdbg -n2 -s/dev/pts/2\n");
+    printf("\t-n - (0..15) адрес РМУ в сети\n");
+    printf("\t-l - имя файла сетевого протокола, в случае '-l-' отказ от создания файла протокола\n");
+    #endif    
 }
 
 void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
-    while ((i=getopt(argc, argv, "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:")) != -1) {
+    while ((i=getopt(argc, argv, 
+        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:"
+    #ifdef LAN_SUPPORT
+        "s:S:n:N:l:L:"
+    #endif
+        )) != -1) {
         switch (tolower(i)) {
         case 'h':
             help();
@@ -287,6 +312,19 @@ void parse_command_line(int argc,char **argv) {
                 printf(" Invalid mouse type (0 - disable, 1 - MS , 2 - MouseSystem) '%s'\n",optarg );
             }
             break;
+        #ifdef LAN_SUPPORT
+        case 's': 
+            strcpy(LAN_ttdev,optarg);
+            break;
+        case 'n': 
+            sscanf(optarg,"%i",&LANADDR);
+            LANADDR=(~LANADDR)&0xf;
+            break;
+        case 'l': 
+            strcpy(LAN_logfile,optarg); 
+            if (strcmp(LAN_logfile,"-") == 0) LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
+            break;
+        #endif    
        }         
     }
 }

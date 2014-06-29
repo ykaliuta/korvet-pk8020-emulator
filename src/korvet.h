@@ -29,8 +29,16 @@
 #include <sys/stat.h> /* for mode definitions */
 #include <ctype.h>
 
+#include <sys/poll.h>
+#include <unistd.h>
+#include <signal.h>
+#include <asm-generic/ioctls.h>
+#include <termios.h>
+
 #ifndef _KORVET_H
 #define _KORVET_H
+
+#define LAN_SUPPORT
 
 #define DBG
 #define noEGA
@@ -45,7 +53,6 @@
 
 #define OK 		0
 #define ERROR		1
-#define LANADDR         0x0f       // Адрес РМУ в сети ^0x0f
 
 #define CPU_CLK         2500000    // частота ЦПУ в герцах
 #define ALL_TAKT        50000      // кол-во тактов в одном VBLANK
@@ -73,6 +80,13 @@ typedef unsigned       dword;
 typedef signed char    offset;
 #define _TYPEDEF_
 #endif
+
+
+
+extern unsigned int 	LANADDR; // Адрес РМУ в сети 00-0f
+extern char 			LAN_ttdev[50];		// последовательный порт сети
+extern char LAN_ttdev[50];     // последовательный порт сети
+extern char LAN_logfile[200];  // Имя файла для лога
 
 
 void Emulator_Write(int Addres,byte Value);
@@ -111,8 +125,11 @@ byte RS232_Read(int Addr);
 
 void LAN_Write(int Addr,byte Value);
 byte LAN_Read(int Addr);
+void Lan_Init();      // открытие и настройка последовательного порта
+void LAN_poll();      // формирование прерывание при наличии байта
 
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
 
 #endif
+
