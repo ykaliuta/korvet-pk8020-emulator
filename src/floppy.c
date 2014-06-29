@@ -19,6 +19,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include <stdio.h>
+
 #include "korvet.h"
 
 #include "vg.h"
@@ -116,9 +118,15 @@ byte FDC_Read(int Addr) {
 
 
 void FDC_Init(void) {
+  int i;
   VG.OperIO=0x0a;
   DskVG();
   InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=0;
+
+  printf("Drive map:\n");
+  for(i=0;i<4;i++) {
+    printf("\t%c - %s\n",'A'+i,Disks[i]);
+  }
 }
 
 void FDC_Reset(void) {

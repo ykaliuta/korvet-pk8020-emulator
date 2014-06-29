@@ -98,11 +98,12 @@ int Mapper_Init(void) {
 int ROM_Init(char *RomFileName) {
  int i;
  int retflag=OK;
+ printf("ROM file : %s\n",RomFileName);
  FILE *MFILE;
  if ((MFILE=fopen(RomFileName,"rb")) == NULL) retflag=ERROR;
  if ((i=fread(ROM,1,ROMSIZE,MFILE)) != ROMSIZE) {  retflag=ERROR; } 
  if (retflag == ERROR) {
-  printf("ERROR: read rom file '%s' : %d bytes long\n",RomFileName,i);
+  printf("WARNING: read rom file '%s' : %d bytes long\n",RomFileName,i);
  }
  fclose(MFILE);
  return retflag;

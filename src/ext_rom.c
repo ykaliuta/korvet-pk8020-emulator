@@ -29,12 +29,12 @@ char ext_rom_file_name[1024]="not set";	// имя файла с образом R
 
 void init_extrom(void) {
   if (ext_rom_mode) {
-    printf("\nExtROM mode with file: %s\n",ext_rom_file_name);
+    printf("ExtROM   : %s\n",ext_rom_file_name);
 
     extrom_file=fopen(ext_rom_file_name,"rb");
     if (extrom_file == 0) {
-      printf("\n - Ошибка открытия файла образа ROM - %s\n",ext_rom_file_name);
-      printf("ExtRom Boot - режим отключен");
+      printf("WARNING: Ошибка открытия файла образа ROM - %s\n",ext_rom_file_name);
+      printf("ExtRom Boot - режим отключен\n");
 
       ext_rom_mode=0;
     }
