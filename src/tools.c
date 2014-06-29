@@ -63,6 +63,9 @@ int BMP_NUM=0;
 extern int JoystickEnabled;
 extern int JoystickNumber;
 
+extern int MouseType; //1 - MSMouse, 2-MouseSystem
+
+
 void Debug_LUT(int Debug_Key) {
     byte SaveLut[16];
     byte i;
@@ -215,12 +218,40 @@ void MUTE_BUF(void) {
     free_audio_stream_buffer(stream);
 }
 
+void help(void) {
+    printf(AboutMSG);
+    printf("\nAvailable keys\n\n");
+
+    printf("Disk Images\n");
+    printf("\t-a <KDI.FILE> KDI disk image mounted in drive A\n");
+    printf("\t-b <KDI.FILE> KDI disk image mounted in drive B\n");
+    printf("\t-c <KDI.FILE> KDI disk image mounted in drive C\n");
+    printf("\t-d <KDI.FILE> KDI disk image mounted in drive D\n");
+
+    printf("\nROM\n");
+    printf("\t-r <ROM.FILE> Path to MAIN ROM file\n");
+    printf("\t-x <ROM.FILE> ROM attached to EXT connector (and turn on ext rom support)\n");
+    printf("\t\t\tdisable joystick support\n");
+
+    printf("\nMouse and Joystick\n");
+    printf("\t-m <mouse type> select attached mouse type\n");
+    printf("\t\t0 - turn support off\n");
+    printf("\t\t1 - emualte Microsoft mouse (default) \n");
+    printf("\t\t2 - emualte MouseSystem mouse\n");
+
+    printf("\t-j <joystick num> emulate physical joystick <joystick num> to korvet joystick (attached to EXT port)\n");
+    printf("\t\t\ttry -j 9 to show all available joysticks in system\n");
+}
 
 void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
-    while ((i=getopt(argc, argv, "a:A:b:B:c:C:d:D:x:X:r:R:j:J:")) != -1) {
+    while ((i=getopt(argc, argv, "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:")) != -1) {
         switch (tolower(i)) {
+        case 'h':
+            help();
+            exit(-1);
+            break;
         case 'a':
             strcpy(Disks[0],optarg);
             break;
@@ -241,11 +272,19 @@ void parse_command_line(int argc,char **argv) {
             ext_rom_mode=1;
             break;
         case 'j':
-            if (optarg[0]>='0' && optarg[0]<'9') {
+            if (optarg[0]>='0' && optarg[0]<='9') {
                 JoystickNumber=optarg[0]-'0';
                 JoystickEnabled=1;
             } else {
                 printf(" Invalid joystick number '%s'\n",optarg );
+            }
+            break;
+        case 'm':
+            i=optarg[0]-'0';
+            if (i==0 || i==1 || i==2) {
+                MouseType=i;
+            } else {
+                printf(" Invalid mouse type (0 - disable, 1 - MS , 2 - MouseSystem) '%s'\n",optarg );
             }
             break;
        }         

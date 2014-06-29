@@ -21,6 +21,8 @@
  */
 #include <allegro.h>
 
+int MouseType = 1; //0 - disabled, 1 - MSMouse, 2-MouseSystem
+
 int mickeyx = 0;
 int mickeyy = 0;
 int btn=0;
@@ -32,6 +34,15 @@ int btn2=0;
 int k_mousex = 0;
 int k_mousey = 0;
 int k_mouseb = 0;
+
+void ChkMouse_Microsoft(void);
+void ChkMouse_MouseSystem(void);
+
+
+void ChkMouse(void) {
+  if (MouseType == 1) ChkMouse_Microsoft();
+  if (MouseType == 2) ChkMouse_MouseSystem();
+}
 
 
 /*
@@ -50,7 +61,7 @@ int k_mouseb = 0;
 Right Button ────┘            X increment      Y increment
 */
 
-void ChkMouse(void) {
+void ChkMouse_Microsoft(void) {
   static unsigned char b1,b2,b3;
 
   get_mouse_mickeys(&mickeyx, &mickeyy);
