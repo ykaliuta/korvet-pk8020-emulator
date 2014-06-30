@@ -4,6 +4,7 @@
 #include <getopt.h>
 
 #include "ext_rom.h"
+#include "lan.h"
 
 #ifdef DBG
 #include "dbg/dbg.h"
@@ -192,8 +193,8 @@ void ReadConfig(void) {
 
     #ifdef LAN_SUPPORT
     // Секция [lan]    
-    LANADDR              =get_config_hex("lan","ADDR",0);  
-    LANADDR=(~LANADDR)&0xf;
+    LAN_Addr              =get_config_hex("lan","ADDR",0);  
+    LAN_Addr=(~LAN_Addr)&0xf;
     strcpy(LAN_ttdev     ,get_config_string("lan","DEVICE",""));
     //strcpy(LAN_logfile   ,get_config_string("lan","LOG",""));
     #endif
@@ -251,15 +252,20 @@ void help(void) {
 
     #ifdef LAN_SUPPORT
     printf("\tLAN support\n");
-    printf("\t-s - имя устройства последовательного порта для эмуляции локальной сети\n");
-    printf("\t\t\t -s/dev/ttyS0 - use real ttyS0 (aka COM1: ) for connect to real PK8010\n");
-    printf("\t\t\t -s/dev/ptmx  - attach to virtual pesudoterminal (emulate network), see pseudeterminal id in output\n");
-    printf("\t\t\t -s/dev/pts/2 - on rmu (see /dev/pttmx output)\n");
-    printf("\t\t\t sample\n");
-    printf("\t\t\t\tRMP ./kdbg -n0 -s/dev/ptmx\n");
-    printf("\t\t\t\tRMU ./kdbg -n2 -s/dev/pts/2\n");
-    printf("\t-n - (0..15) адрес РМУ в сети\n");
-    printf("\t-l - имя файла сетевого протокола, в случае '-l-' отказ от создания файла протокола\n");
+    printf("\t-l - emulate corver network\n");
+    printf("\t\t-l <path to port> /dev/ttyS0 - use real ttyS0 (aka COM1: ) for connect to real PK8010\n");
+    printf("\t\t-l RMP - run as RMP\n");
+    printf("\t\t-l RMU - run as RMU (and attach to the emulator started with -l RMP)\n");
+    // printf("\t\tor long way ...\n");
+    // printf("\t\t-l /dev/ptmx  - attach to virtual pesudoterminal (emulate network), see pseudeterminal id in output\n");
+    // printf("\t\t-l /dev/pts/2 - on rmu (see /dev/pttmx output)\n");
+    printf("\t\tsample\n");
+    // printf("\t\t\tRMP ./kdbg -n0 -s/dev/ptmx\n");
+    // printf("\t\t\tRMU ./kdbg -n2 -s/dev/pts/2\n");
+    printf("\t\t-l /dev/ttyS0 - use real ttyS0 (aka COM1: ) for connect to real PK8010\n");
+    printf("\n");
+    printf("\t-n - (0..15) RMU network address\n");
+    printf("\t-q - file name for logging network traffic\n");
     #endif    
 }
 
@@ -269,7 +275,7 @@ void parse_command_line(int argc,char **argv) {
     while ((i=getopt(argc, argv, 
         "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:"
     #ifdef LAN_SUPPORT
-        "s:S:n:N:l:L:"
+        "n:N:l:L:q:Q:"
     #endif
         )) != -1) {
         switch (tolower(i)) {
@@ -313,18 +319,23 @@ void parse_command_line(int argc,char **argv) {
             }
             break;
         #ifdef LAN_SUPPORT
-        case 's': 
+        case 'l': 
             strcpy(LAN_ttdev,optarg);
             break;
         case 'n': 
-            sscanf(optarg,"%i",&LANADDR);
-            LANADDR=(~LANADDR)&0xf;
+            sscanf(optarg,"%i",&LAN_Addr);
+            LAN_Addr=(~LAN_Addr)&0xf;
             break;
-        case 'l': 
+        case 'q': 
             strcpy(LAN_logfile,optarg); 
-            if (strcmp(LAN_logfile,"-") == 0) LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
+            // if (strcmp(LAN_logfile,"-") == 0) {
+            //     LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
+            // }
             break;
-        #endif    
+        #endif
+        default:
+            printf("aborted, use -h for help\n"); 
+            exit(-1);   
        }         
     }
 }

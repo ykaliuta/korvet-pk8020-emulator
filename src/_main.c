@@ -23,6 +23,7 @@
 #include "korvet.h"
 #include "vg.h"
 #include <assert.h>
+#include "lan.h"
 
 #ifdef DBG
 #include "dbg/dbg.h"
@@ -336,6 +337,11 @@ int main(int argc,char **argv) {
     #ifdef TRACETIMER
     fclose(F_TIMER);
     #endif
+
+    #ifdef LAN_SUPPORT
+    unlink(LAN_PTX_FILE);
+    #endif
+
 
     return 0;
 }

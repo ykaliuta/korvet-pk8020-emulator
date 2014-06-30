@@ -21,6 +21,7 @@
  */
 #include "korvet.h"
 #include "ext_rom.h"
+#include "lan.h"
 
 #define noPPI_DEBUG
 
@@ -106,7 +107,7 @@ byte Assemble_PPI1A(void)
 {
    int Value=0;
 
-   Value|=(LANADDR           &0x0f)<<4; // xxxx0000
+   Value|=(LAN_Addr          &0x0f)<<4; // xxxx0000
    Value|=(scr_Attr_Read     &0x01)<<3; // 0000x000
    Value|=(GetPrinterStatus()&0x01)<<2; // 00000x00
    Value|=((Takt<VBLANK_TAKT)?1:0 )<<1; // 000000x0

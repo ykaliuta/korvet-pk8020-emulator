@@ -19,15 +19,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#define _GNU_SOURCE
-#include "korvet.h"
+
+/* 
+ * This code writen by Alexander Stepanov  forth32 <at> mail.ru
+ * http://zx-pk.ru/showthread.php?t=23456
+ * http://zx-pk.ru/showthread.php?t=23458
+ * and bit modified by Sergey Erokhin
+ * jun 2014
+ */ 
+
 #include <allegro.h>
 #include <stdio.h>
 #include <sys/poll.h>
 #include <stdlib.h>
 #include <termios.h>
 
-unsigned int 	LANADDR=0^0x0f;
+#include <time.h>
+
+#include "korvet.h"
+#include "lan.h"
+
+unsigned int 	LAN_Addr=0^0x0f;
 
 // увеличивается время поиска РМУ в сети и ожидания при потере пакетов
 
@@ -39,12 +51,12 @@ byte LAN_Read(int Addr) {
 // fixfor KORNET work
     return 0x85;
 }
-void LAN_Init() {};
-void LAN_poll() {};
+void LAN_Init(void) {};
+void LAN_poll(void) {};
 #else
 
-char LAN_ttdev[50];     // последовательный порт сети
-char LAN_logfile[200];  // Имя файла для лога 
+char        LAN_ttdev[1000];     // последовательный порт сети
+char        LAN_logfile[1000]="";  // Имя файла для лога 
 
 
 //*******************************************************************
@@ -163,6 +175,8 @@ void LAN_Write(int Addr,byte Value) {
             fputc(c,netlog);
             fputc(0,netlog);     // код 0 - данные для записи
         }
+        // usleep(10000000);
+        //usleep(1000);
     }
 }
 
@@ -241,11 +255,25 @@ void sio_handler(int sig) {
 
 }
 
+char *get_rmp_ptx_path(void) {
+    char *ret=NULL;
+    static char buf[1024];
+    FILE *f=fopen(LAN_PTX_FILE,"r");
+    if (f) {
+        fscanf(f,"RMP PTX: %s",buf);
+        ret=buf;
+        fclose(f);
+    }
+    return ret;
+}
+
+
+
 //***********************************************
 //* Инициализация сетевого адаптера ВВ51        *
 //***********************************************
 
-void LAN_Init() {
+void LAN_Init(void) {
 
     char npts[100];      // строка для приема имени псевдотерминала
     int err;
@@ -255,6 +283,25 @@ void LAN_Init() {
     netlog=0;       // лог пока не открыт
 
     if (strlen(LAN_ttdev) == 0) return;   // сетевой адаптер не описан в конфиге - пропускаем
+
+    if ( (0==strcmp("rmp",LAN_ttdev)) || (0==strcmp("RMP",LAN_ttdev)) ) {
+            printf("LAN RMP mode initalized\n");
+            strcpy(LAN_ttdev,"/dev/ptmx");
+            LAN_Addr=0 ^ 0x0f;
+    } else if ((0==strcmp("rmu",LAN_ttdev)) || (0==strcmp("RMU",LAN_ttdev)) ) {
+        if (get_rmp_ptx_path() != NULL) {
+            strncpy(LAN_ttdev,get_rmp_ptx_path(),1000);
+
+            if (LAN_Addr == 0x0f) {
+                LAN_Addr = 2 ^ 0x0f;
+            }
+
+            printf("LAN RMU mode initalized (RMU NUM: %-2d, server ptx=%s)\n",LAN_Addr^0x0f,LAN_ttdev);
+        } else {
+            printf("WARNING: LAN RMU mode ignored, can't find %s\nrun -s rmp before\n",LAN_PTX_FILE);
+            exit(-1);
+        }
+    }
 
 
     //lanfd = open(LAN_ttdev, O_RDWR | O_NOCTTY | O_SYNC);  // для синхронной заиси - надежнее, но с тормозпми
@@ -272,8 +319,19 @@ void LAN_Init() {
     if (grantpt(lanfd) == 0) {
         unlockpt(lanfd);         // разблокируем подчиненный терминал
         ptsname_r(lanfd,npts,100); // получаем его имя
-        if (npts != 0) printf("\nПодчиненный псевдотерминал - %s",npts);
-        else printf("\nНевозможно определить имя подчиненного терминала");
+        if (npts != 0) {
+            printf("\nПодчиненный псевдотерминал - %s",npts);
+            FILE *f=fopen(LAN_PTX_FILE,"wt");
+            if (f != NULL) {
+                fprintf(f,"RMP PTX: %s",npts);
+                fclose(f);
+            } else {
+                printf("can't create %s, -s RMU can't work !\n",LAN_PTX_FILE);
+            }
+           
+        } else {
+            printf("\nНевозможно определить имя подчиненного терминала");
+        }
         fflush(stdout);
     }
 
@@ -326,9 +384,39 @@ void LAN_Init() {
     // инициализация структуры запроса ppoll()
     pf.fd=lanfd;
 
-    printf("\nАдрес эмулятора в сети - %1x\n",(~LANADDR)&0xf);
+    printf("\nАдрес эмулятора в сети - %1x\n",(~LAN_Addr)&0xf);
     fflush(stdout);
 
 }
 
 #endif
+
+/*
+Стартуем первый эмулятор.
+
+Код:
+
+./kdbg -n0 -s/dev/ptmx -l server.log -a disk/unsort18.kdi -b disk/MIKRDOS3.KDI
+Последовательный порт /dev/ptmx открыт
+Подчиненный псевдотерминал - /dev/pts/2
+Открыт файл сетевого протокола server.log
+Адрес эмулятора в сети - 0
+Driver: ALSA
+
+Это у нас будет РМП. В качестве последовательного устройства указываем мультиплексор виртуальных терминалов /dev/ptmx. Будет сформирован лог server.log.
+При старте эмулятор указал, что сформирован подчиненный последовательный порт /dev/pts/2. Эта информация нам нужна для запуска второй копии эмулятора.
+
+Теперь стартуем второй эмулятор
+
+Код:
+
+./kdbg -n2 -s/dev/pts/2 -l client.log
+Открыт файл сетевого протокола client.log
+Адрес эмулятора в сети - 2
+Driver: ALSA
+
+Это будет РМУ с адресом 2, сетевой лог сохраняется в client.log. В качестве последовательного порта указываем имя подчиненного виртуального терминала, выданное нам первой копией эмулятора.
+
+Все, сеть из 2 корветов готова. Можно начинать развлекаться. Я потестировал сеть в программах STS и YP - работает вроде без сбоев в обе стороны.
+
+*/

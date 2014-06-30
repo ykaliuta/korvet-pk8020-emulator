@@ -38,6 +38,18 @@
 #ifndef _KORVET_H
 #define _KORVET_H
 
+#ifdef __GNUC__
+/*code for GNU C compiler */
+#elif _MSC_VER
+/*usually has the version number in _MSC_VER*/
+/*code specific to MSVC compiler*/
+#elif __BORLANDC__
+/*code specific to borland compilers*/
+#elif __MINGW32__
+/*code specific to mingw compilers*/
+#endif
+
+
 #define LAN_SUPPORT
 
 #define DBG
@@ -81,14 +93,6 @@ typedef signed char    offset;
 #define _TYPEDEF_
 #endif
 
-
-
-extern unsigned int 	LANADDR; // Адрес РМУ в сети 00-0f
-extern char 			LAN_ttdev[50];		// последовательный порт сети
-extern char LAN_ttdev[50];     // последовательный порт сети
-extern char LAN_logfile[200];  // Имя файла для лога
-
-
 void Emulator_Write(int Addres,byte Value);
 byte Emulator_Read(int Addres);
 
@@ -109,6 +113,9 @@ void LUT_Write(byte Value);
 byte PIC_Read(int Addr);
 void PIC_Write(int Addr,byte Value);
 
+void PIC_IntRequest(int IntNum);             // Запрос на прерывание.
+
+
 void PPI1_Write(int Addr, byte Value);
 byte PPI1_Read(int Addr);
 
@@ -122,11 +129,6 @@ void PPI_init();
 
 void RS232_Write(int Addr, byte Value);
 byte RS232_Read(int Addr);
-
-void LAN_Write(int Addr,byte Value);
-byte LAN_Read(int Addr);
-void Lan_Init();      // открытие и настройка последовательного порта
-void LAN_poll();      // формирование прерывание при наличии байта
 
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
