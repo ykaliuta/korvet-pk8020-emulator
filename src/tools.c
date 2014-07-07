@@ -238,8 +238,11 @@ void help(void) {
 
     printf("\nROM\n");
     printf("\t-r <ROM.FILE> Path to MAIN ROM file\n");
+    printf("\t-f <FONTROM.FILE> Path to FONT ROM file\n");
     printf("\t-x <ROM.FILE> ROM attached to EXT connector (and turn on ext rom support)\n");
     printf("\t\t\tdisable joystick support\n");
+    printf("\t-E <foldername> - turn on ExtROMExtender, point to folder that emulate SD card\n");
+
 
     printf("\nMouse and Joystick\n");
     printf("\t-m <mouse type> select attached mouse type\n");
@@ -273,7 +276,7 @@ void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
     while ((i=getopt(argc, argv, 
-        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:"
+        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"
     #endif
@@ -297,6 +300,18 @@ void parse_command_line(int argc,char **argv) {
             break;
         case 'r':
             strcpy(RomFileName,optarg);
+            break;
+        case 'f':
+            strcpy(FontFileName,optarg);
+            break;
+        case 'e':
+            strcpy(ext_rom_emu_folder,optarg);
+            printf("%c\n",ext_rom_emu_folder[strlen(ext_rom_emu_folder)-1]);
+            if (ext_rom_emu_folder[strlen(ext_rom_emu_folder)-1] != '/') {
+                strcat(ext_rom_emu_folder,"/");
+            }
+            strcpy(ext_rom_file_name,"stage1.rom");
+            ext_rom_mode=1;
             break;
         case 'x': 
             strcpy(ext_rom_file_name,optarg);

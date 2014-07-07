@@ -150,7 +150,10 @@ void Disassemble_PPI2C(int Value)
   static int oldState_SoundEnable;
   int tSoundEnable;
 
-  if ((((Value&0x80)>>7) == 1) && (ext_rom_mode)) PIC_IntRequest(0);    // формируем запрос прерывания extrom по сигналу control
+  if ((((Value&0x80)>>7) == 1) && (ext_rom_mode)) {
+    PIC_IntRequest(0);    // формируем запрос прерывания extrom по сигналу control
+  }
+
   //   XS1:32          =(Value&0x80)>>7;
   //  Reset for Analog Joystick =(Value&0x40)>>6;
   // ~SE               =(Value&0x20)>>5;
@@ -258,17 +261,47 @@ byte PPI2_Read(int Addr){
 void PPI3_Write(int Addr, byte Value) {
     int bit;
     switch (Addr & 0x03) {
-      case 0: {PPI3_A=Value;break;}
+      case 0: {
+        PPI3_A=Value;
+
+        // printf("W3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+
+        if ((PPI2_C&0x80) == 0) break;   // control=0 - все расширения неактивны 
+        
+        if (PPI3_RUS != EXT_ROM_EMU_MODE) break;  
+
+        ext_rom_api_write(Value);
+
+        ext_rom_addr_changed=0; 
+        break;
+      }
       case 1: {
         PPI3_B=Value;
+        ext_rom_addr_changed=1; 
         break;
        }
       case 2: {
         PPI3_C=Value;
+        ext_rom_addr_changed=1;
         break;
        }
       case 3: {
-           if (Value & 0x80) PPI3_RUS=Value;
+           if (Value & 0x80) {
+            #if 0
+              //                012345678901234
+              char decoded[64]="A_x_i B_x_i C_i";
+              decoded[ 2]='0'+( (Value&0x60) >> 5);
+              decoded[ 4]=(Value&0x10 ) ? 'i' : 'o';
+
+              decoded[ 8]='0'+(Value&0x04 >> 0);
+              decoded[10]=(Value&0x02 ) ? 'i' : 'o';
+
+              decoded[14]=(Value&0x01 ) ? 'i' : 'o';
+
+              printf("PPI3RUS: %02x - %s\n",Value,decoded);
+            #endif
+            PPI3_RUS=Value;
+          }
            else {
              bit=1 << ( (Value & 0x0e) >> 1);
              if (Value &1) PPI3_C|=bit;
@@ -282,13 +315,19 @@ void PPI3_Write(int Addr, byte Value) {
 
 byte PPI3_Read(int Addr){
     int Value;
-    switch (Addr & 0x03) {
+    switch (Addr  & 0x03) {
       case 0: {
        if ((!ext_rom_mode) || ((PPI2_C&0x80) == 0)) {
           Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
         }
         else {
-          Value=ext_rom_read(PPI3_B,PPI3_C);
+          if ( PPI3_RUS == EXT_ROM_EMU_MODE ) {
+            Value=ext_rom_api_read();
+            // printf("R3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+          } else {
+            Value=ext_rom_read(PPI3_B,PPI3_C);
+            // printf("R3A:%02x%02x=%02x (2C:%02x RUS:%03x)\n",PPI3_C,PPI3_B,Value,PPI2_C&0x80, PPI3_RUS);
+          }
         }  
         break;
       }
@@ -311,7 +350,13 @@ byte PPI3_Read(int Addr){
 
 //           Value=PPI3_B;break;
       }
-      case 2: {Value=PPI3_C;break;}
+      case 2: {
+        if ( PPI3_RUS != EXT_ROM_EMU_MODE) Value=PPI3_C;
+        else Value=0x80 | 0x20;  // OBF=1  IBF=1
+        // printf("R3C:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+
+        break;
+      }
       case 3: {return 0xff;break;}
     }
     return Value;
@@ -323,7 +368,7 @@ void ShowPPIdbg(void) {
 
  int i=0;
  int x=10;
- int y=657;
+ int y=657-50;
  char nc_rd[8][4] ={
                     "___",
                     "__1",
@@ -392,12 +437,12 @@ void ShowPPIdbg(void) {
                                              scr_Page_Acces,
                                              scr_Page_Show
            );
- textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"            ACZU     (Attr:%d Wide:%d FONT2:%d)",
-                                             scr_Attr_Write,
-                                             scr_Wide_Mode,
-                                             scr_Second_Font
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"VBlank: %d  ACZU     (Attr:%d Wide:%d FONT2:%d)",
+                                                  VBLANK,
+                                                  scr_Attr_Write,
+                                                  scr_Wide_Mode,
+                                                  scr_Second_Font
            );
- textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"VBlank: %d",VBLANK);
 }
 
 #endif
