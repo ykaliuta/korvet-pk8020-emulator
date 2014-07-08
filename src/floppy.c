@@ -24,7 +24,9 @@
 #include "korvet.h"
 
 #include "vg.h"
+int floppy_disabled=0;
 int InUseFDD[4];
+
 
 struct DatVG VG;
 char   Disks[4][1024]
@@ -82,6 +84,8 @@ byte FDC_Read_DRVREG(void) {
 
 void FDC_Write_DRVREG(byte Value) {
 
+  if (floppy_disabled) return;
+
   DRVREG=Value;
   VG.DataIO=(Value & 0xf0) | drv[Value & 0x0f];
   VG.OperIO=9;
@@ -90,6 +94,9 @@ void FDC_Write_DRVREG(byte Value) {
 }
 
 void FDC_Write(int Addr, byte Value) {
+
+  if (floppy_disabled) return;
+
   VG.DataIO=Value;
   switch (Addr & 0x03) {
     case 0:    VG.OperIO=1;break;
@@ -104,6 +111,9 @@ void FDC_Write(int Addr, byte Value) {
 }
 
 byte FDC_Read(int Addr) {
+
+  if (floppy_disabled) return 0xff;
+
   switch (Addr & 0x03) {
     case 0:    VG.OperIO=0;break;
     case 1:    VG.OperIO=2;break;
@@ -119,9 +129,15 @@ byte FDC_Read(int Addr) {
 
 void FDC_Init(void) {
   int i;
+
+  InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=0;
+  if (floppy_disabled) {
+    printf("Floppy emulation disabled\n");
+    return;
+  }
+
   VG.OperIO=0x0a;
   DskVG();
-  InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=0;
 
   printf("Drive map:\n");
   for(i=0;i<4;i++) {
@@ -130,6 +146,9 @@ void FDC_Init(void) {
 }
 
 void FDC_Reset(void) {
+  
+  if (floppy_disabled) return;
+
   VG.OperIO=0x0c;
   DskVG();
   VG.OperIO=0x0a;

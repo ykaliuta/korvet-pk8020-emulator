@@ -51,7 +51,8 @@ extern int scr_GZU_Size_Mask;    // маска размера ГЗУ, =0x0f - 4*
 extern int KeyboadUpdateFlag;   // =1 if need rebuld keyboard layout
 extern int KeyboardLayout;
 
-extern int  InUseFDD[4];
+extern int InUseFDD[4];
+extern int floppy_disabled;
 
 extern byte SOUNDBUF[];
 
@@ -235,6 +236,7 @@ void help(void) {
     printf("\t-b <KDI.FILE> KDI disk image mounted in drive B\n");
     printf("\t-c <KDI.FILE> KDI disk image mounted in drive C\n");
     printf("\t-d <KDI.FILE> KDI disk image mounted in drive D\n");
+    printf("\t-z disable floppy disk controller emulation\n");
 
     printf("\nROM\n");
     printf("\t-r <ROM.FILE> Path to MAIN ROM file\n");
@@ -276,7 +278,7 @@ void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
     while ((i=getopt(argc, argv, 
-        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E"
+        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZ"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"
     #endif
@@ -297,6 +299,9 @@ void parse_command_line(int argc,char **argv) {
             break;
         case 'd':
             strcpy(Disks[3],optarg);
+            break;
+        case 'z':
+            floppy_disabled=1;
             break;
         case 'r':
             strcpy(RomFileName,optarg);

@@ -108,23 +108,39 @@ void parse_write(void) {
     }
     case EMU_STAGE2: {
       if (in_buffer_size == 4) {
-        sprintf(tmp_path,"%sext.kdi",ext_rom_emu_folder);
-        f_emu=fopen(tmp_path,"rb");
-        if (f_emu == 0) {
-          printf("ERROR: can't open %s\n",tmp_path);
+        
+        switch (in_buffer[0]) {
+        
+          case 1: // read sector
+            sprintf(tmp_path,"%sext.kdi",ext_rom_emu_folder);
+            f_emu=fopen(tmp_path,"rb");
+            if (f_emu == 0) {
+              printf("ERROR: can't open %s\n",tmp_path);
+            }
+            //CMD,DRV,TRK,SEC
+
+            // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
+            // fread(fb,1,128,emu_file);
+
+            // printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d\n",in_buffer[0],in_buffer[1],in_buffer[2],in_buffer[3]);
+            fseek(f_emu,(in_buffer[2]*40+in_buffer[3])*128,SEEK_SET);
+            fread(out_buffer,1,128,f_emu);
+            fclose(f_emu);
+            out_buffer_size=128;
+            in_buffer_size=0;
+            break;
+        
+          case 0xf0: // SPEED TEST - out 0x8000 bytes
+            printf("SDEMU: SPEDD TEST 8000 to korvet\n");
+            out_buffer_size=0x8000;
+            in_buffer_size=0;
+            break;
+
+          default: 
+            printf("SDEMU: unsupported CMD '%02x'\n",in_buffer[0]);
+            break;
         }
 
-        //CMD,DRV,TRK,SEC
-
-        // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
-        // fread(fb,1,128,emu_file);
-
-        // printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d\n",in_buffer[0],in_buffer[1],in_buffer[2],in_buffer[3]);
-        fseek(f_emu,(in_buffer[2]*40+in_buffer[3])*128,SEEK_SET);
-        fread(out_buffer,1,128,f_emu);
-        fclose(f_emu);
-        out_buffer_size=128;
-        in_buffer_size=0;
       }
       break;
     }
