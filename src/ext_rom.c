@@ -30,6 +30,11 @@ char  ext_rom_file_name[1024]="not set";	 // имя файла с образом
 int   ext_rom_addr_changed=0;              // =1 while EXT ROM BOOT (rom loader only write in PPI3B,PPI3C)
 char  ext_rom_emu_folder[1024]="";         // папка которая прикидывается SDCARD эмулятора
 
+int   e_cmd=0;
+int   e_trk=0;
+int   e_sec=0;
+int   e_drv=0;
+
 #define EXT_BUF_SIZE (64*1024)
 byte in_buffer[EXT_BUF_SIZE];
 int in_buffer_size=0;
@@ -76,6 +81,42 @@ byte ext_rom_read(unsigned char PPI3_B, unsigned char PPI3_C) {
 	return value;
 }
 
+void emu_read128(void) {
+  //CMD,DRV,TRK,SEC
+  int offset=(e_trk*40+e_sec)*128;
+
+  // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
+
+  // printf("READ CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d OFFSET:%08x\n",e_cmd,e_drv,e_trk,e_sec,offset);
+  sprintf(tmp_path,"%sext.kdi",ext_rom_emu_folder);
+  f_emu=fopen(tmp_path,"rb");
+  if (f_emu == 0) {
+    printf("ERROR: can't open %s\n",tmp_path);
+  } else {
+    fseek(f_emu,offset,SEEK_SET);
+    fread(out_buffer,1,128,f_emu);
+    fclose(f_emu);
+  }
+}
+
+void emu_write128(void) {
+  //CMD,DRV,TRK,SEC
+  int offset=(e_trk*40+e_sec)*128;
+
+  // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
+  // printf("WRITE CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d OFFSET:%08x\n",e_cmd,e_drv,e_trk,e_sec,offset);
+
+  sprintf(tmp_path,"%sext.kdi",ext_rom_emu_folder);
+  f_emu=fopen(tmp_path,"r+b");
+  if (f_emu == 0) {
+    printf("ERROR: can't open for write %s\n",tmp_path);
+  } else {
+    fseek(f_emu,offset,SEEK_SET);
+    fwrite(in_buffer,1,128,f_emu);
+    fclose(f_emu);
+  }
+}
+
 void parse_write(void) {
   // char fname[1024]="extrom/stage2.rom";
   switch (emu_stage) {
@@ -108,25 +149,24 @@ void parse_write(void) {
     }
     case EMU_STAGE2: {
       if (in_buffer_size == 4) {
-        
+        e_cmd=in_buffer[0];
+        e_drv=in_buffer[1];
+        e_trk=in_buffer[2];
+        e_sec=in_buffer[3];
+
+        // printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d\n",in_buffer[0],in_buffer[1],in_buffer[2],in_buffer[3]);
+        printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d\n",e_cmd,e_drv,e_trk,e_sec);
         switch (in_buffer[0]) {
         
           case 1: // read sector
-            sprintf(tmp_path,"%sext.kdi",ext_rom_emu_folder);
-            f_emu=fopen(tmp_path,"rb");
-            if (f_emu == 0) {
-              printf("ERROR: can't open %s\n",tmp_path);
-            }
-            //CMD,DRV,TRK,SEC
+            emu_read128();
 
-            // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
-            // fread(fb,1,128,emu_file);
-
-            // printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d\n",in_buffer[0],in_buffer[1],in_buffer[2],in_buffer[3]);
-            fseek(f_emu,(in_buffer[2]*40+in_buffer[3])*128,SEEK_SET);
-            fread(out_buffer,1,128,f_emu);
-            fclose(f_emu);
             out_buffer_size=128;
+            in_buffer_size=0;
+            break;
+
+          case 2: // write sector
+            emu_stage=EMU_STAGE2_WRITE128;
             in_buffer_size=0;
             break;
         
@@ -141,6 +181,14 @@ void parse_write(void) {
             break;
         }
 
+      }
+      break;
+    }
+    case EMU_STAGE2_WRITE128: {
+      if (in_buffer_size == 128) {
+        emu_write128();
+        in_buffer_size=0;
+        emu_stage=EMU_STAGE2;
       }
       break;
     }

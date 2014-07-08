@@ -25,8 +25,9 @@
 
 #define EXT_ROM_EMU_MODE (0xc0)
 
-#define EMU_STAGE1	1
-#define EMU_STAGE2 	3
+#define EMU_STAGE1			1
+#define EMU_STAGE2 			3
+#define EMU_STAGE2_WRITE128 4
 
 
 extern int ext_rom_mode;
