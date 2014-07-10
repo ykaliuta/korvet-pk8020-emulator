@@ -339,7 +339,9 @@ int main(int argc,char **argv) {
     #endif
 
     #ifdef LAN_SUPPORT
-    unlink(LAN_PTX_FILE);
+    if (LAN_Addr == 0x0f) { // remove ptx file only when RMU
+        unlink(LAN_PTX_FILE);
+    }
     #endif
 
 
