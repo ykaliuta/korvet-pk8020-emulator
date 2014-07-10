@@ -25,9 +25,14 @@
 
 #define EXT_ROM_EMU_MODE (0xc0)
 
-#define EMU_STAGE1			1
-#define EMU_STAGE2 			3
-#define EMU_STAGE2_WRITE128 4
+#define EMU_STAGE1			 	1
+#define EMU_STAGE2_WAITCMD	 	2
+#define EMU_STAGE2_WRITE128  	3
+#define EMU_STAGE2_WRSPPEDTEST  4
+
+#define EMU_API_FAIL 		 	0
+#define EMU_API_OK 			 	1
+
 
 
 extern int ext_rom_mode;

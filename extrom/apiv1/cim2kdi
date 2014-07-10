@@ -1,0 +1,1 @@
+dd if=exrsystem.cim of=ext.kdi conv=notrunc
