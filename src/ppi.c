@@ -180,14 +180,18 @@ void Disassemble_PPI2C(int Value)
 
 int Assemble_PPI2C(void)
 {
-    int Value=0;
+    int Value=PPI2_C;
+  
+    Value &= 0b11110111;
+
 //   XS1:32          =(Value&0x80)>>7;
 //  Reset for Analog Joystick =(Value&0x40)>>6;
 // ~SE               =(Value&0x20)>>5;
 // ~ACK              =(Value&0x10)>>4;
-   Value             =(SoundEnable&0x01)<<3;
+   Value             |=(SoundEnable&0x01)<<3;
 // Cassete Motor ON  =(Value&0x04)>>2;
 // CasseteOut level  =(Value&0x03)>>0;
+
    return Value;
 }
 
@@ -252,7 +256,8 @@ byte PPI2_Read(int Addr){
     switch (Addr & 0x03) {
       case 0: {Value=PPI2_A;break;}
       case 1: {Value=PPI2_B;break;}
-      case 2: {Value=PPI2_C=Assemble_PPI2C();break;}
+      // case 2: {Value=PPI2_C=Assemble_PPI2C();break;}
+      case 2: {Value=Assemble_PPI2C();break;}
       case 3: {return 0xff;break;}
     }
     return Value;
