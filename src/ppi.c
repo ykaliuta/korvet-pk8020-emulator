@@ -30,6 +30,8 @@ extern int Takt;
 extern F_TIMER;
 #endif
 
+extern char  control_flag;
+
 extern int SYSREG;
 extern int NCREG;
 
@@ -271,7 +273,7 @@ void PPI3_Write(int Addr, byte Value) {
 
         // printf("W3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
 
-        if ((PPI2_C&0x80) == 0) break;   // control=0 - все расширения неактивны 
+        if (((PPI2_C&0x80) == 0)&& (control_flag==1)) break;   // control=0 - все расширения неактивны 
         
         if (PPI3_RUS != EXT_ROM_EMU_MODE) break;  
 
@@ -322,7 +324,7 @@ byte PPI3_Read(int Addr){
     int Value;
     switch (Addr  & 0x03) {
       case 0: {
-       if ((!ext_rom_mode) || ((PPI2_C&0x80) == 0)) {
+       if ((!ext_rom_mode) || (((PPI2_C&0x80) == 0))&& (control_flag==1)) {
           Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
         }
         else {
@@ -388,39 +390,38 @@ void ShowPPIdbg(void) {
  char tncreg[512];
 
  char tsysreg[32][40]={          
-                       "0-37FF|3C00|    |3B00|3A00|3800",
-                       "0-1FFF|    |    |    |    |    ",
-                       "0-3FFF|    |    |    |    |    ",
-                       "      |    |    |    |    |    ",
-                       "0-1FFF|FC00|    |FB00|FA00|F800",
-                       "0-1FFF|FC00|    |FB00|FA00|F800",
-                       "0-3FFF|FC00|    |FB00|FA00|F800",
-                       "      |FC00|    |FB00|FA00|F800",
-                       "0-37FF|3C00|C000|3B00|3A00|3800",
-                       "0-1FFF|    |C000|    |    |    ",
-                       "0-3FFF|    |C000|    |    |    ",
-                       "      |    |C000|    |    |    ",
-                       "0-1FFF|    |4000|FE00|FF00|    ",
-                       "0-1FFF|    |4000|FE00|FF00|    ",
-                       "0-3FFF|    |4000|FE00|FF00|    ",
-                       "      |    |4000|FE00|FF00|    ",
-                       "0-5FFF|FC00|    |FB00|FA00|F800",
-                       "0-1FFF|FC00|    |FB00|FA00|F800",
-                       "0-3FFF|FC00|    |FB80|FA00|F800",
-                       "      |FC00|    |FB00|FA00|F800",
-                       "0-5FFF|    |    |FE00|FF00|    ",
-                       "0-1FFF|    |    |FE00|FF00|    ",
-                       "0-3FFF|    |    |FE00|FF00|    ",
-                       "      |    |    |FE00|FF00|    ",
-                       "0-5FFF|    |C000|    |BF00|    ",
-                       "0-1FFF|    |C000|    |BF00|    ",
-                       "0-3FFF|    |C000|    |BF00|    ",
-                       "      |    |C000|    |BF00|    ",
-                       "0-5FFF|    |C000|    |    |    ",
-                       "0-1FFF|    |C000|    |    |    ",
-                       "0-3FFF|    |C000|    |    |    ",
-                       "      |    |C000|    |    |    ",
-                      };
+                       "0-37FF 3C00      3B00 3A00 3800",
+                       "0-1FFF                         ",
+                       "0-3FFF                         ",
+                       "                               ",
+                       "0-1FFF FC00      FB00 FA00 F800",
+                       "0-1FFF FC00      FB00 FA00 F800",
+                       "0-3FFF FC00      FB00 FA00 F800",
+                       "       FC00      FB00 FA00 F800",
+                       "0-37FF 3C00 C000 3B00 3A00 3800",
+                       "0-1FFF      C000               ",
+                       "0-3FFF      C000               ",
+                       "            C000               ",
+                       "0-1FFF      4000 FE00 FF00     ",
+                       "0-1FFF      4000 FE00 FF00     ",
+                       "0-3FFF      4000 FE00 FF00     ",
+                       "            4000 FE00 FF00     ",
+                       "0-5FFF FC00      FB00 FA00 F800",
+                       "0-1FFF FC00      FB00 FA00 F800",
+                       "0-3FFF FC00      FB80 FA00 F800",
+                       "       FC00      FB00 FA00 F800",
+                       "0-5FFF           FE00 FF00     ",
+                       "0-1FFF           FE00 FF00     ",
+                       "0-3FFF           FE00 FF00     ",
+                       "                 FE00 FF00     ",
+                       "0-5FFF      C000      BF00     ",
+                       "0-1FFF      C000      BF00     ",
+                       "0-3FFF      C000      BF00     ",
+                       "            C000      BF00     ",
+                       "0-5FFF      C000               ",
+                       "0-1FFF      C000               ",
+                       "0-3FFF      C000               ",
+                       "            C000               ",                      };
 
  if (NCREG & 0x80) { // Color MODE
    sprintf(tncreg,"COLOR: Read:%d (%s) Write:%d (%s)            ",
@@ -433,7 +434,7 @@ void ShowPPIdbg(void) {
                  ,NCREG&1,nc_rd[(NCREG>>4)&0x7],nc_rd[((~NCREG)>>1)&0x7]);
  }
 
- textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"           | ROM  |ACZU|GZU |RG  |PB  |KEY ");
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"             ROM   ACZU GZU  Regs Port KEYs");
 
  textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"SysReg: %02x >%s",SYSREG<<2,tsysreg[SYSREG]);
  textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"NCREG : %02x >%s",NCREG,tncreg);
@@ -448,6 +449,25 @@ void ShowPPIdbg(void) {
                                                   scr_Wide_Mode,
                                                   scr_Second_Font
            );
+
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI1 RUS=%02x A=%02x B=%02X C=%02x",
+                                                  PPI1_RUS,
+                                                  PPI1_Read(0),
+                                                  PPI1_Read(1),
+                                                  PPI1_Read(2));
+
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI2 RUS=%02x A=%02x B=%02X C=%02x",
+                                                  PPI2_RUS,
+                                                  PPI2_Read(0),
+                                                  PPI2_Read(1),
+                                                  PPI2_Read(2));
+
+ textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI3 RUS=%02x A=%02x B=%02X C=%02x",
+                                                  PPI3_RUS,
+                                                  PPI3_A,
+                                                  PPI3_B,
+                                                  PPI3_C);
+
 }
 
 #endif

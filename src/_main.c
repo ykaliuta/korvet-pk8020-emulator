@@ -94,6 +94,75 @@ void Reset(void) {
     InitTMR();
 }
 
+void trace_bios(word pc) {
+    static unsigned int dma;
+    word bc=CPU_GetBC();
+    word HL;
+    int i,j;
+    switch (pc) {
+        case 0xda18: {
+            printf("TRACE_BIOS: HOME");
+            break;
+        }
+        case 0xda1B: {
+            printf("TRACE_BIOS: sel_DSK dsk=%d\n",bc & 0xff);
+            break;
+        }
+        case 0xda1E: {
+            printf("TRACE_BIOS: set_TRK trk=%d\n",bc & 0xff);
+            break;
+        }
+        case 0xda21: {
+            printf("TRACE_BIOS: set_SEC sec=%d\n",bc & 0xff);
+            break;
+        }
+        case 0xda24: {
+            printf("TRACE_BIOS: set_DMA dma=0x%04x\n",bc);
+            break;
+        }
+        case 0xda27: {
+            printf("TRACE_BIOS: READ\n");
+            break;
+        }
+        case 0xda2A: {
+            printf("TRACE_BIOS: WRITE type=%d\n",bc & 0xff);
+            break;
+        }
+
+    // microdos
+        case 0xE46E:  // IO 870430
+        case 0xEAA3:  // IO 880630
+        case 0xEAA5: { // IO 900105
+            HL=CPU_GetHL();
+            dma=RAM[HL+6] | (RAM[HL+7] << 8);
+            printf("DSK_IO: drv=%02x chword=%02x func=%02x numb=%02x trk=%02x sec=%02x abuf=%04x htrk=%02x hsec=%02x\n",
+                RAM[HL+0],
+                RAM[HL+1],
+                RAM[HL+2],
+                RAM[HL+3],
+                RAM[HL+4],
+                RAM[HL+5],
+                dma,
+                RAM[HL+8],
+                RAM[HL+9]
+            );
+            break;
+        }
+
+        // case 0xeabe: { //dma buf after IO
+        //     printf("DMA BUF:\n");
+        //     for (i=0;i<8;i++) {
+        //         printf("%04X: ",dma+i*16);
+        //         for (j=0;j<16;j++) {
+        //             byte v=RAM[dma+i*16+j];
+        //             printf("%02X ",v);
+        //         }
+        //         printf("\n");
+        //     }
+        // }
+    }
+}
+
 
 int main_loop(void) {
     unsigned char *p;
@@ -149,6 +218,8 @@ int main_loop(void) {
         if (__PC == 0x0000) CheckROM();
         else if (__PC == 0xc75c) CheckCCP();
         else if (__PC == 0xcade) CheckComEXEC();
+
+        trace_bios(__PC);
 
         if (__PC == dbg_HERE) dbg_TRACE=1;
 
