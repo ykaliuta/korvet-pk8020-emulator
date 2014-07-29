@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUTHOR: Sergey Erokhin                 esl@pisem.net,pk8020@gmail.com
  * &Korvet Team                                              2000...2005
  * ETALON Korvet Emulator                         http://pk8020.narod.ru
