@@ -1,0 +1,62 @@
+1. DOWNLOAD
+	tortoise HG
+	http://tortoisehg.bitbucket.org/download/
+
+		http://bitbucket.org/tortoisehg/files/downloads/tortoisehg-3.0.1-x86.msi
+		http://bitbucket.org/tortoisehg/files/downloads/tortoisehg-3.0.1-x64.msi
+
+	mingw installer
+		http://sourceforge.net/projects/mingw/files/Installer/
+
+		http://sourceforge.net/projects/mingw/files/Installer/mingw-get-setup.exe/download
+
+	allegro
+		https://www.allegro.cc/files/?v=4.4
+
+		http://cdn.allegro.cc/file/library/allegro/4.4.2/allegro-4.4.2-mingw-4.5.2.zip
+
+2. Install
+
+	Install tortoise HG
+	Install MINGW
+		launch installer and select 
+			mingw-developer-toolkit
+			mingw32-base
+			msys-base
+		Installation -> Apply changes
+		(wait while download and installing)
+
+		mingw installed in C:\MinGW
+
+	extract allegro-4.4.2-mingw-4.5.2.zip into  C:\MinGW
+
+
+3. update $PATH
+	set MINGDIR=c:\mingw
+	set PATH=%MINGDIR%\bin;%MINGDIR%\msys\1.0\bin;%path%;
+	"c:\FAR_\Far\Far"
+
+4. checkout sources from bitbucket
+
+	create some folder (c:\dev\ as sample)
+	in c:\dev
+	hg clone https://bitbucket.org/esl/korvet-pk8020-emulator
+
+	for updating files from repository
+	hg ci
+	hg update
+
+5.  edit Makefile (switch to windows) (will fixed late)
+
+	#LIBS     = -mwindows -lallegro-4.4.2-mt
+	LIBS     = -lalleg
+	replace to 
+	LIBS     = -mwindows -lallegro-4.4.2-mt
+	#LIBS     = -lalleg
+
+6. compile
+	cd c:\dev\korvet-pk8020-emulator
+	make clean 
+	make
+
+
