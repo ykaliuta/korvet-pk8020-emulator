@@ -49,6 +49,7 @@ extern int KeyboardLayout;
 extern int LutUpdateFlag;
 extern int FlagScreenScale;
 extern int MuteFlag;
+extern int AllScreenUpdateFlag;  // Флаг необходимости обновть весь экран
 
 AUDIOSTREAM *stream;
 
@@ -101,7 +102,7 @@ void trace_bios(word pc) {
     int i,j;
     switch (pc) {
         case 0xda18: {
-            printf("TRACE_BIOS: HOME");
+            printf("TRACE_BIOS: HOME\n");
             break;
         }
         case 0xda1B: {
@@ -242,6 +243,11 @@ int main_loop(void) {
     #ifdef SOUND
     //       MakeSound(); // timer
             if (!key[KEY_F6]) {
+                // были в MUTE перед этим
+                if (MuteFlag==1) {
+                    AllScreenUpdateFlag=1;
+                }
+
                 MuteFlag=0;
                 MakeSound(); // timer
 
