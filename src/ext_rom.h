@@ -23,30 +23,32 @@
 #ifndef _EXTROM_H
 #define _EXTROM_H
 
-#define EXT_ROM_EMU_MODE		(0xc0)
+#define EXT_ROM_EMU_MODE        (0xc0)
 
-#define EMU_STAGE1			 	1
-#define EMU_STAGE2_WAITCMD	 	2
+#define EMU_STAGE1		        1
+#define EMU_STAGE2_WAITCMD   	2
 #define EMU_STAGE2_WRITE128  	3
 #define EMU_STAGE2_WRSPPEDTEST  4
 #define EMU_STAGE2_GETFILENAME  5
 #define EMU_STAGE2_CREATE_KDI   6
 #define EMU_STAGE2_GETFOLDER    7
 
-#define EMU_API_FAIL 		 	0
-#define EMU_API_OK 			 	1
+#define EMU_API_FAIL            0
+#define EMU_API_OK              1
 
 
 extern int ext_rom_mode;
-extern FILE* extrom_file;       
+extern FILE* extrom_file;
 extern char ext_rom_file_name[];	// имя файла с образом ROM
 extern char ext_rom_emu_folder[];  	// папка которая прикидывается SDCARD эмулятора
 
-int   ext_rom_addr_changed; 		// =1 while EXT ROM BOOT (rom loader only write in PPI3B,PPI3C) 
+int   ext_rom_addr_changed; 		// =1 while EXT ROM BOOT (rom loader only write in PPI3B,PPI3C)
 
 void init_extrom(void);
 byte ext_rom_read(unsigned char PPI3_B, unsigned char PPI3_C);
 
 void ext_rom_api_write(byte Value);
+
+extern char  control_flag;           // Флаг анализа сигнала Control: 0-игнорируется, 1-учитвается при файловых операциях
 
 #endif

@@ -2,8 +2,9 @@ CC       = gcc.exe
 #LIBS     = -mwindows -lallegro-4.4.2-mt
 
 LIBS     = -lalleg
-CFLAGS   = -MMD -g -Isrc
-#CFLAGS   = -O7 -MMD -fomit-frame-pointer -funroll-loops -Isrc
+CFLAGS   = -MMD -ggdb -Isrc
+#CFLAGS   = -O3 -g -MMD -fomit-frame-pointer -funroll-loops -Isrc
+#CFLAGS   = -O -MMD -funroll-loops -Isrc
 #LIBS     = -lalleg -pg -g 
 #CFLAGS   = -pg -g -fno-omit-frame-pointer -MMD -Isrc
 

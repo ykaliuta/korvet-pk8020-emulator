@@ -30,10 +30,10 @@ FILE* extrom_file;
 char  ext_rom_file_name[1024]="not set";    // имя файла с образом ROM
 int   ext_rom_addr_changed=0;               // =1 while EXT ROM BOOT (rom loader only write in PPI3B,PPI3C)
 char  ext_rom_emu_folder[1024]="";          // папка которая прикидывается SDCARD эмулятора
-char  drive_filename[4][14];                // имена файлов для монтирования образа
-char  drive_foldername[4][14];              // имена каталогов, хранящих файлы
-char  drive_status[4];                      // состояние образа - 0 - не смонтирован, 1 - смонтирован
-char  drive_roflag[4];                      // разрешение записи: 0-чтение/запись   1-только чтение
+char  drive_filename[5][14];                // имена файлов для монтирования образа
+char  drive_foldername[5][14];              // имена каталогов, хранящих файлы
+char  drive_status[5];                      // состояние образа - 0 - не смонтирован, 1 - смонтирован
+char  drive_roflag[5];                      // разрешение записи: 0-чтение/запись   1-только чтение
 char  diskfolder[14];                       // имя каталога по умолчанию, из которго берутся образы
 FILE* mount_cfg;                            // файл списка монтирования
 char  control_flag=1;                       // Флаг анализа сигнала Control: 0-игнорируется, 1-учитвается при файловых операциях
@@ -46,6 +46,11 @@ unsigned char e_drv=0;
 unsigned char e_crc=0;
 
 int   e_substitute_system_track=1;        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+// Имена файлов, подставляемых для загрузки системных дорожек
+char fname_subst[64]="SYSTEMn.BIN";
+char* sysfiles[3]= {"SYSTEM.BIN","MICRODOS.BIN",fname_subst};
+char substitute_number=0;
 
 #define EXT_BUF_SIZE (64*1024)
 byte in_buffer[EXT_BUF_SIZE];
@@ -135,14 +140,20 @@ void init_extrom(void) {
         fread(diskfolder,1,14,mount_cfg);
     }
 
+// Диск 4 (E) - Mount-диск
+    strcpy(drive_filename[4],"EXRTOOLS.KDI");
+    strcpy(drive_foldername[4],"");
+
     drive_status[0]=1;
     drive_status[1]=1;  // образ смонтирован - поднимаем флаги тодбко для A и B
-    drive_status[2]=0;
-    drive_status[3]=0;
+    drive_status[2]=1;
+    drive_status[3]=1;
+    drive_status[4]=1;
     drive_roflag[0]=0;
     drive_roflag[1]=0;  // снимаем защиту от записи
     drive_roflag[2]=0;
     drive_roflag[3]=0;
+    drive_roflag[4]=1;  // диск Е по умолчанию защищен!
 }
 
 byte ext_rom_read(unsigned char PPI3_B, unsigned char PPI3_C) {
@@ -157,26 +168,28 @@ byte ext_rom_read(unsigned char PPI3_B, unsigned char PPI3_C) {
     }
     return value;
 }
+//************************
+//*  Чтение образа диска
+//************************
 
 void emu_read_image_128(void) {
     //CMD,DRV,TRK,SEC
     int offset;
     unsigned short lspt;
-
-    // fseek(f_emu,(trk*40+sec)*128,SEEK_SET);
+    // substitute 2 track for cpm & co, and 3 for microdos
+    int track_to_substitute= (substitute_number == 1) ? 3 : 2 ;
 
     // printf("READ CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d OFFSET:%08x\n",e_cmd,e_drv,e_trk,e_sec,offset);
-    strcpy(tmp_path,ext_rom_emu_folder);                    // имя каталога с образами
-    if ((e_substitute_system_track == 1) && (e_trk<2)) {
-        strcat(tmp_path,"SYSTEM.BIN");                      // для режима подстановки образа системы
-    } else  {
+    strcpy(tmp_path,ext_rom_emu_folder);  // имя каталога с образами
+    if ((e_substitute_system_track == 1) && (e_trk<track_to_substitute) && (e_drv == 0)) strcat(tmp_path,sysfiles[substitute_number]); // для режима подстановки образа системы
+    else  {
         strcat(tmp_path,drive_foldername[e_drv]);
-        strcat(tmp_path,"/");                               // каталог на карте с образами
-        strcat(tmp_path,drive_filename[e_drv]);             // для доступа к самому диску A
+        strcat(tmp_path,"/");                                     // каталог на карте с образами
+        strcat(tmp_path,drive_filename[e_drv]);                       // для доступа к самому диску A
     }
-    //  sprintf(tmp_path,"%sdisk_%c.kdi",ext_rom_emu_folder,'a'+e_drv);
+//  sprintf(tmp_path,"%sdisk_%c.kdi",ext_rom_emu_folder,'a'+e_drv);
     f_emu=fopen(tmp_path,"rb");
-    if (drive_status[e_drv]==0) {       // диск не смонтирован
+    if (drive_status[e_drv]==0) {   // диск не смонтирован
         add_to_out_buf(EMU_API_FAIL);   // даем отлуп в интерфейс
         printf(" - диск не смонтирован\n");
         return;                         // обрываем операцию
@@ -184,17 +197,23 @@ void emu_read_image_128(void) {
     if (f_emu == 0) {
         add_to_out_buf(EMU_API_FAIL);
         printf("ERROR: can't open %s\n",tmp_path);
-        drive_status[e_drv]=0;          // снимаем флаг смонтированного диска
+        drive_status[e_drv]=0;   // снимаем флаг смонтированного диска
     } else {
         add_to_out_buf(EMU_API_OK);
-        fseek(f_emu,16,SEEK_SET);       // поле LSPT инфосектора
-        fread(&lspt,1,2,f_emu);         // читаем SPT
-        offset=(e_trk*lspt+e_sec)*128;  // полное смещение до сектора
+        fseek(f_emu,16,SEEK_SET);  // поле LSPT инфосектора
+        fread(&lspt,1,2,f_emu);    // читаем SPT
+
+        offset=(e_trk*lspt+e_sec)*128; // полное смещение до сектора
+
         fseek(f_emu,offset,SEEK_SET);
         fread(static_buf128,1,128,f_emu);
         fclose(f_emu);
     }
 }
+
+//************************
+//*  Запись образа диска
+//************************
 
 void emu_write128(void) {
     //CMD,DRV,TRK,SEC
@@ -208,15 +227,14 @@ void emu_write128(void) {
     strcat(tmp_path,drive_foldername[e_drv]);
     strcat(tmp_path,"/");                     // каталог на карте с образами
     strcat(tmp_path,drive_filename[e_drv]);
-    //  sprintf(tmp_path,"%sdisk_%c.kdi",ext_rom_emu_folder,'a'+e_drv);
     f_emu=fopen(tmp_path,"r+b");
     if (f_emu == 0) {
         printf("ERROR: can't open for write %s\n",tmp_path);
         drive_status[e_drv]=0;         // снимаем флаг смонтированного диска
     }
     else {
-        fseek(f_emu,16,SEEK_SET);      // поле LSPT инфосектора
-        fread(&lspt,1,2,f_emu);        // читаем SPT
+        fseek(f_emu,16,SEEK_SET);  // поле LSPT инфосектора
+        fread(&lspt,1,2,f_emu);    // читаем SPT
         offset=(e_trk*lspt+e_sec)*128; // полное смещение до сектора
         fseek(f_emu,offset,SEEK_SET);
         fwrite(in_buffer,1,128,f_emu);
@@ -232,6 +250,7 @@ void emu_write128(void) {
 void emu_getfilename() {
 
     strncpy(drive_filename[e_drv],in_buffer,14);       // имя файла
+    strncpy(drive_foldername[e_drv],diskfolder,14);    // имя файла
     drive_filename[e_drv][13]=0;
     drive_status[e_drv]=1;		                       // образ смонтирован - поднимаем флаг
     printf(" + mount %c: %s\n",e_drv+'A',drive_filename[e_drv]);
@@ -297,12 +316,12 @@ void emu_createkdi() {
 
     int i;
     unsigned char fb[256];
-    const char infosector[]= {  
-                                0x80, 0xc3, 0x00, 0xda, 0x0a, 0x00, 0x00, 0x01, 
-                                0x01, 0x01, 0x03, 0x01, 0x05, 0x00, 0x50, 0x00,
-                                0x28, 0x00, 0x04, 0x0f, 0x00, 0x8a, 0x01, 0x7f, 
-                                0x00, 0xc0, 0x00, 0x20, 0x00, 0x02, 0x00, 0x10
-                            };
+    const char infosector[]= {
+        0x80, 0xc3, 0x00, 0xda, 0x0a, 0x00, 0x00, 0x01,
+        0x01, 0x01, 0x03, 0x01, 0x05, 0x00, 0x50, 0x00,
+        0x28, 0x00, 0x04, 0x0f, 0x00, 0x8a, 0x01, 0x7f,
+        0x00, 0xc0, 0x00, 0x20, 0x00, 0x02, 0x00, 0x10
+    };
 
     strncpy(drive_filename[e_drv],in_buffer,14); // имя файла
     drive_filename[e_drv][13]=0;
@@ -406,127 +425,159 @@ void emu_api_cmd(void) {
     int i;
     switch (in_buffer[0]) {
 
-        case 0: { // ping
+    case 0: { // ping
+        if (extrom_debug) {printf("CMD: PING\n");}
+
+        add_to_out_buf(EMU_API_OK);
+        in_buffer_size=0;
+        break;
+    }
+
+    case 1: { // read sector
+        if (extrom_debug) {printf("CMD: READ sector\n");}
+        emu_read_image_128();
+        if (drive_status[e_drv] == 1) add_block_to_out_buf(128,static_buf128);
+        in_buffer_size=0;
+        break;
+    }
+
+    case 2: { // write sector
+        if (extrom_debug) {printf("CMD: WRITE sector\n");}
+        if ((drive_status[e_drv]==0) || (drive_roflag[e_drv] == 1)) {   // диск не смонтирован или запрещена запись
+            add_to_out_buf(EMU_API_FAIL);                               // даем отлуп в интерфейс
+            printf(" - запись недоступна или диск не смонтирова\n");
+        }
+        else   {
             add_to_out_buf(EMU_API_OK);
-            in_buffer_size=0;
-            break;
+            emu_stage=EMU_STAGE2_WRITE128;
         }
+        in_buffer_size=0;
+        break;
+    }
 
-        case 1: { // read sector
-            emu_read_image_128();
-            if (drive_status[e_drv] == 1) add_block_to_out_buf(128,static_buf128);
-            in_buffer_size=0;
-            break;
-        }
+    case 0x80: { // получить имя файла образа
+        if (extrom_debug) {printf("CMD: GET image file name\n");}
+        add_to_out_buf(EMU_API_OK);
+        add_to_out_buf(drive_roflag[e_drv]);
+        add_block_to_out_buf(14,drive_foldername[e_drv]);
+        add_block_to_out_buf(14,drive_filename[e_drv]);
+        in_buffer_size=0;
+        break;
+    }
 
-        case 2: { // write sector
-            if ((drive_status[e_drv]==0) || (drive_roflag[e_drv] == 1)) {   // диск не смонтирован или запрещена запись
-                add_to_out_buf(EMU_API_FAIL);                               // даем отлуп в интерфейс
-                printf(" - запись недоступна или диск не смонтирова\n");
+    case 0x81: { // Установить имя файла образа
+        if (extrom_debug) {printf("CMD: SET image file name\n");}
+        add_to_out_buf(EMU_API_OK);
+        emu_stage=EMU_STAGE2_GETFILENAME;
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x82: { // получить состояние смонтированного образа
+        if (extrom_debug) {printf("CMD: GET mount state\n");}
+        add_to_out_buf(drive_status[e_drv]);
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x83: { // Создание образа KDI
+        if (extrom_debug) {printf("CMD: CREATE KDI\n");}
+        add_to_out_buf(EMU_API_OK);
+        emu_stage=EMU_STAGE2_CREATE_KDI;
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x84: { // Получение списка файлов
+        if (extrom_debug) {printf("CMD: GET FLIST\n");}
+        add_to_out_buf(EMU_API_OK);
+        emu_send_dir();
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x85: { // Получение имени каталога с образами
+        if (extrom_debug) {printf("CMD: GET FOLDER NAME\n");}
+        add_to_out_buf(EMU_API_OK);
+        add_block_to_out_buf(14,diskfolder);
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x86: { // Установка имени каталога с образами sec=0 верменно,  1 - постоянно
+        if (extrom_debug) {printf("CMD: SET FOLDER NAME\n");}
+        add_to_out_buf(EMU_API_OK);
+        emu_stage=EMU_STAGE2_GETFOLDER;
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x87: { // Вывод списка каталогов, имеющихся на карте
+        if (extrom_debug) {printf("CMD: GET FOLDER LIST\n");}
+        add_to_out_buf(EMU_API_OK);
+        emu_send_listdir();
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0x88: { // Снятие защиты записи с диска Е
+        if (extrom_debug) {printf("CMD: UNLOCK DRIVE E \n");}
+        add_to_out_buf(EMU_API_OK);
+        drive_roflag[4]=0;
+        in_buffer_size=0;
+        break;
+    }
+
+    case 0xA0: {  // --------- включение-отключение подстановки системных дорожек
+        if (extrom_debug) {printf("CMD: substitution \n");}
+        if (e_drv == 0) {
+            add_to_out_buf(EMU_API_OK);
+            if (e_trk == 0) e_substitute_system_track=0;
+            else {
+                e_substitute_system_track=1;
+                sysfiles[2][6]='0'+e_trk;    // впиывваем # в SYSTEMn.BIN
+                substitute_number=e_trk-1; // индекс в массиве подставляемых имен файлов
+                if (substitute_number>2) substitute_number=2;  // для параметров 3 и более подставляем SYSTEMn.BIN
             }
-            else   {
-                add_to_out_buf(EMU_API_OK);
-                emu_stage=EMU_STAGE2_WRITE128;
-            }
-            in_buffer_size=0;
-            break;
         }
+        else  add_to_out_buf(EMU_API_FAIL);   // иначе ответ Error
+        in_buffer_size=0;
+        break;
+    }
 
-        case 0x80: { // получить имя файла образа
-            add_to_out_buf(EMU_API_OK);
-            add_to_out_buf(drive_roflag[e_drv]);
-            add_block_to_out_buf(14,drive_foldername[e_drv]);
-            add_block_to_out_buf(14,drive_filename[e_drv]);
-            in_buffer_size=0;
-            break;
-        }
+    case 0xA1: { // установка реакции на Control
+        if (extrom_debug) {printf("CMD: Control sense\n");}
+        add_to_out_buf(EMU_API_OK);
+        control_flag=e_trk;
+        in_buffer_size=0;
+        break;
+    }
 
-        case 0x81: { // Установить имя файла образа
-            add_to_out_buf(EMU_API_OK);
-            emu_stage=EMU_STAGE2_GETFILENAME;
-            in_buffer_size=0;
-            break;
+    case 0xf0: { // SPEED TEST - out 0x8000 bytes
+        if (extrom_debug) {printf("CMD: SpeedTest OUT \n");}
+        add_to_out_buf(EMU_API_OK);
+        printf("SDEMU: SPEDD TEST 8000 to korvet\n");
+        for (i=0; i<0x8000; i++) {
+            add_to_out_buf(0);
         }
+        // out_buffer_size=0x8000;
+        in_buffer_size=0;
+        break;
+    }
 
-        case 0x82: { // получить состояние смонтированного образа
-            add_to_out_buf(drive_status[e_drv]);
-            in_buffer_size=0;
-            break;
-        }
+    case 0xf1: { // SPEED TEST - in 0x8000 bytes
+        if (extrom_debug) {printf("CMD: SpeedTest IN \n");}
+        add_to_out_buf(EMU_API_OK);
+        printf("SDEMU: SPEDD TEST 8000 from korvet\n");
+        emu_stage=EMU_STAGE2_WRSPPEDTEST;
+        in_buffer_size=0;
+        break;
+    }
 
-        case 0x83: { // Создание образа KDI
-            add_to_out_buf(EMU_API_OK);
-            emu_stage=EMU_STAGE2_CREATE_KDI;
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0x84: { // Получение списка файлов
-            add_to_out_buf(EMU_API_OK);
-            emu_send_dir();
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0x85: { // Получение имени каталога с образами
-            add_to_out_buf(EMU_API_OK);
-            add_block_to_out_buf(14,diskfolder);
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0x86: { // Установка имени каталога с образами sec=0 верменно,  1 - постоянно
-            add_to_out_buf(EMU_API_OK);
-            emu_stage=EMU_STAGE2_GETFOLDER;
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0x87: { // Вывод списка каталогов, имеющихся на карте
-            add_to_out_buf(EMU_API_OK);
-            emu_send_listdir();
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0xA0: { // set system substitute trk=1 on,=0 off
-            add_to_out_buf(EMU_API_OK);
-            e_substitute_system_track=e_trk;
-            in_buffer_size=0;
-            printf("API 0XA0 - system substitute = %d\n",e_substitute_system_track);
-            break;
-        }
-
-        case 0xA1: { // установка реакции на Control
-            add_to_out_buf(EMU_API_OK);
-            control_flag=e_trk;
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0xf0: { // SPEED TEST - out 0x8000 bytes
-            add_to_out_buf(EMU_API_OK);
-            printf("SDEMU: SPEDD TEST 8000 to korvet\n");
-            for (i=0; i<0x8000; i++) {
-                add_to_out_buf(0);
-            }
-            // out_buffer_size=0x8000;
-            in_buffer_size=0;
-            break;
-        }
-
-        case 0xf1: { // SPEED TEST - in 0x8000 bytes
-            add_to_out_buf(EMU_API_OK);
-            printf("SDEMU: SPEDD TEST 8000 from korvet\n");
-            emu_stage=EMU_STAGE2_WRSPPEDTEST;
-            in_buffer_size=0;
-            break;
-        }
-
-        default: {
-            printf("SDEMU: unsupported CMD '%02x'\n",in_buffer[0]);
-            break;
-        }
+    default: {
+        printf("SDEMU: unsupported CMD '%02x'\n",in_buffer[0]);
+        break;
+    }
     }
 }
 
@@ -537,78 +588,78 @@ void parse_write(void) {
     // char fname[1024]="extrom/stage2.rom";
     switch (emu_stage) {
 
-        case EMU_STAGE1: { // Stage1 loader send GET_IMAGE_X where X-0..8 (8 by default)
-            emu_stage1();
-            break;
-        }
+    case EMU_STAGE1: { // Stage1 loader send GET_IMAGE_X where X-0..8 (8 by default)
+        emu_stage1();
+        break;
+    }
 
-        case EMU_STAGE2_WAITCMD: {
-            if (in_buffer_size == 5) {
-                e_cmd=in_buffer[0];
-                e_drv=in_buffer[1];
-                e_trk=in_buffer[2];
-                e_sec=in_buffer[3];
-                e_crc=in_buffer[4];
-                crc=e_cmd+e_drv+e_trk+e_sec-1;
+    case EMU_STAGE2_WAITCMD: {
+        if (in_buffer_size == 5) {
+            e_cmd=in_buffer[0];
+            e_drv=in_buffer[1];
+            e_trk=in_buffer[2];
+            e_sec=in_buffer[3];
+            e_crc=in_buffer[4];
+            crc=e_cmd+e_drv+e_trk+e_sec-1;
 
-                if (extrom_debug) {
-                    printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d CRC:%02x (%02x)%s\n",e_cmd,e_drv,e_trk,e_sec,e_crc,crc, e_crc==crc ? "" : " - ERROR !!!");
-                }
-
-                if (crc == e_crc) {
-                    emu_api_cmd();
-                } else {
-                    add_to_out_buf(EMU_API_FAIL);
-                }
+            if (extrom_debug) {
+                printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d CRC:%02x (%02x)%s\n",e_cmd,e_drv,e_trk,e_sec,e_crc,crc, e_crc==crc ? "" : " - ERROR !!!");
             }
-            break;
-        }
-        case EMU_STAGE2_WRITE128: {
-            if (in_buffer_size == 128) {
-                emu_write128();
-                in_buffer_size=0;
-                emu_stage=EMU_STAGE2_WAITCMD;
-            }
-            break;
-        }
 
-        case EMU_STAGE2_GETFILENAME: {
-            if (in_buffer_size == 14) {
-                emu_getfilename();
-                in_buffer_size=0;
-                emu_stage=EMU_STAGE2_WAITCMD;
+            if (crc == e_crc) {
+                emu_api_cmd();
+            } else {
+                add_to_out_buf(EMU_API_FAIL);
             }
-            break;
         }
+        break;
+    }
+    case EMU_STAGE2_WRITE128: {
+        if (in_buffer_size == 128) {
+            emu_write128();
+            in_buffer_size=0;
+            emu_stage=EMU_STAGE2_WAITCMD;
+        }
+        break;
+    }
 
-        case EMU_STAGE2_CREATE_KDI: {
-            if (in_buffer_size == 14) {
-                emu_createkdi();
-                in_buffer_size=0;
-                emu_stage=EMU_STAGE2_WAITCMD;
-            }
-            break;
+    case EMU_STAGE2_GETFILENAME: {
+        if (in_buffer_size == 14) {
+            emu_getfilename();
+            in_buffer_size=0;
+            emu_stage=EMU_STAGE2_WAITCMD;
         }
+        break;
+    }
 
-        case EMU_STAGE2_GETFOLDER: {
-            if (in_buffer_size == 14) {
-                emu_setfolder();
-                in_buffer_size=0;
-                emu_stage=EMU_STAGE2_WAITCMD;
-            }
-            break;
+    case EMU_STAGE2_CREATE_KDI: {
+        if (in_buffer_size == 14) {
+            emu_createkdi();
+            in_buffer_size=0;
+            emu_stage=EMU_STAGE2_WAITCMD;
         }
+        break;
+    }
 
-        case EMU_STAGE2_WRSPPEDTEST: {
-            if (in_buffer_size == 0x8000) {
-                in_buffer_size=0;
-                emu_stage=EMU_STAGE2_WAITCMD;
-            }
-            break;
+    case EMU_STAGE2_GETFOLDER: {
+        if (in_buffer_size == 14) {
+            emu_setfolder();
+            in_buffer_size=0;
+            emu_stage=EMU_STAGE2_WAITCMD;
         }
-        default: {
-            printf("ERROR: unsupported stage '%d' size:%d\n",emu_stage,in_buffer_size);
+        break;
+    }
+
+    case EMU_STAGE2_WRSPPEDTEST: {
+        if (in_buffer_size == 0x8000) {
+            in_buffer_size=0;
+            emu_stage=EMU_STAGE2_WAITCMD;
         }
+        break;
+    }
+    default: {
+        printf("ERROR: unsupported stage '%d' size:%d\n",emu_stage,in_buffer_size);
+    }
     }
     return;
 }

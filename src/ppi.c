@@ -181,7 +181,7 @@ void Disassemble_PPI2C(int Value)
 int Assemble_PPI2C(void)
 {
     int Value=PPI2_C;
-  
+
     Value &= 0b11110111;
 
 //   XS1:32          =(Value&0x80)>>7;
@@ -199,35 +199,53 @@ void PPI1_Write(int Addr, byte Value) {
     int bit,oldc;
 
     switch (Addr & 0x03) {
-        case 0: {PPI1_A=Value;break;}
-        case 1: {FDC_Write_DRVREG(Value);break;}
-        case 2: {
-            DisassembleVIREG_PPI1C(Value);
-            PPI1_C=Value;
-            break;
+    case 0: {
+        PPI1_A=Value;
+        break;
+    }
+    case 1: {
+        FDC_Write_DRVREG(Value);
+        break;
+    }
+    case 2: {
+        DisassembleVIREG_PPI1C(Value);
+        PPI1_C=Value;
+        break;
+    }
+    case 3: {
+        if (Value & 0x80) PPI1_RUS=Value;
+        else {
+            bit=1 << ( (Value & 0x0e) >> 1);
+            oldc=PPI1_C;
+            if (Value &1) oldc|=bit;
+            else          oldc&=bit^0xff;
+            DisassembleVIREG_PPI1C(oldc);
+            PPI1_C=oldc;
         }
-        case 3: {
-            if (Value & 0x80) PPI1_RUS=Value;
-            else {
-                bit=1 << ( (Value & 0x0e) >> 1);
-                oldc=PPI1_C;
-                if (Value &1) oldc|=bit;
-                else          oldc&=bit^0xff;
-                DisassembleVIREG_PPI1C(oldc);
-                PPI1_C=oldc;
-            }
-            break;
-        }
+        break;
+    }
     }
 }
 
-byte PPI1_Read(int Addr){
+byte PPI1_Read(int Addr) {
     int Value;
     switch (Addr & 0x03) {
-        case 0: {Value=Assemble_PPI1A();break;}
-        case 1: {Value=FDC_Read_DRVREG();break;}
-        case 2: {Value=AssembleVIREG_PPI1C();break;}
-        case 3: {return 0xff;break;}
+    case 0: {
+        Value=Assemble_PPI1A();
+        break;
+    }
+    case 1: {
+        Value=FDC_Read_DRVREG();
+        break;
+    }
+    case 2: {
+        Value=AssembleVIREG_PPI1C();
+        break;
+    }
+    case 3: {
+        return 0xff;
+        break;
+    }
     }
     return Value;
 }
@@ -235,30 +253,52 @@ byte PPI1_Read(int Addr){
 void PPI2_Write(int Addr, byte Value) {
     int bit;
     switch (Addr & 0x03) {
-        case 0: {PPI2_A=Value;break;}
-        case 1: {PPI2_B=Value;break;}
-        case 2: {PPI2_C=Value;Disassemble_PPI2C(PPI2_C);break;}
-        case 3: {
-            if (Value & 0x80) PPI2_RUS=Value;
-            else {
-             bit=1 << ( (Value & 0x0e) >> 1);
-                if (Value &1) PPI2_C|=bit;
-                else          PPI2_C&=bit^0xff;
-            }
-            Disassemble_PPI2C(PPI2_C);
-            break;
+    case 0: {
+        PPI2_A=Value;
+        break;
+    }
+    case 1: {
+        PPI2_B=Value;
+        break;
+    }
+    case 2: {
+        PPI2_C=Value;
+        Disassemble_PPI2C(PPI2_C);
+        break;
+    }
+    case 3: {
+        if (Value & 0x80) PPI2_RUS=Value;
+        else {
+            bit=1 << ( (Value & 0x0e) >> 1);
+            if (Value &1) PPI2_C|=bit;
+            else          PPI2_C&=bit^0xff;
         }
+        Disassemble_PPI2C(PPI2_C);
+        break;
+    }
     }
 }
 
-byte PPI2_Read(int Addr){
+byte PPI2_Read(int Addr) {
     int Value;
     switch (Addr & 0x03) {
-        case 0: {Value=PPI2_A;break;}
-        case 1: {Value=PPI2_B;break;}
-        // case 2: {Value=PPI2_C=Assemble_PPI2C();break;}
-        case 2: {Value=Assemble_PPI2C();break;}
-        case 3: {return 0xff;break;}
+    case 0: {
+        Value=PPI2_A;
+        break;
+    }
+    case 1: {
+        Value=PPI2_B;
+        break;
+    }
+    // case 2: {Value=PPI2_C=Assemble_PPI2C();break;}
+    case 2: {
+        Value=Assemble_PPI2C();
+        break;
+    }
+    case 3: {
+        return 0xff;
+        break;
+    }
     }
     return Value;
 }
@@ -266,100 +306,103 @@ byte PPI2_Read(int Addr){
 void PPI3_Write(int Addr, byte Value) {
     int bit;
     switch (Addr & 0x03) {
-        case 0: {
-            PPI3_A=Value;
+    case 0: {
+        PPI3_A=Value;
 
-            // printf("W3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+        // printf("W3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
 
-            if (((PPI2_C&0x80) == 0)&& (control_flag==1)) break;   // control=0 - все расширения неактивны 
+        if (((PPI2_C&0x80) == 0)&& (control_flag==1)) break;   // control=0 - все расширения неактивны
 
-            if (PPI3_RUS != EXT_ROM_EMU_MODE) break;  
+        if (PPI3_RUS != EXT_ROM_EMU_MODE) break;
 
-            ext_rom_api_write(Value);
+        ext_rom_api_write(Value);
 
-            ext_rom_addr_changed=0; 
-            break;
+        ext_rom_addr_changed=0;
+        break;
+    }
+    case 1: {
+        PPI3_B=Value;
+        ext_rom_addr_changed=1;
+        break;
+    }
+    case 2: {
+        PPI3_C=Value;
+        ext_rom_addr_changed=1;
+        break;
+    }
+    case 3: {
+        if (Value & 0x80) {
+#if 0
+            //                012345678901234
+            char decoded[64]="A_x_i B_x_i C_i";
+            decoded[ 2]='0'+( (Value&0x60) >> 5);
+            decoded[ 4]=(Value&0x10 ) ? 'i' : 'o';
+
+            decoded[ 8]='0'+(Value&0x04 >> 0);
+            decoded[10]=(Value&0x02 ) ? 'i' : 'o';
+
+            decoded[14]=(Value&0x01 ) ? 'i' : 'o';
+
+            printf("PPI3RUS: %02x - %s\n",Value,decoded);
+#endif
+            PPI3_RUS=Value;
         }
-        case 1: {
-            PPI3_B=Value;
-            ext_rom_addr_changed=1; 
-            break;
+        else {
+            bit=1 << ( (Value & 0x0e) >> 1);
+            if (Value &1) PPI3_C|=bit;
+            else          PPI3_C&=bit^0xff;
         }
-        case 2: {
-            PPI3_C=Value;
-            ext_rom_addr_changed=1;
-            break;
-        }
-        case 3: {
-            if (Value & 0x80) {
-                #if 0
-                //                012345678901234
-                char decoded[64]="A_x_i B_x_i C_i";
-                decoded[ 2]='0'+( (Value&0x60) >> 5);
-                decoded[ 4]=(Value&0x10 ) ? 'i' : 'o';
-
-                decoded[ 8]='0'+(Value&0x04 >> 0);
-                decoded[10]=(Value&0x02 ) ? 'i' : 'o';
-
-                decoded[14]=(Value&0x01 ) ? 'i' : 'o';
-
-                printf("PPI3RUS: %02x - %s\n",Value,decoded);
-                #endif
-                PPI3_RUS=Value;
-            }
-            else {
-                bit=1 << ( (Value & 0x0e) >> 1);
-                if (Value &1) PPI3_C|=bit;
-                else          PPI3_C&=bit^0xff;
-            }
-            break;
-        }
+        break;
+    }
     }
 }
 
-byte PPI3_Read(int Addr){
+byte PPI3_Read(int Addr) {
     int Value;
     switch (Addr  & 0x03) {
-        case 0: {
-            if ((!ext_rom_mode) || (((PPI2_C&0x80) == 0))&& (control_flag==1)) {
-                Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
+    case 0: {
+        if ((!ext_rom_mode) || (((PPI2_C&0x80) == 0))&& (control_flag==1)) {
+            Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
+        }
+        else {
+            if ( PPI3_RUS == EXT_ROM_EMU_MODE ) {
+                Value=ext_rom_api_read();
+                // printf("R3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+            } else {
+                Value=ext_rom_read(PPI3_B,PPI3_C);
+                // printf("R3A:%02x%02x=%02x (2C:%02x RUS:%03x)\n",PPI3_C,PPI3_B,Value,PPI2_C&0x80, PPI3_RUS);
             }
-            else {
-                if ( PPI3_RUS == EXT_ROM_EMU_MODE ) {
-                    Value=ext_rom_api_read();
-                    // printf("R3A:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
-                } else {
-                    Value=ext_rom_read(PPI3_B,PPI3_C);
-                    // printf("R3A:%02x%02x=%02x (2C:%02x RUS:%03x)\n",PPI3_C,PPI3_B,Value,PPI2_C&0x80, PPI3_RUS);
-                }
-            }  
-            break;
         }
-        case 1: {
-            /*
-            // k_mouse part
-                       if (PPI3_C & 0x10) {
-                          Value = (8-k_mousey) | (k_mouseb^0x30);
-                          k_mousey=0;
-                       } else {
-                          Value = (k_mousex+8) | (k_mouseb^0x30);
-                          k_mousex=0;
-                       }
-                       break;
-            */
-            // deflector Joystick
-            if (ext_rom_mode) Value=PPI3_B; // загрузка из ROM - читаем что записали, это адрес
-            else Value=Read_Joystick();
-            break;
-            //Value=PPI3_B;break;
-        }
-        case 2: {
-            if ( PPI3_RUS != EXT_ROM_EMU_MODE) Value=PPI3_C;
-            else Value=0x80 | 0x20;  // OBF=1  IBF=1
-            // printf("R3C:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
-            break;
-        }
-        case 3: {return 0xff;break;}
+        break;
+    }
+    case 1: {
+        /*
+        // k_mouse part
+                   if (PPI3_C & 0x10) {
+                      Value = (8-k_mousey) | (k_mouseb^0x30);
+                      k_mousey=0;
+                   } else {
+                      Value = (k_mousex+8) | (k_mouseb^0x30);
+                      k_mousex=0;
+                   }
+                   break;
+        */
+        // deflector Joystick
+        if (ext_rom_mode) Value=PPI3_B; // загрузка из ROM - читаем что записали, это адрес
+        else Value=Read_Joystick();
+        break;
+        //Value=PPI3_B;break;
+    }
+    case 2: {
+        if ( PPI3_RUS != EXT_ROM_EMU_MODE) Value=PPI3_C;
+        else Value=0x80 | 0x20;  // OBF=1  IBF=1
+        // printf("R3C:%02x %02x %02x\n",PPI2_C&0x80, PPI3_RUS, Value);
+        break;
+    }
+    case 3: {
+        return 0xff;
+        break;
+    }
     }
     return Value;
 }
@@ -371,7 +414,7 @@ void ShowPPIdbg(void) {
     int i=0;
     int x=10;
     int y=657-50;
-    char nc_rd[8][4] ={
+    char nc_rd[8][4] = {
         "___",
         "__1",
         "_2_",
@@ -384,7 +427,7 @@ void ShowPPIdbg(void) {
 
     char tncreg[512];
 
-    char tsysreg[32][40]={          
+    char tsysreg[32][40]= {
         "0-37FF 3C00      3B00 3A00 3800",
         "0-1FFF                         ",
         "0-3FFF                         ",
@@ -416,18 +459,18 @@ void ShowPPIdbg(void) {
         "0-5FFF      C000               ",
         "0-1FFF      C000               ",
         "0-3FFF      C000               ",
-        "            C000               ",                      
+        "            C000               ",
     };
 
     if (NCREG & 0x80) { // Color MODE
         sprintf(tncreg,"COLOR: Read:%d (%s) Write:%d (%s)            ",
-                     (NCREG>>4)&0x7,nc_rd[(NCREG>>4)&0x7],
-                     (NCREG>>1)&0x7,nc_rd[(NCREG>>1)&0x7]
-        );
+                (NCREG>>4)&0x7,nc_rd[(NCREG>>4)&0x7],
+                (NCREG>>1)&0x7,nc_rd[(NCREG>>1)&0x7]
+               );
 
     } else {
         sprintf(tncreg,"PLANE: Val: %d Read:%s Write:%s "
-                     ,NCREG&1,nc_rd[(NCREG>>4)&0x7],nc_rd[((~NCREG)>>1)&0x7]);
+                ,NCREG&1,nc_rd[(NCREG>>4)&0x7],nc_rd[((~NCREG)>>1)&0x7]);
     }
 
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"             ROM   ACZU GZU  Regs Port KEYs");
@@ -435,34 +478,34 @@ void ShowPPIdbg(void) {
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"SysReg: %02x >%s",SYSREG<<2,tsysreg[SYSREG]);
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"NCREG : %02x >%s",NCREG,tncreg);
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"ViREG : %02x >GZU PAGE (Acess :%d Show:%d)",
-                            AssembleVIREG_PPI1C(),
-                            scr_Page_Acces,
-                            scr_Page_Show
-           );
+                  AssembleVIREG_PPI1C(),
+                  scr_Page_Acces,
+                  scr_Page_Show
+                 );
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"VBlank: %d  ACZU     (Attr:%d Wide:%d FONT2:%d)",
-                            VBLANK,
-                            scr_Attr_Write,
-                            scr_Wide_Mode,
-                            scr_Second_Font
-           );
+                  VBLANK,
+                  scr_Attr_Write,
+                  scr_Wide_Mode,
+                  scr_Second_Font
+                 );
 
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI1 RUS=%02x A=%02x B=%02X C=%02x",
-                            PPI1_RUS,
-                            PPI1_Read(0),
-                            PPI1_Read(1),
-                            PPI1_Read(2));
+                  PPI1_RUS,
+                  PPI1_Read(0),
+                  PPI1_Read(1),
+                  PPI1_Read(2));
 
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI2 RUS=%02x A=%02x B=%02X C=%02x",
-                            PPI2_RUS,
-                            PPI2_Read(0),
-                            PPI2_Read(1),
-                            PPI2_Read(2));
+                  PPI2_RUS,
+                  PPI2_Read(0),
+                  PPI2_Read(1),
+                  PPI2_Read(2));
 
     textprintf_ex(screen,font,x,y+16*i++,0x20+0x07,0,"PPI3 RUS=%02x A=%02x B=%02X C=%02x",
-                            PPI3_RUS,
-                            PPI3_A,
-                            PPI3_B,
-                            PPI3_C);
+                  PPI3_RUS,
+                  PPI3_A,
+                  PPI3_B,
+                  PPI3_C);
 }
 
 #endif
