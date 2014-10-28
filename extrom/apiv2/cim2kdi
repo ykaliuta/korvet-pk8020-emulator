@@ -1,2 +1,0 @@
-dd if=exrsystem.cim of=disk_a.kdi conv=notrunc
-dd if=exrsystem.cim of=disk_b.kdi conv=notrunc
