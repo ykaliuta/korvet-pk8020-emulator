@@ -1,0 +1,2 @@
+dd if=exrsystem.cim of=DISKA.KDI conv=notrunc
+#dd if=exrsystem.cim of=DISKB.KDI conv=notrunc

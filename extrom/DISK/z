@@ -1,0 +1,14 @@
+#!/bin/sh
+kdi="DISKA.KDI"
+cp $1 $kdi 
+#xkorvet d diska.kdi TETRIS.COM
+#xkorvet a diska.kdi TETRIS.COM
+#xkorvet d diska.kdi SAMOVAR.COM
+#xkorvet a diska.kdi SAMOVAR.COM
+cd additionals
+for f in *.*; 
+do 
+    xkorvet d ../$kdi $f;
+    xkorvet a ../$kdi $f; 
+done
+cd ..

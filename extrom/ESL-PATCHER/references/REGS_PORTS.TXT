@@ -1,0 +1,211 @@
+﻿ 
+FAxx ______________________________________ 
+
+..7F	-	SYSREG		
+..BF	-	NCREG		
+..FB	-	LUT
+
+.. 0111 1111
+.. 1011 1111
+.. 1111 1011
+
+
+____ NCREG ____
+
+0x80 Plane/Colormode
+
+PlaneMode
+ WriteMask
+   11111101
+   11111011
+   11110111
+ ReadMask
+   00010000
+   00100000
+   01000000
+ ValueMask
+   00000001
+
+bit7 alsvays 0
+
+ColorMode
+ WriteColorMask
+   00001110b
+ ReadColorMask
+   01110000
+ 
+_____ LUT _____
+
+YrgbA210
+
+Y	-	brightness
+r	-	Red
+g	-	Green
+b	-	Blue
+A	-	ACZU
+2	-	Plane #2
+1	-	Plane #1
+0	-	Plane #0
+
+FBxx ______________________________________ 
+
+     
+00xxx000
+
+  000	-	TMR
+  001	-	PPI3
+  010	-	RS232
+  011	-	FDC
+  100	-	LAN
+  101	-	PIC
+  110   -	PPI2
+  111   -	PPI1
+
+
+TMR
+..00	-	TMR_0		Sound			
+..01	-	TMR_1		RS232			2000 kHz
+..02	-	TMR_2		SYS timer (int 5)	50 Hz
+..03	-	TMR_RUS
+
+PPI3				(Ext port)
+..08	-	A
+..09	-	B
+..0A	-	C
+..0B	-	RUS
+
+RS232
+..10	-	RS232_Data
+..11	-	RS232_Ctrl
+
+FDC
+..18	-	FDC_CMD/STAT
+..19	-	FDC_TRK
+..1A	-	FDC_SEC
+..1B	-	FDC_DATA
+
+LAN
+..20	-	LAN_Data
+..21	-	LAN_Ctrl
+
+PIC
+..28	-	PIC_RUS
+..29	-	PIC_MASK
+
+PPI2
+..30	-	LSTDATA
+..31	-	empty
+..32	-	(CASOUT, LSTCTL, SOUNDC)
+..33	-	RUS
+
+PPI1
+..38	-	(LANADDR, VISTS, LSTSTS, VBLANK, CASIN)
+..39	-	(DRVREG)
+..3A	-	(VIREG)
+..3B	-	RUS
+
+
+30:_ LSTDATA ____ OUT _____________ 2:A
+
+LPT DATA
+
+31:_ JoyStick ___ OUT _____________ 2:B
+
+joystick
+
+joystick A (XS8)
+ax	1       ax
+bx	3       bx
+1j-kn0	6	x1
+1j-kn1	7       x2
+
+joystick B (XS9)
+ay	1       ay
+by	3       by
+2j-kn0	6       y1
+2j-kn1	7       y2
+
+yyxxbaba
+2121yyxx
+.	-	80      2j-kn1
+ .	-	40      2j-kn0
+  .	-	20      1j-kn1
+   .	-	10      1j-kn0
+    .	-	08	by
+     .	-	04	ay 
+      .	-	02 	bx
+       .-	01	ax
+
+axc
+bxc
+ayc
+byc
+
+x1  : xs8:06
+x2  : xs8:07
+y1  : xs9:06
+y2  : xs9:07
+
+32:_____ OUT _____________ 2:C
+
+XREBSPtt
+
+X	-       80 XS1:32
+ R	-       40 RESC (Reset for Joystick)
+  E	-       20 ~SE
+   B	-       10 ~ACK Printer Strobe ?
+    S	-       08 Sound Enable
+     P  -       04 CAS Motor
+      tt-       01 Send LOW level
+                02 Send MID level
+       	        03 Send HIGH level
+
+38:______________ IN _______________ 1:A
+
+nnnnALVT
+
+nnnn	-	F0 LAN num
+    A   -	08 Attr Mask
+     L	-	04 LPT Ready
+      V - 	02 VBLANK
+       T-	01 TapeIn
+
+39: _ DRVREG ____ OUT ______________ 1:B
+
+zDMS3210
+
+z	-	80 203mm disk
+ D	-	40 SD disk
+  M	-	20 Motor ON
+   S	-	10 Side
+    3	-	08 FDD3
+     2	-	04 FDD2
+      1	-	02 FDD1
+       0-	01 FDD0
+
+3A: _ VIREG ______ OUT ______________ 1:C
+
+wwxxLFvv
+ww	-	xx RW video page num 
+  01	-	10 Attr SET 
+  10	-	20 Attr RESET
+  11	-	30 Attr STORE
+    L	-	08 Large (32x16)
+     F	-	04 SecondFont
+      vv-	xx Visible video page num
+
+F8xx ______________________________________ KBD
+
+
+___________________________________________ INT LEVEL 
+
+IRQ
+   0	-	EXTERNAL
+   1	-	RS232 reciver ready
+   2	-	RS232 sender ready
+   3	-	LAN
+   4	-	50 Hz
+   5	-	TIMER chanel #2
+   6	-	LST READY
+   7	-	FDD Motor stop
+___________________________________________

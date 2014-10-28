@@ -1,0 +1,6 @@
+_BIOS_:NAME::
+	setUNSUPPORTED
+
+:CUSTOM_CHECKERS:
+	
+	stop ':NAME:'

@@ -1,0 +1,542 @@
+   1:     -	F1D5          	loader_place 	equ 	0xF1D5
+   2:     -	E496          	ldir_de_hl_c	equ 	0xE496
+   3:     -	BF00          	cuntinue_in_bios equ 	0xBF00	
+   4:				
+   5:     -	FA7F          	sysreg1C	equ 	0xfa7f
+   6:     -	FF7F          	sysreg5c 	equ 	0xff7f
+   7:				
+   8:				stop 	macro msg
+   9:					endm
+  10:				
+  11:				dbpatch macro addr,oldbyte,newbyte
+  12:					ld 	a,newbyte
+  13:					ld 	(addr),a
+  14:					endm
+  15:				
+  16:				dbpatchmaybe macro addr,oldbyte,newbyte
+  17:					endm
+  18:				
+  19:				dwpatch macro addr,oldword,newword
+  20:					ld 	hl,newword
+  21:					ld 	(addr),hl
+  22:					endm
+  23:				
+  24:				dwstore macro addr,newword
+  25:					ld 	hl,newword
+  26:					ld 	(addr),hl
+  27:					endm
+  28:				
+  29:				setCPM 	macro 	
+  30:					endm
+  31:				
+  32:				setMICRODOS macro
+  33:					endm
+  34:				
+  35:				setUNSUPPORTED macro
+  36:					endm
+  37:				
+  38:				RQ_OPTS1	macro
+  39:					endm
+  40:				
+  41:				RQ_OPTS2	macro
+  42:					endm
+  43:				
+  44:				RQ_OPTS_ANY	macro
+  45:					endm
+  46:				
+  47:				
+  48:     -	F1D5          		org loader_place
+  49:				
+  50:    0+4	F1D5  F3      		di
+  51:				
+  52:				; 	ld 	hl,0xFB0B
+  53:				; 	ld 	(hl),0xc0 ; Конифгурация ВВ55 - Порт А в режиме 2, порт В на вывод
+  54:				
+  55:				; 	ld 	hl,0xFB32 
+  56:				; 	ld 	(hl),0xc9 ; set ppic.7=1
+  57:				
+  58:    4+7	F1D6  3E5C    		ld 	a,0x5c
+  59:   11+13	F1D8  327FFA  		ld 	(sysreg1C),a 	
+  60:				
+  61:   24+10	F1DB  2100FA  		ld      hl, resident_md_addr
+  62:   34+10	F1DE  1146F2  		ld      de, resident_md
+  63:   44+7	F1E1  0EF8    		ld      c, resident_md_len
+  64:   51+17	F1E3  CD96E4  		call 	ldir_de_hl_c
+  65:				
+  66:					include "../out/patcher-microdos-MICRODOS_OPTS2_900105.asm"
+**** ../out/patcher-microdos-MICRODOS_OPTS2_900105.asm ****
+   1:     -	F1E6          	_BIOS_MICRODOS_OPTS2_900105:
+   2:     -	F1E6          		setMICRODOS
+   2:     -	F1E6          		endm
+   3:     -	F1E6          		RQ_OPTS_ANY
+   3:     -	F1E6          		endm
+   4:     -	F1E6          		dbpatchmaybe	0xF04E	,0x1B	,0x0d
+   4:     -	F1E6          		endm
+   5:     -	F1E6          		dbpatchmaybe	0xF04E+1	,0x45	,0x0d
+   5:     -	F1E6          		endm
+   6:     -	F1E6          		dwpatch	0xEAFF+1	,0xEB36	,MD_READ			
+   6:   68+10	F1E6  2126FA  		ld 	hl,MD_READ
+   6:   78+16	F1E9  2200EB  		ld 	(0xEAFF+1),hl
+   6:     -	F1EC          		endm
+   7:     -	F1EC          		dwpatch	0xEB04+1	,0xEBA0	,MD_WRITE
+   7:   94+10	F1EC  213BFA  		ld 	hl,MD_WRITE
+   7:  104+16	F1EF  2205EB  		ld 	(0xEB04+1),hl
+   7:     -	F1F2          		endm
+   8:     -	F1F2          		dbpatch	0xEC87	,0xcd	,0x00
+   8:  120+7	F1F2  3E00    		ld 	a,0x00
+   8:  127+13	F1F4  3287EC  		ld 	(0xEC87),a
+   8:     -	F1F7          		endm
+   9:     -	F1F7          		dwpatch	0xEC87+1	,0xEE14	,0x0000
+   9:  140+10	F1F7  210000  		ld 	hl,0x0000
+   9:  150+16	F1FA  2288EC  		ld 	(0xEC87+1),hl
+   9:     -	F1FD          		endm
+  10:     -	F1FD          		dwpatch	0xEC8A+1	,0xEE1E	,MD_READ_INFOSECTOR
+  10:  166+10	F1FD  2150FA  		ld 	hl,MD_READ_INFOSECTOR
+  10:  176+16	F200  228BEC  		ld 	(0xEC8A+1),hl
+  10:     -	F203          		endm
+  11:     -	F203          		dwstore	MD_DRV2+1,	0xEF06
+  11:  192+10	F203  2106EF  		ld 	hl,0xEF06
+  11:  202+16	F206  22DBFA  		ld 	(MD_DRV2+1),hl
+  11:     -	F209          		endm
+  12:     -	F209          		dwstore	MD_RDBUF2+1,	0xF04E
+  12:  218+10	F209  214EF0  		ld 	hl,0xF04E
+  12:  228+16	F20C  22EAFA  		ld 	(MD_RDBUF2+1),hl
+  12:     -	F20F          		endm
+  13:     -	F20F          		dwstore	MD_PARAM2+1,	0xEEF8
+  13:  244+10	F20F  21F8EE  		ld 	hl,0xEEF8
+  13:  254+16	F212  2205FA  		ld 	(MD_PARAM2+1),hl
+  13:     -	F215          		endm
+  14:					;custom checkers
+  15:     -	F215          		dwpatch	0xBD80	,0xBD80 ,0xBD80
+  15:  270+10	F215  2180BD  		ld 	hl,0xBD80
+  15:  280+16	F218  2280BD  		ld 	(0xBD80),hl
+  15:     -	F21B          		endm
+  16:     -	F21B          		dwpatch	0xBD82	,0xBE00 ,0xBE00
+  16:  296+10	F21B  2100BE  		ld 	hl,0xBE00
+  16:  306+16	F21E  2282BD  		ld 	(0xBD82),hl
+  16:     -	F221          		endm
+  17:     -	F221          		dwpatch	0xc000+1	,0xC487 ,0xC487
+  17:  322+10	F221  2187C4  		ld 	hl,0xC487
+  17:  332+16	F224  2201C0  		ld 	(0xc000+1),hl
+  17:     -	F227          		endm
+  18:     -	F227          		dwpatch	0xc003+1	,0xDBC0 ,0xDBC0
+  18:  348+10	F227  21C0DB  		ld 	hl,0xDBC0
+  18:  358+16	F22A  2204C0  		ld 	(0xc003+1),hl
+  18:     -	F22D          		endm
+  19:     -	F22D          		dbpatch	0xbe07+1	,0x02 ,0x02
+  19:  374+7	F22D  3E02    		ld 	a,0x02
+  19:  381+13	F22F  3208BE  		ld 	(0xbe07+1),a
+  19:     -	F232          		endm
+  20:     -	F232          		dbpatch	0xEC42	,0x21 ,0x21
+  20:  394+7	F232  3E21    		ld 	a,0x21
+  20:  401+13	F234  3242EC  		ld 	(0xEC42),a
+  20:     -	F237          		endm
+  21:     -	F237          		stop 'MICRODOS_OPTS2_900105'
+  21:     -	F237          		endm
+**** kdi_resident.asm ****
+  67:				
+  68:  414+7	F237  3E1C    		ld 	a,0x1c
+  69:  421+13	F239  327FFF  		ld 	(sysreg5C),a
+  70:				
+  71:  434+10	F23C  213EF3  		ld 	hl,msgPATCHED
+  72:  444+17	F23F  CD86E4  		call    0xE486   
+  73:				
+  74:  461+4	F242  FB      		ei
+  75:  465+10	F243  C300BF  		jp 	cuntinue_in_bios
+  76:				
+  77:				
+  78:				
+  79:					include "../extrom-patcher-resident-microdos.asm"
+**** ../extrom-patcher-resident-microdos.asm ****
+   1:     -	FE08          	MD_rPORTA	EQU	0FE08H		; Порт Канала A интерфейса расширения
+   2:     -	FE0A          	MD_rPORTC	EQU	0FE0AH		; Порт Канала С интерфейса расширения
+   3:     -	FE0B          	MD_rPCWR	EQU	0FE0BH		; Порт управляющих команд
+   4:				
+   5:     -	0000          	MD_RRBUFF 	EQU 	0
+   6:				
+   7:     -	F246          	resident_md:
+   8:				
+   9:				; 	.phase 	0xFD80
+  10:     -	FA00          		.phase 	0xFA00
+  11:     -	FA00          	resident_md_addr 	EQU 	$
+  12:				
+  13:				
+  14:				;мы тут в конфигуации 0x5C
+  15:				
+  16:				;Код Cfg    ПЗУ     ОЗУ        ГЗУ   ОЗУ2       Клав  Рег2  А/Ц   Рег1
+  17:				;ID  Name   ROM     RAM        GZU   Ram2       KBD   REGS  ACZU  DEV
+  18:				;______________________________________________________________________
+  19:				;1C  ODOSA          0000-F7FF                   F800  FA00  FC00  FB00
+  20:				;5C  DOSA           0000-FDFF                         FF00        FE00
+  21:				
+  22:				
+  23:				
+  24:				;PATCH --------------------------------------------------------------------------
+  25:				
+  26:				;do_dskIO
+  27:				
+  28:				; RAM:EAFD FE 04                    cp      4 		
+  29:				; RAM:EAFF CA 36 EB                 jp      z, jREAD 		<--- MY write
+  30:				; RAM:EB02 FE 06                    cp      6
+  31:				; RAM:EB04 CA A0 EB                 jp      z, jWRITE 		<--- MY write
+  32:				
+  33:				
+  34:				; SELDSK:
+  35:				; RAM:EC87 CD 14 EE                 call    SEL_DSK_SEEK0       <--- 00 00 00
+  36:				; RAM:EC8A CD 1E EE                 call    ReadToRDBUF 	<--- MY read info into F04E. nz if err 
+  37:				
+  38:				; RAM:EC3A          Flush?:                                 ; CODE XREF: do_DSKIO+6Ap
+  39:				; RAM:EC3A                                                  ; do_DSKIO+9Ap ...
+  40:				; RAM:EC3A 21 FD EE                 ld      hl, flagWriteReuired?
+  41:				; RAM:EC3D 7E                       ld      a, (hl)
+  42:				; RAM:EC3E B7                       or      a
+  43:				; RAM:EC3F C8                       ret     z  			<--- C9, newer flush
+  44:				; RAM:EC42 21 0A EF                 ld      hl, WrBufDiskInfo   <--- or C9 HERE
+  45:				
+  46:				
+  47:				;DISKINFO -----------------------------------------------------------------------
+  48:				
+  49:				; RAM:EB36          jREAD:                                  ; CODE XREF: do_DSKIO+40j
+  50:				; RAM:EB36 2A F8 EE                 ld      hl, (DSC_IO_HL) ; DSCDESCR
+  51:				; RAM:EB39 46                       ld      b, (hl)         ; Drive
+  52:				; RAM:EB3A 23                       inc     hl
+  53:				
+  54:				; RAM:EAF1 7E                       ld      a, (hl) 	    ;operation 3-reset?, 4-read,6-write
+  55:				; RAM:EAF2 23                       inc     hl
+  56:				
+  57:				; RAM:EB3C 23                       inc     hl 		    ; ?chword?
+  58:				; RAM:EB3D 23                       inc     hl              ; ?NumB?
+  59:				
+  60:				; RAM:EB3E 4E                       ld      c, (hl)         ; track
+  61:				; RAM:EB3F 23                       inc     hl
+  62:				
+  63:				; RAM:EB40 7E                       ld      a, (hl)         ; sector
+  64:				; RAM:EB3F 23                       inc     hl
+  65:				
+  66:				; RAM:EAF6 5E                       ld      e, (hl)
+  67:				; RAM:EAF7 23                       inc     hl
+  68:				; RAM:EAF8 56                       ld      d, (hl)
+  69:				; RAM:EAF9 EB                       ex      de, hl
+  70:				; RAM:EAFA 22 FA EE                 ld      (_DMA??), hl
+  71:				;DISKINFO -----------------------------------------------------------------------
+  72:				
+  73:     -	FA00          	md_fetch_params:
+  74:				
+  75:  475+11	FA00  F5      		push 	af
+  76:  486+11	FA01  C5      		push 	bc
+  77:  497+11	FA02  D5      		push 	de
+  78:  508+11	FA03  E5      		push 	hl
+  79:				
+  80:     -	FA04          	MD_PARAM2:
+  81:  519+16	FA04  2AF8EE  		ld      hl, (0xEEF8) ; DSCDESCR
+  82:  535+7	FA07  7E      		ld      a, (hl)         ; Drive
+  83:  542+6	FA08  23      		inc     hl
+  84:  548+13	FA09  32F3FA  		ld 	(MD_EXR_DRV),a
+  85:				
+  86:				; 	ld      a, (hl)		;operation 3-reset?, 4-read,6-write
+  87:  561+6	FA0C  23      		inc     hl
+  88:				
+  89:  567+6	FA0D  23      		inc     hl		; ?chword?
+  90:  573+6	FA0E  23      		inc     hl              ; ?NumB?
+  91:				
+  92:  579+7	FA0F  7E      		ld      a, (hl)         ; track
+  93:  586+6	FA10  23      		inc     hl
+  94:  592+13	FA11  32F4FA  		ld 	(MD_EXR_TRK),a
+  95:				
+  96:  605+7	FA14  7E      		ld      a, (hl)         ; sector
+  97:  612+4	FA15  3D      		DEC	A
+  98:  616+6	FA16  23      		inc     hl
+  99:  622+13	FA17  32F5FA  		ld 	(MD_EXR_SEC),a
+ 100:				
+ 101:  635+7	FA1A  5E      		ld      e, (hl)
+ 102:  642+6	FA1B  23      		inc     hl
+ 103:  648+7	FA1C  56      		ld      d, (hl)
+ 104:  655+4	FA1D  EB      		ex      de, hl
+ 105:  659+16	FA1E  22F6FA  		ld      (MD_DMA), hl
+ 106:				
+ 107:  675+10	FA21  E1      		pop 	hl
+ 108:  685+10	FA22  D1      		pop 	de
+ 109:  695+10	FA23  C1      		pop 	bc
+ 110:  705+10	FA24  F1      		pop 	af
+ 111:				
+ 112:  715+10	FA25  C9      		ret
+ 113:				
+ 114:     -	FA26          	MD_READ:
+ 115:  725+17	FA26  CD00FA  		call 	md_fetch_params
+ 116:					
+ 117:  742+7	FA29  3E01    		LD	A,1
+ 118:  749+13	FA2B  32F2FA  		LD	(MD_EXR_CMD),A	; 1 - команда чтения
+ 119:				
+ 120:  762+17	FA2E  CDADFA  		CALL	MD_EXR_SENDCMD	; отсылаем команду
+ 121:  779+4	FA31  3D      		DEC	A		; ответ, 0 - ошибка, 1 - ОК
+ 122:  783+5+6	FA32  C0      		RET	NZ		; 0 - ошибка
+ 123:  788+16	FA33  2AF6FA  		LD	HL,(MD_DMA)	; адрес буфера для приема данных
+ 124:  804+17	FA36  CD75FA  		CALL	MD_EXR_GETSEC	; принимаем данные
+ 125:  821+4	FA39  AF      		XOR	A		; завершение всегда успешно
+ 126:  825+10	FA3A  C9      		RET
+ 127:				
+ 128:     -	FA3B          	MD_WRITE:
+ 129:  835+17	FA3B  CD00FA  		call	md_fetch_params
+ 130:				
+ 131:  852+7	FA3E  3E02    		LD	A,2		; 2 - команда записи
+ 132:  859+13	FA40  32F2FA  		LD	(MD_EXR_CMD),A
+ 133:				
+ 134:  872+17	FA43  CDADFA  		CALL	MD_EXR_SENDCMD
+ 135:  889+4	FA46  3D      		DEC	A		; ответ, 0 - ошибка, 1 - ОК
+ 136:  893+5+6	FA47  C0      		RET	NZ		; 0 - ошибка
+ 137:  898+16	FA48  2AF6FA  		LD	HL,(MD_DMA)
+ 138:  914+17	FA4B  CD91FA  		CALL	MD_EXR_PUTSEC
+ 139:  931+4	FA4E  AF      		XOR	A		; запись успешна
+ 140:  935+10	FA4F  C9      		RET
+ 141:				
+ 142:     -	FA50          	MD_READ_INFOSECTOR:
+ 143:  945+17	FA50  CDD4FA  		CALL	MD_EXR_READINFO
+ 144:  962+4	FA53  3D      		DEC	A		; ответ, 0 - ошибка, 1 - ОК
+ 145:  966+10	FA54  C9      		ret
+ 146:				
+ 147:				
+ 148:				;==================  Драйвер ExtROM-API ====================================
+ 149:					
+ 150:					
+ 151:				;****************************************
+ 152:				;*  Прием байта из порта А по стробу    *
+ 153:				;****************************************
+ 154:     -	FA55          	MD_EXR_GETBYTE:
+ 155:  976+11	FA55  E5      		PUSH	HL
+ 156:  987+10	FA56  210AFE  		LD	HL,MD_rPORTC
+ 157:     -	FA59          	MD_pWG:
+ 158:  997+7	FA59  7E      		LD	A,(HL)		; слово состояния ВВ55 - берется из порта С
+ 159: 1004+7	FA5A  E620    		AND	20h		; выделяем сигнал IBF
+ 160: 1011+10	FA5C  CA59FA  		JP	Z,MD_pWG		; IBF=0 - данных еще нет
+ 161: 1021+13	FA5F  3A08FE  		LD	A,(MD_rPORTA)		; данные поступили - выбираем их из порта А
+ 162: 1034+10	FA62  E1      		POP	HL
+ 163: 1044+10	FA63  C9      		RET
+ 164:				
+ 165:				;****************************************
+ 166:				;*  Отправка байта в порт A             *
+ 167:				;****************************************
+ 168:     -	FA64          	MD_EXR_PUTBYTE:
+ 169: 1054+11	FA64  E5      		PUSH	HL
+ 170: 1065+11	FA65  F5      		PUSH	AF
+ 171: 1076+10	FA66  210AFE  		LD	HL,MD_rPORTC
+ 172:     -	FA69          	MD_pWP:
+ 173: 1086+7	FA69  7E      		LD	A,(HL)		; слово состояния ВВ55 - берется из порта С
+ 174: 1093+7	FA6A  E680    		AND	80h		; выделяем сигнал -OBF
+ 175: 1100+10	FA6C  CA69FA  		JP	Z,MD_pWP		; -OBF=0 - в передатчике сидит незабранный байт
+ 176: 1110+10	FA6F  F1      		POP	AF
+ 177: 1120+13	FA70  3208FE  		LD	(MD_rPORTA),A		; данные поступили - выбираем их из порта А
+ 178: 1133+10	FA73  E1      		POP	HL
+ 179: 1143+10	FA74  C9      		RET
+ 180:				
+ 181:				;*******************************************
+ 182:				;*      Прием сектора                      *
+ 183:				;* HL - адрес размещения сектора в памяти  *
+ 184:				;*  Размер сектора - 128 байт              *
+ 185:				;*******************************************
+ 186:     -	FA75          	MD_EXR_GETSEC:
+ 187: 1153+4	FA75  F3      		di
+ 188: 1157+11	FA76  C5      		PUSH	BC
+ 189: 1168+11	FA77  D5      		PUSH	DE
+ 190: 1179+7	FA78  0E80    		LD	C,128		; счетчик байтов сектора, всего 128 байт
+ 191: 1186+4	FA7A  EB      		EX	DE,HL		; адрес буфера -> DE
+ 192: 1190+10	FA7B  210AFE  		LD	HL,MD_rPORTC
+ 193:     -	FA7E          	MD_pGSL:
+ 194: 1200+7	FA7E  7E      		LD	A,(HL)		; слово состояния ВВ55 - берется из порта С
+ 195: 1207+7	FA7F  E620    		AND	20h		; выделяем сигнал IBF
+ 196: 1214+10	FA81  CA7EFA  		JP	Z,MD_pGSL		; IBF=0 - данных еще нет
+ 197: 1224+13	FA84  3A08FE  		LD	A,(MD_rPORTA)		; данные поступили - выбираем их из порта А
+ 198: 1237+7	FA87  12      		LD	(DE),A		; принимаем и размещаем очередной байт
+ 199: 1244+6	FA88  13      		INC	DE		; указатель буфера ++
+ 200: 1250+4	FA89  0D      		DEC	C		; принимаем остальные байты
+ 201: 1254+10	FA8A  C27EFA  		JP	NZ,MD_pGSL
+ 202: 1264+10	FA8D  D1      		POP	DE
+ 203: 1274+10	FA8E  C1      		POP	BC
+ 204: 1284+4	FA8F  FB      		ei 		
+ 205: 1288+10	FA90  C9      		RET
+ 206:				
+ 207:				;*******************************************
+ 208:				;*      Передача сектора                   *
+ 209:				;* HL - адрес размещения сектора в памяти  *
+ 210:				;*  Размер сектора - 128 байт              *
+ 211:				;*******************************************
+ 212:     -	FA91          	MD_EXR_PUTSEC:
+ 213: 1298+4	FA91  F3      		di
+ 214: 1302+11	FA92  C5      		PUSH	BC
+ 215: 1313+11	FA93  D5      		PUSH	DE
+ 216: 1324+7	FA94  0E80    		LD	C,128		; счетчик байтов сектора, всего 128 байт
+ 217: 1331+4	FA96  EB      		EX	DE,HL		; адрес буфера -> DE
+ 218: 1335+10	FA97  210AFE  		LD	HL,MD_rPORTC
+ 219:     -	FA9A          	MD_pPSL:
+ 220: 1345+7	FA9A  7E      		LD	A,(HL)		; слово состояния ВВ55 - берется из порта С
+ 221: 1352+7	FA9B  E680    		AND	80h		; выделяем сигнал -OBF
+ 222: 1359+10	FA9D  CA9AFA  		JP	Z,MD_pPSL		; -OBF=0 - в передатчике сидит незабранный байт
+ 223: 1369+7	FAA0  1A      		LD	A,(DE)		; принимаем и размещаем очередной байт
+ 224: 1376+13	FAA1  3208FE  		LD	(MD_rPORTA),A		; данные поступили - выбираем их из порта А
+ 225: 1389+6	FAA4  13      		INC	DE
+ 226: 1395+4	FAA5  0D      		DEC	C		; принимаем остальные байты
+ 227: 1399+10	FAA6  C29AFA  		JP	NZ,MD_pPSL
+ 228: 1409+10	FAA9  D1      		POP	DE
+ 229: 1419+10	FAAA  C1      		POP	BC
+ 230: 1429+4	FAAB  FB      		ei 		
+ 231: 1433+10	FAAC  C9      		RET
+ 232:				
+ 233:				;****************************************
+ 234:				;*     Отправка командного пакета       *
+ 235:				;****************************************
+ 236:     -	FAAD          	MD_EXR_SENDCMD:
+ 237:				
+ 238: 1443+4	FAAD  F3      		di
+ 239: 1447+11	FAAE  E5      		PUSH	HL
+ 240: 1458+11	FAAF  C5      		PUSH	BC
+ 241: 1469+7	FAB0  3E0C    		LD	A,0Ch
+ 242: 1476+13	FAB2  320BFE  		LD	(MD_rPCWR),A	; переключаем порт в режим 2
+ 243: 1489+10	FAB5  21F2FA  		LD	HL,MD_EXR_CMD
+ 244: 1499+7	FAB8  0E04    		LD	C,4		; пакет - 4 байта
+ 245: 1506+7	FABA  0600    		LD	B,0		; заготовка контрольной суммы
+ 246:     -	FABC          	MD_pSCL:
+ 247: 1513+7	FABC  7E      		LD	A,(HL)		; очередной байт пакета 
+ 248: 1520+4	FABD  80      		ADD 	B		; добавляем к КС
+ 249: 1524+4	FABE  47      		LD	B,A
+ 250: 1528+7	FABF  7E      		LD	A,(HL)		; очередной байт пакета 
+ 251: 1535+17	FAC0  CD64FA  		CALL	MD_EXR_PUTBYTE		; - в порт
+ 252: 1552+6	FAC3  23      		INC	HL
+ 253: 1558+4	FAC4  0D      		DEC	C
+ 254: 1562+10	FAC5  C2BCFA  		JP	NZ,MD_pSCL
+ 255: 1572+4	FAC8  78      		LD	A,B
+ 256: 1576+4	FAC9  3D      		DEC 	A		; КС-1
+ 257: 1580+17	FACA  CD64FA  		CALL	MD_EXR_PUTBYTE     ; контрольная сумма
+ 258: 1597+17	FACD  CD55FA  		CALL	MD_EXR_GETBYTE	; ответ контроллера
+ 259: 1614+10	FAD0  C1      		POP	BC
+ 260: 1624+10	FAD1  E1      		POP	HL
+ 261: 1634+4	FAD2  FB      		ei 		
+ 262: 1638+10	FAD3  C9      		RET
+ 263:				
+ 264:				;*******************************************
+ 265:				;*  Чтение информационного сектора
+ 266:				;*******************************************
+ 267:     -	FAD4          	MD_EXR_READINFO:
+ 268: 1648+10	FAD4  21F2FA  		LD	HL,MD_EXR_CMD	; командный пакет
+ 269: 1658+10	FAD7  3601    		LD	(HL),1		; команда чтения
+ 270: 1668+6	FAD9  23      		INC	HL
+ 271:     -	FADA          	MD_DRV2:
+ 272: 1674+13	FADA  3A06EF  		LD	A,(0xEF06)	; вписываем # устройства
+ 273: 1687+7	FADD  77      		LD	(HL),A
+ 274: 1694+6	FADE  23      		INC	HL
+ 275: 1700+10	FADF  3600    		LD	(HL),0		; обнуляем, поскольку читаем сектор 0 дорожки 0 
+ 276: 1710+6	FAE1  23      		INC	HL
+ 277: 1716+10	FAE2  3600    		LD	(HL),0		
+ 278: 1726+17	FAE4  CDADFA  		CALL	MD_EXR_SENDCMD	; отправляем команду
+ 279: 1743+4	FAE7  B7      		OR	A
+ 280: 1747+5+6	FAE8  C8      		RET 	Z		; ошибка
+ 281:     -	FAE9          	MD_RDBUF2:
+ 282: 1752+10	FAE9  210000  		LD	HL,MD_RRBUFF	; принимаем данные
+ 283: 1762+17	FAEC  CD75FA  		CALL	MD_EXR_GETSEC
+ 284: 1779+7	FAEF  3E01    		LD	A,1
+ 285: 1786+10	FAF1  C9      		RET
+ 286:				
+ 287:				
+ 288:				; Командный пакет интерфейса Extrom-API
+ 289:				;===============================================
+ 290:     -	FAF2  00      	MD_EXR_CMD:	DB	0	; Команда чтения(0)-записи(1)
+ 291:     -	FAF3  00      	MD_EXR_DRV:	DB	0	; Устройство - A(0), B(1)	
+ 292:     -	FAF4  00      	MD_EXR_TRK:	DB	0	; логическая дорожка
+ 293:     -	FAF5  00      	MD_EXR_SEC:	DB	0	; логический сектор (128b)
+ 294:     -	FAF6  0000    	MD_DMA: 	DW 	0 	; адресс куда/откуда
+ 295:				
+ 296:     -	F33E          		.dephase
+ 297:     -	00F8          	resident_md_len 	equ $-resident_md
+ 298:				
+ 299:				
+**** kdi_resident.asm ****
+  80:				
+  81:					;ldir use C as conter
+  82:     -	0001          		.assert 0xff>resident_md_len
+  83:     -	F33E          	msgPATCHED:
+  84:     -	F33E  202B2045		db 	' + EXTROM PATCH BY ESL 16 Oct 2014'
+	      5854524F
+	      4D205041
+	      54434820
+	      42592045
+	      534C2031
+	      36204F63
+	      74203230
+	      3134
+  85:     -	F360  0D0A24  		db 	0x0d,0x0a,'$'
+  86:				;           RAM:BED5          _BOOT2:                                 ; CODE XREF: RAM:BE7Bj
+  87:				;           RAM:BED5                                                  ; RAM:BE8Dj
+  88:				;           RAM:BED5 3E 20                    ld      a, 20h ; ' '
+  89:				;           RAM:BED7 32 3A FB                 ld      (_1C_PPI1C_Vireg), a
+  90:				;           RAM:BEDA FB                       ei
+  91:				;           RAM:BEDB CD B6 E4                 call    PCLS
+  92:				;           RAM:BEDE 21 4E F0                 ld      hl, BOOT_LOGO   ; "\x1BEdn=˜s( =d8020\r\neTT=¦s(fßv 01.05.90\r\n$"
+  93:				;           RAM:BEE1 CD 86 E4                 call    PUT_STR
+  94:				;           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  95:				;           RAM:BEE4 C3 00 BF                 jp      loc_BF00        
+  96:				;           !!!!!!!!!!!!!!!!!!!!!
+  97:				
+  98:				;           0xBEE4 -> fdd:0x0164
+  99:				;           сюда ставим переход на нас, а там переход на BF00
+ 100:				
+ 101:				;           используем код из загрузчика
+ 102:				;           RAM:BE9A 21 80 FC                 ld      hl, E_DRIVE
+ 103:				;           RAM:BE9D 11 00 F1                 ld      de, E_DRIVE_IMAGE
+ 104:				;           RAM:BEA0 0E D5                    ld      c, 213
+ 105:				;           RAM:BEA2 CD 96 E4                 call    ldir_de_hl_c
+ 106:				;           т.е. наш код это что-то типа
+ 107:				;           call  0xE496
+
+
+
+Statistics:
+
+     4	passes
+     0	jr promotions
+    37	symbols
+   398	bytes
+
+    19	macro calls
+   147	macro bytes
+     0	invented symbols
+
+
+
+Symbol Table:
+
+_bios_microdos_opts2_900105 f1e6     
+cuntinue_in_bios=bf00     
+ldir_de_hl_c   =e496     
+loader_place   =f1d5     
+md_dma          faf6     
+md_drv2         fada     
+md_exr_cmd      faf2     
+md_exr_drv      faf3     
+md_exr_getbyte  fa55     
+md_exr_getsec   fa75     
+md_exr_putbyte  fa64     
+md_exr_putsec   fa91     
+md_exr_readinfo fad4     
+md_exr_sec      faf5     
+md_exr_sendcmd  faad     
+md_exr_trk      faf4     
+md_fetch_params fa00     
+md_param2       fa04     
+md_pgsl         fa7e     
+md_ppsl         fa9a     
+md_pscl         fabc     
+md_pwg          fa59     
+md_pwp          fa69     
+md_rdbuf2       fae9     
+md_read         fa26     
+md_read_infosector fa50     
+md_rpcwr       =fe0b     
+md_rporta      =fe08     
+md_rportc      =fe0a     
+md_rrbuff      =   0     
+md_write        fa3b     
+msgpatched      f33e     
+resident_md     f246     
+resident_md_addr=fa00     
+resident_md_len=  f8     
+sysreg1c       =fa7f     
+sysreg5c       =ff7f     
+

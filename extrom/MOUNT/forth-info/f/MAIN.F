@@ -1,0 +1,16 @@
+hex 1f decimal emit
+.( MAIN ) cr
+
+INCLUDE LOCALS.F
+
+INCLUDE TOOLS.F
+
+INCLUDE BUFTOOLS.F
+
+INCLUDE EXT-ROM.F
+
+INCLUDE DSKINFO.F
+
+crlf
+.( DONE ) 
+
