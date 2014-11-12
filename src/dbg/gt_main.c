@@ -122,17 +122,24 @@ void GameTools(void) {
   UpdateGameTool();
 
   if (GT_Pass == 0) {
-     tScreenPutString("  B) new BYTE mode, W) new WORD mode, ESC - exit                ",C_Edit,0,GT_Y+1);
+     tScreenPutString("  B) new BYTE mode, W) new WORD mode, ESC - exit, F1 - help                ",C_Edit,0,GT_Y+1);
      GT_Mode=GT_ZERO;
      while (!Exit) {
        Key=readkey();
        switch (Key>>8) {
+          case KEY_F1  : {
+            _HELP(MAXDBG);
+            Update_Screen();
+            UpdateGameTool();
+            tScreenPutString("  B) new BYTE mode, W) new WORD mode, ESC - exit, F1 - help                ",C_Edit,0,GT_Y+1);
+            break;
+          }
           case KEY_B   : {Exit=1;GT_Mode=GT_BYTE;GT_Pass=0;break;}
           case KEY_W   : {Exit=1;GT_Mode=GT_WORD;GT_Pass=0;break;}
           case KEY_ESC : {Exit=1;break;}
        }
      }
-     
+
   } else {
      tScreenPutString("1) < 2) > 3) = 4) != 9) !=0 0) ==0 C+(0-9)==(0..9), B/W) new Byte/Word, C) Clr ESC) Exit",C_Edit,0,GT_Y+1);
      while (!Exit) {

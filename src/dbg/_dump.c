@@ -31,18 +31,21 @@
    struct sFIELD Field[1+1+16+1+16+1]; // Label Addr 16hex stopfiled 16dmp (MAX variant)
 */
 
-struct ZONE DUMP_ZONE={ 0,10,19,0,
+struct ZONE DUMP_ZONE={ 0 , // Y
+                        10, // YLine
+                        19, // Base Y
+                        0 , // BaseAddr 
                         1,(1+1+16+1+16+1),
                        {{  0      ,15,zLABEL},
                         { 17      , 4,zADDR },
-                        { 23+0x0*3, 2,zHEX  },{ 23+0x1*3, 2,zHEX},{ 23+0x2*3, 2,zHEX},{ 23+0x3*3, 2,zHEX},	
-                        { 23+0x4*3, 2,zHEX  },{ 23+0x5*3, 2,zHEX},{ 23+0x6*3, 2,zHEX},{ 23+0x7*3, 2,zHEX},	
-                        { 23+0x8*3, 2,zHEX  },{ 23+0x9*3, 2,zHEX},{ 23+0xa*3, 2,zHEX},{ 23+0xb*3, 2,zHEX},	
+                        { 23+0x0*3, 2,zHEX  },{ 23+0x1*3, 2,zHEX},{ 23+0x2*3, 2,zHEX},{ 23+0x3*3, 2,zHEX},
+                        { 23+0x4*3, 2,zHEX  },{ 23+0x5*3, 2,zHEX},{ 23+0x6*3, 2,zHEX},{ 23+0x7*3, 2,zHEX},
+                        { 23+0x8*3, 2,zHEX  },{ 23+0x9*3, 2,zHEX},{ 23+0xa*3, 2,zHEX},{ 23+0xb*3, 2,zHEX},
                         { 23+0xc*3, 2,zHEX  },{ 23+0xd*3, 2,zHEX},{ 23+0xe*3, 2,zHEX},{ 23+0xf*3, 2,zHEX},
                         { 70      , 1,zBRK  },
-                        { 71+0x0*1, 1,zASC  },{ 71+0x1*1, 1,zASC},{ 71+0x2*1, 1,zASC},{ 71+0x3*1, 1,zASC},	
-                        { 71+0x4*1, 1,zASC  },{ 71+0x5*1, 1,zASC},{ 71+0x6*1, 1,zASC},{ 71+0x7*1, 1,zASC},	
-                        { 71+0x8*1, 1,zASC  },{ 71+0x9*1, 1,zASC},{ 71+0xa*1, 1,zASC},{ 71+0xb*1, 1,zASC},	
+                        { 71+0x0*1, 1,zASC  },{ 71+0x1*1, 1,zASC},{ 71+0x2*1, 1,zASC},{ 71+0x3*1, 1,zASC},
+                        { 71+0x4*1, 1,zASC  },{ 71+0x5*1, 1,zASC},{ 71+0x6*1, 1,zASC},{ 71+0x7*1, 1,zASC},
+                        { 71+0x8*1, 1,zASC  },{ 71+0x9*1, 1,zASC},{ 71+0xa*1, 1,zASC},{ 71+0xb*1, 1,zASC},
                         { 71+0xc*1, 1,zASC  },{ 71+0xd*1, 1,zASC},{ 71+0xe*1, 1,zASC},{ 71+0xf*1, 1,zASC},
                         { 70+16+1 , 1,zBRK  },
                        }
@@ -99,7 +102,7 @@ void Update_DUMP(void) {
   // tScreenPutString("----------------------------------------------------------------------+----------------+",C_Border,0,DUMP_ZONE.BaseY-1);
   // tScreenPutString("----------------------------------------------------------------------+-----------------",C_Border,0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine);
   draw_hline(0,DUMP_ZONE.BaseY+DUMP_ZONE.YLine,88-1,C_Border);
-}       
+}
 
 int _DUMP(int Key){
   int i;
@@ -148,9 +151,9 @@ int _DUMP(int Key){
                        break;
                       }
        case KEY_TAB:  {
-                       if (zone->Field[zone->Cursor].Type == zHEX) zone->Cursor+=16+1;   
-                       else if (zone->Field[zone->Cursor].Type == zASC) zone->Cursor-=16+1;   
-                       break;   
+                       if (zone->Field[zone->Cursor].Type == zHEX) zone->Cursor+=16+1;
+                       else if (zone->Field[zone->Cursor].Type == zASC) zone->Cursor-=16+1;
+                       break;
                       }
        case KEY_F2:   {
                        switch (Key&0xff) {
@@ -159,7 +162,7 @@ int _DUMP(int Key){
                          default: i=bpRDMEM|bpWRMEM;
                        }
                        WR_BreakPoint(Addr,RD_BreakPoint(Addr)^i);
-                       break;   
+                       break;
                       }
     }
 
@@ -197,7 +200,7 @@ int _DUMP(int Key){
                            }
 
                            if (L != NULL) strcpy(BUF,L->Name);
- 
+
                            tmp = LineEdit(BUF,LABELLEN,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
 
                            if (tmp > 0) {
@@ -205,7 +208,7 @@ int _DUMP(int Key){
                                 L=FindNameLabel(BUF);
                                 if (L == NULL) AddLabel(Addr,BUF);
                                 else  zone->BaseAddr=L->Addr-(zone->Y)*0x10;
-                              } else {          // edit old label 
+                              } else {          // edit old label
                                 DeleteLabel(Addr);
                                 AddLabel(Addr,BUF);
                               }
@@ -220,7 +223,7 @@ int _DUMP(int Key){
                               zone->BaseAddr=tmp-(zone->Y)*0x10;
                            }
                            break;
-          }             
+          }
           case zHEX   : {
                            int tmp;
                            if (KEY_ENTER != Key>>8) simulate_keypress(Key);
@@ -245,7 +248,7 @@ int _DUMP(int Key){
                              simulate_keypress(KEY_RIGHT<<8);
                            }
                            break;
-          }             
+          }
        }
        Key=0;
        tSetUpdate(0);

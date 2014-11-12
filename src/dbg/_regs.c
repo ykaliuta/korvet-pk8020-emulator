@@ -47,7 +47,6 @@ struct ZONE REG_ZONE[4]={
                         { 31      , 1,zSKIP },{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},
                         { 31      , 1,zSKIP },{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},
                        }
-                       
        },
    [2] {                0,4,2,0,
                         0,(1+1+4),
@@ -58,7 +57,6 @@ struct ZONE REG_ZONE[4]={
                          { 31      , 1,zSKIP },{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},
                          { 31      , 1,zSKIP },{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},{31,1,zSKIP},
                         }
-                       
        },
    [3] {                0,4,3,0,
                         0,(1+1),
