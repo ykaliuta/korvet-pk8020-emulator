@@ -37,7 +37,11 @@ extern byte BreakPoint[0xffff];
 struct CPUREG dbg_REG;
 struct CPUREG dbg_prevREG;
 
-#define MAXDBG 3
+
+extern struct ZONE DUMP_ZONE;
+
+void NormPC();
+
 int (*_dbg[MAXDBG])(int Key)={_REGS,_DASM,_DUMP};
 int  dbgMODE =1;    //текущий режим отладчика.
  
@@ -153,6 +157,8 @@ void UpdateHARDWARE(void){
  ShowPPIdbg();
 // ShowKBDdbg();
 // ShowFDCdbg();
+ tScreenPutString("F1",C_HELP,1,36+11);
+ tScreenPutString(" - HELP",C_Default,1+2,36+11);
 }
 
 void Update_Screen(void) {
@@ -167,7 +173,7 @@ void Update_Screen(void) {
   UpdateGameTool();
 
   SetDBGLut(Flag_DBG_LUT);
-  SCREEN_ShowScreen();  
+  SCREEN_ShowScreen();
 }
 
 void doDBG(void) {
@@ -218,15 +224,17 @@ void doDBG(void) {
     if (key_shifts & KB_SHIFT_FLAG) {Key+=KK_Shift;}
 
     switch (Key) {
-       case KEY_8_PAD<<8: {Key = KEY_UP    <<8;break;}                      
-       case KEY_9_PAD<<8: {Key = KEY_PGUP  <<8;break;}                      
-       case KEY_4_PAD<<8: {Key = KEY_LEFT  <<8;break;}                      
-       case KEY_6_PAD<<8: {Key = KEY_RIGHT <<8;break;}                      
-       case KEY_2_PAD<<8: {Key = KEY_DOWN  <<8;break;}                      
-       case KEY_3_PAD<<8: {Key = KEY_PGDN  <<8;break;}                      
+       case KEY_8_PAD<<8: {Key = KEY_UP    <<8;break;}
+       case KEY_9_PAD<<8: {Key = KEY_PGUP  <<8;break;}
+       case KEY_4_PAD<<8: {Key = KEY_LEFT  <<8;break;}
+       case KEY_6_PAD<<8: {Key = KEY_RIGHT <<8;break;}
+       case KEY_2_PAD<<8: {Key = KEY_DOWN  <<8;break;}
+       case KEY_3_PAD<<8: {Key = KEY_PGDN  <<8;break;}
     }
 
     switch (Key) {
+
+       case (KEY_F1  <<8)         : {_HELP(dbgMODE);AllScreenUpdateFlag=1;Update_Screen();break;}
 
        case (KEY_UP  <<8)+KK_Ctrl : {if (dbgMODE != 0 )       dbgMODE--;Key=-1;break;}
        case (KEY_DOWN<<8)+KK_Ctrl : {if (dbgMODE != MAXDBG-1) dbgMODE++;Key=-1;break;}
@@ -237,6 +245,16 @@ void doDBG(void) {
        case (KEY_F5  <<8)         : {Flag_DBG_LUT^=1;                   Key=-1;break;}
        case (KEY_F5  <<8)+KK_Ctrl : {Flag_DBG_LUT_Mode^=1;              Key=-1;break;}
 
+
+       case (KEY_P   <<8)+KK_Ctrl : {NormPC();Update_Screen(); Key=-1;break;}
+
+       case (KEY_P   <<8)+KK_Alt  : {DUMP_ZONE.BaseAddr=dbg_REG.PC;Update_Screen(); Key=-1;break;}
+       case (KEY_S   <<8)+KK_Alt  : {DUMP_ZONE.BaseAddr=dbg_REG.SP;Update_Screen(); Key=-1;break;}
+       case (KEY_B   <<8)+KK_Alt  : {DUMP_ZONE.BaseAddr=dbg_REG.BC;Update_Screen(); Key=-1;break;}
+       case (KEY_D   <<8)+KK_Alt  : {DUMP_ZONE.BaseAddr=dbg_REG.DE;Update_Screen(); Key=-1;break;}
+       case (KEY_H   <<8)+KK_Alt  : {DUMP_ZONE.BaseAddr=dbg_REG.HL;Update_Screen(); Key=-1;break;}
+
+
        case (KEY_W   <<8)+KK_Alt  : {WriteMEM();Update_Screen();        Key=-1;break;}
        case (KEY_R   <<8)+KK_Alt  : {ReadMEM();Update_Screen();         Key=-1;break;}
 
@@ -245,7 +263,7 @@ void doDBG(void) {
 
        case (KEY_Z   <<8)         :
        case (KEY_Z   <<8)+KK_Ctrl : {GameTools();Update_Screen();       Key=-1;break;}
-       
+
        case (KEY_F12 <<8)+KK_Ctrl : {Exit=1;main_loop_run_flag=0;break;}
     }
 
@@ -253,13 +271,13 @@ void doDBG(void) {
 
     switch (Key) {
 
-       case (KEY_F7  <<8)         : {dbg_TRACE=1;Exit=1;break;}
-       case (KEY_F8  <<8)         : {if (TCall[Emulator_Read(dbg_REG.PC)]) dbg_HERE=dbg_REG.PC+GetCmdLen(dbg_REG.PC);
-                                     else dbg_TRACE=1;
-                                     Exit=1;break;
-                                    }
-       case (KEY_F9  <<8)         : {Exit=1;break;}
-       case (KEY_F10 <<8)         : {BW_Flag^=1;break;}
+      case (KEY_F7  <<8)         : {dbg_TRACE=1;Exit=1;break;}
+      case (KEY_F8  <<8)         : {if (TCall[Emulator_Read(dbg_REG.PC)]) dbg_HERE=dbg_REG.PC+GetCmdLen(dbg_REG.PC);
+                                    else dbg_TRACE=1;
+                                    Exit=1;break;
+                                   }
+      case (KEY_F9  <<8)         : {Exit=1;break;}
+      case (KEY_F10 <<8)         : {BW_Flag^=1;break;}
     }
   }
 

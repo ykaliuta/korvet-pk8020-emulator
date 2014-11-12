@@ -41,6 +41,8 @@ typedef signed char    offset;
 #define _TYPEDEF_
 #endif
 
+#define MAXDBG  3 // DBG mode, Regs,Dasm,Dump
+
 #define KORVET_FONT0                     0        /* FONT */
 #define KORVET_FONT1                     1        /* FONT */
 #define PC_FONT                          2        /* FONT */
@@ -70,6 +72,7 @@ typedef signed char    offset;
 #define C_High       0x4f
 #define C_ReadWrite  0x0a
 #define C_NEQ        0x0b
+#define C_HELP       0x4F
  
 #define zLABEL	1
 #define zADDR	2
@@ -141,14 +144,15 @@ struct CPUREG {
 int _REGS(int Key);
 int _DASM(int Key);
 int _DUMP(int Key);
+int _HELP(int dbgMODE);
 
 word CPU_GetPC(void);
-word CPU_GetSP(void); 
-word CPU_GetHL(void); 
-word CPU_GetDE(void); 
-word CPU_GetBC(void); 
-word CPU_GetAF(void); 
-word CPU_GetI(void);  
+word CPU_GetSP(void);
+word CPU_GetHL(void);
+word CPU_GetDE(void);
+word CPU_GetBC(void);
+word CPU_GetAF(void);
+word CPU_GetI(void);
 
 void CPU_SetPC(word Val);
 void CPU_SetSP(word Val);
