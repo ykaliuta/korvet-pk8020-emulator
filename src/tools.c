@@ -12,18 +12,20 @@
 
 extern byte LUT[16];
 
+extern int OSD_LUT_Flag;
+extern int OSD_FPS_Flag;
+extern int OSD_FDD_Flag;
+extern int OSD_KBD_Flag;
+
+extern int InUseKBD;                 // kbd osd flag
+extern int InUseKBD_rows[16];
+extern int KBD_LED;                  // RusEngFlag
+
 extern int SCREEN_OFFX;
 extern int SCREEN_OFFY;
 extern int SCREEN_XMAX;
 extern int SCREEN_YMAX;
 extern int SCREEN_OSDY;
-
-extern int OSD_LUT_Flag;
-extern int OSD_FPS_Flag;
-extern int OSD_FDD_Flag;
-
-extern int FPS_Scr;
-extern int FPS_LED;
 
 extern char FontFileName[1024];
 extern char RomFileName[1024];
@@ -122,8 +124,7 @@ void dump_gzu(int page) {
     fclose(F_DMP);
 }
 
-void Write_Dump(void)
-{
+void Write_Dump(void) {
 
     FILE *F_DMP;
 
@@ -187,6 +188,7 @@ void ReadConfig(void) {
     OSD_LUT_Flag         =get_config_hex(section,"OSD_LUT",0);
     OSD_FPS_Flag         =get_config_hex(section,"OSD_FPS",0);
     OSD_FDD_Flag         =get_config_hex(section,"OSD_FDD",0);
+    OSD_KBD_Flag         =get_config_hex(section,"OSD_KBD",0);
 
     FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
 
@@ -201,19 +203,6 @@ void ReadConfig(void) {
     #endif
 }
 
-void PrintDecor() {
-
-    rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_OFFY+SCREEN_YMAX+1,255);
-
-    //init InUseFlag for screen update
-    InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
-
-    if (Current_Scr_Mode != SCR_DBG) {
-        textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-Zoom, F6-Turbo, F10-Mono, F9-dbg");
-        rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
-        textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
-    }
-}
 
 void MUTE_BUF(void) {
     int i;
@@ -380,37 +369,25 @@ void check_missing_images(void) {
     }
 }
 
-void update_osd(void) {
-    // выводим OnScreen LED
-    // ТОЛЬКО если есть необходимость обновить индикаторы,
-    // иначе будут мигать, да и FPS падает ;-)
-    // FPS
-    if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {
-        PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY  ,FPS_Scr);
-        FPS_LED=FPS_Scr;
-    };
-    // Floppy Disk TRACK
-    if (OSD_FDD_Flag && InUseFDD[0]) {
-        InUseFDD[0]--;
-        PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);
-    }
-    if (OSD_FDD_Flag && InUseFDD[1]) {
-        InUseFDD[1]--;
-        PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);
-    }
-    if (OSD_FDD_Flag && InUseFDD[2]) {
-        InUseFDD[2]--;
-        PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OSDY,VG.TrackReal[2],InUseFDD[2]);
-    }
-    if (OSD_FDD_Flag && InUseFDD[3]) {
-        InUseFDD[3]--;
-        PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OSDY,VG.TrackReal[3],InUseFDD[3]);
-    }
-    // if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,SCREEN_OFFX+512,SCREEN_OSDY,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");}
 
-    if (getpixel(screen,SCREEN_OFFX-2,SCREEN_OFFY-2) != 255) {
-        PrintDecor();
-        AllScreenUpdateFlag=1;
-    }
+void update_rus_lat(void) {
+  // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken)
+  if ((RAM[0xf72e] ^ (KEYBOARD_Read(0x80,1)&2)) != KBD_LED) {
+      KBD_LED=(RAM[0xf72e] ^ (KEYBOARD_Read(0x80,1)&2));
+      KeyboadUpdateFlag=1;
+  }
+}
 
+void PrintDecor() {
+
+    rect(screen,SCREEN_OFFX-2,SCREEN_OFFY-2,SCREEN_OFFX+SCREEN_XMAX+1,SCREEN_OFFY+SCREEN_YMAX+1,255);
+
+    //init InUseFlag for screen update
+    InUseFDD[0]=InUseFDD[1]=InUseFDD[2]=InUseFDD[3]=1;
+
+    if (Current_Scr_Mode != SCR_DBG) {
+        textprintf_ex(screen,font,15,SCREEN_H-33,255,0,"Alt-F9-MENU, F11-Reset, F12-Quit, F8-Zoom, F6-Turbo, F10-Mono, F9-dbg");
+        rect(screen,0,SCREEN_H-40,SCREEN_W,SCREEN_H-40,255);
+        textprintf_ex(screen,font,0,SCREEN_H-16,255,0,AboutMSG);
+    }
 }

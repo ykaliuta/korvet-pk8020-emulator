@@ -27,7 +27,11 @@ int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
 int KeyAlias[KEY_MAX];
 
-extern int KBD_LED;
+// extern int KBD_LED;
+int KBD_LED=2;                  // RusEngFlag
+
+int InUseKBD=0;                 // in use flag
+int InUseKBD_rows[16];          // Frames to show OSD KBD
 
 int AliasTab[]={
 //                 Alias      => Key
@@ -128,10 +132,14 @@ int ChkMattrixLine(int N)
   return Value;
 }
 
-int KEYBOARD_Read(int Addr) {
+int KEYBOARD_Read(int Addr,int InternalMode) {
   int Value=0;
   int Line=0;
   int i;
+
+  if (!InternalMode) {
+    UpdateKBD_OSD(Addr);
+  }
 
   if (KeyboadUpdateFlag) {KBD_Select();}
 
@@ -152,13 +160,14 @@ int KEYBOARD_Read(int Addr) {
   return Value;
 }
 
+
 char *PrintKBD(int Addr,int y) {
 
  static char BUFFER[512];
  int Mask=0x80;
  int i=14;
  char *ptr=BUFFER+6;
- int Value=KEYBOARD_Read(Addr);
+ int Value=KEYBOARD_Read(Addr,1);
 
  char KBD_TXT[13][32]={
                        "Ю@АaБbЦcДdЕeФfГg",

@@ -100,7 +100,7 @@ void FDC_Write_DRVREG(byte Value);
 void FDC_Write(int Addr, byte Value);
 byte FDC_Read(int Addr);
 
-int  KEYBOARD_Read(int Addr);
+int  KEYBOARD_Read(int Addr,int InternalMode);
 
 void GZU_Write(int Addr,byte Value);
 byte GZU_Read(int Addr);
@@ -132,6 +132,9 @@ byte RS232_Read(int Addr);
 
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
+
+void update_rus_lat(void);
+void ResetOSD(void);
 
 #endif
 

@@ -26,11 +26,37 @@
 // special thanks for FONT & OSD Ideas
 
 #include <allegro.h>
+#include "korvet.h"
+#include "vg.h"
 
+
+extern int AllScreenUpdateFlag;
 
 int OSD_LUT_Flag=0;
 int OSD_FPS_Flag=0;
 int OSD_FDD_Flag=0;
+int OSD_KBD_Flag=0;
+
+extern int SCREEN_OFFX;
+extern int SCREEN_OFFY;
+extern int SCREEN_XMAX;
+extern int SCREEN_YMAX;
+extern int SCREEN_OSDY;
+
+// extern int OSD_LUT_Flag;
+// extern int OSD_FPS_Flag;
+// extern int OSD_FDD_Flag;
+
+extern int InUseFDD[4];
+
+extern int FPS_Scr;
+extern int FPS_LED;
+
+
+extern int InUseKBD;                 // kbd osd flag
+extern int InUseKBD_rows[16];
+
+void PrintDecor(void);
 
 BITMAP *DIGITS[0x10];
 
@@ -70,6 +96,8 @@ static void write_tdnumber (BITMAP *bmp,int x, int y, int num)
     }
 }
 
+void update_osd(void);
+
 void InitOSD(void) {
    int i;
    for (i=0;i<0x10;i++) {
@@ -85,6 +113,8 @@ void DestroyOSD(void) {
      destroy_bitmap(DIGITS[i]);
   }
 }
+
+
 
 void PutLED_FDD(int x,int y,int i,int OnFlag) {
   int d1,d2,c;
@@ -140,3 +170,127 @@ void PutLED_FPS(int x,int y,int i) {
                 masked_blit(DIGITS[d0],screen,0,0,x+2+1+7*3,y+2,7,7);
 
 }
+
+void UpdateKBD_OSD(int Addr) {
+  int shift=0x0001;
+  int i=0;
+  int offset=0;
+
+  if (Addr & 0x0100) offset=8;
+
+  for (i=0;i<8;i++) {
+    // printf("ADD: %d : %d : %04x : %02x : %02x\n",i,offset,Addr,shift,Addr & shift);
+    if (Addr & shift) {
+      InUseKBD_rows[offset+i]=3;
+      InUseKBD=1;
+    }
+    shift=shift << 1;
+  }
+}
+
+int CurrentKbdOSD[16];
+
+void PutLED_KBD(int x0,int y0) {
+
+  int x=x0;
+  int y=y0;
+  int c;
+  int i;
+  int showFlag=0;
+
+  for (i=0;i<8;i++) {
+    if (InUseKBD_rows[i]) {
+      InUseKBD_rows[i]--;
+      c=InUseKBD_rows[i] ? makecol8(255,255,255) : 0 ;
+      showFlag=1;
+      if (CurrentKbdOSD[i] != c) {
+        CurrentKbdOSD[i] = c;
+        hline(screen,x,y+i*3  ,x+8,c);
+        hline(screen,x,y+i*3+1,x+8,c);
+      }
+    }
+
+    if (InUseKBD_rows[i+8]) {
+      InUseKBD_rows[i+8]--;
+      showFlag=1;
+      c=InUseKBD_rows[i+8] ? makecol8(255,255,255) : 0 ;
+      if (CurrentKbdOSD[i+8] != c) {
+        CurrentKbdOSD[i+8] = c;
+        hline(screen,x+10,y+i*3  ,x+8+10,c);
+        hline(screen,x+10,y+i*3+1,x+8+10,c);
+      }
+    }
+  }
+
+  if (showFlag == 0) {
+    InUseKBD=0;
+    // printf("KBD:OFF\n");
+  }
+}
+
+void ResetOSD(void) {
+  int i;
+  //
+
+  InUseKBD=1;
+  for (i=0;i<16;i++) {
+    CurrentKbdOSD[i]=1; //not 0
+    InUseKBD_rows[i]=1; // 1 for update
+  }
+
+  //
+  InUseFDD[0]=0;
+  InUseFDD[1]=0;
+  InUseFDD[2]=0;
+  InUseFDD[3]=0;
+  //
+  update_osd();
+
+  InUseKBD=0;
+  for (i=0;i<16;i++) {
+    CurrentKbdOSD[i]=1; //not 0
+    InUseKBD_rows[i]=0;
+  }
+
+  PrintDecor();
+}
+
+void update_osd(void) {
+    // выводим OnScreen LED
+    // ТОЛЬКО если есть необходимость обновить индикаторы,
+    // иначе будут мигать, да и FPS падает ;-)
+    // FPS
+    if (OSD_FPS_Flag && (FPS_Scr != FPS_LED)) {
+        PutLED_FPS(SCREEN_OFFX,SCREEN_OSDY  ,FPS_Scr);
+        FPS_LED=FPS_Scr;
+    };
+    // Floppy Disk TRACK
+    if (OSD_FDD_Flag && InUseFDD[0]) {
+        InUseFDD[0]--;
+        PutLED_FDD(SCREEN_OFFX+512-80,SCREEN_OSDY,VG.TrackReal[0],InUseFDD[0]);
+    }
+    if (OSD_FDD_Flag && InUseFDD[1]) {
+        InUseFDD[1]--;
+        PutLED_FDD(SCREEN_OFFX+512-60,SCREEN_OSDY,VG.TrackReal[1],InUseFDD[1]);
+    }
+    if (OSD_FDD_Flag && InUseFDD[2]) {
+        InUseFDD[2]--;
+        PutLED_FDD(SCREEN_OFFX+512-40,SCREEN_OSDY,VG.TrackReal[2],InUseFDD[2]);
+    }
+    if (OSD_FDD_Flag && InUseFDD[3]) {
+        InUseFDD[3]--;
+        PutLED_FDD(SCREEN_OFFX+512-20,SCREEN_OSDY,VG.TrackReal[3],InUseFDD[3]);
+    }
+
+    // if (JoystickUseFlag) {JoystickUseFlag--;textprintf(screen,font,SCREEN_OFFX+512,SCREEN_OSDY,255,"%s",(JoystickUseFlag==0)?"      ":"JOY:3B");}
+
+    if (getpixel(screen,SCREEN_OFFX-2,SCREEN_OFFY-2) != 255) {
+        PrintDecor();
+        AllScreenUpdateFlag=1;
+    }
+
+    if (OSD_KBD_Flag && InUseKBD) {
+       PutLED_KBD(SCREEN_OFFX+512-80-8-8-4-8,SCREEN_OSDY);
+    }
+}
+

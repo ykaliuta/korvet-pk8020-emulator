@@ -40,7 +40,7 @@ int FPS=0;
 int FPS_Scr=0;
 int FPS_LED=0;
 int Counter50hz=0;		// 50 hz synchronization counter
-int KBD_LED=2;                  // RusEngFlag
+extern int KBD_LED;                  // RusEngFlag
 
 extern byte SOUNDBUF[];
 extern byte RAM[65535];
@@ -93,6 +93,7 @@ void Reset(void) {
     PPI_Init();    
     Serial_Init();
     InitTMR();
+    ResetOSD();
 }
 
 void trace_bios(word pc) {
@@ -182,6 +183,7 @@ int main_loop(void) {
             } else {
                 FlagScreenScale^=1;
                 SCREEN_SetGraphics(SCR_EMULATOR);
+                update_osd();
             }
             while (key[KEY_F8]);
         }
@@ -290,11 +292,7 @@ int main_loop(void) {
 
             update_osd();
 
-            // if LAT<->RUS rebuild KeboardLayout table (auto qwerty<->jcuken)
-            if ((RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2)) != KBD_LED) {
-                KBD_LED=(RAM[0xf72e] ^ (KEYBOARD_Read(0x80)&2));
-                KeyboadUpdateFlag=1;
-            }
+            // update_rus_lat();
         }
     }
 }
