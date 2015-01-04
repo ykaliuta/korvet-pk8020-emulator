@@ -30,10 +30,6 @@ int KeyAlias[KEY_MAX];
 // extern int KBD_LED;
 int KBD_LED=2;                  // RusEngFlag
 
-int InUseKBD=0;                 // in use flag
-int InUseKBD_rows[16];          // Frames to show OSD KBD
-int InUseKBD_rows2[16];          // Frames to show OSD KBD
-
 int AliasTab[]={
 //                 Alias      => Key
                  KEY_DOWN      , KEY_2_PAD,
