@@ -32,6 +32,7 @@ int KBD_LED=2;                  // RusEngFlag
 
 int InUseKBD=0;                 // in use flag
 int InUseKBD_rows[16];          // Frames to show OSD KBD
+int InUseKBD_rows2[16];          // Frames to show OSD KBD
 
 int AliasTab[]={
 //                 Alias      => Key
@@ -138,6 +139,7 @@ int KEYBOARD_Read(int Addr,int InternalMode) {
   int i;
 
   if (!InternalMode) {
+    // printf("KBD: %04X\n",Addr);
     UpdateKBD_OSD(Addr);
   }
 
@@ -147,7 +149,7 @@ int KEYBOARD_Read(int Addr,int InternalMode) {
   for (i=0;i<MAXALIAS*2;i+=2) {if (KeyAlias[AliasTab[i]]) KeyAlias[AliasTab[i+1]]=1;}
 
   if (Addr&0x100) Line=8;
-  
+
   if (Addr&0x0001) Value|=ChkMattrixLine(Line);Line++;
   if (Addr&0x0002) Value|=ChkMattrixLine(Line);Line++;
   if (Addr&0x0004) Value|=ChkMattrixLine(Line);Line++;

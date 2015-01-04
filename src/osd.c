@@ -55,6 +55,7 @@ extern int FPS_LED;
 
 extern int InUseKBD;                 // kbd osd flag
 extern int InUseKBD_rows[16];
+extern int InUseKBD_rows2[16];
 
 void PrintDecor(void);
 
@@ -178,10 +179,21 @@ void UpdateKBD_OSD(int Addr) {
 
   if (Addr & 0x0100) offset=8;
 
+  Addr &= 0xff;
+
+  if (Addr == 0x01) {InUseKBD_rows2[offset+0]=6;}
+  if (Addr == 0x02) {InUseKBD_rows2[offset+1]=6;}
+  if (Addr == 0x04) {InUseKBD_rows2[offset+2]=6;}
+  if (Addr == 0x08) {InUseKBD_rows2[offset+3]=6;}
+  if (Addr == 0x10) {InUseKBD_rows2[offset+4]=6;}
+  if (Addr == 0x20) {InUseKBD_rows2[offset+5]=6;}
+  if (Addr == 0x40) {InUseKBD_rows2[offset+6]=6;}
+  if (Addr == 0x80) {InUseKBD_rows2[offset+7]=6;}
+
   for (i=0;i<8;i++) {
     // printf("ADD: %d : %d : %04x : %02x : %02x\n",i,offset,Addr,shift,Addr & shift);
     if (Addr & shift) {
-      InUseKBD_rows[offset+i]=3;
+      InUseKBD_rows[offset+i]=6;
       InUseKBD=1;
     }
     shift=shift << 1;
@@ -189,6 +201,7 @@ void UpdateKBD_OSD(int Addr) {
 }
 
 int CurrentKbdOSD[16];
+int CurrentKbdOSD2[16];
 
 void PutLED_KBD(int x0,int y0) {
 
@@ -220,6 +233,29 @@ void PutLED_KBD(int x0,int y0) {
         hline(screen,x+10,y+i*3+1,x+8+10,c);
       }
     }
+
+    if (InUseKBD_rows2[i]) {
+      InUseKBD_rows2[i]--;
+      c=InUseKBD_rows2[i] ? makecol8(50,255,50) : 0 ;
+      showFlag=1;
+      if (CurrentKbdOSD2[i] != c) {
+        CurrentKbdOSD2[i] = c;
+        hline(screen,x-20,y+i*3  ,x-20+8,c);
+        hline(screen,x-20,y+i*3+1,x-20+8,c);
+      }
+    }
+
+    if (InUseKBD_rows2[i+8]) {
+      InUseKBD_rows2[i+8]--;
+      showFlag=1;
+      c=InUseKBD_rows2[i+8] ? makecol8(50,255,50) : 0 ;
+      if (CurrentKbdOSD2[i+8] != c) {
+        CurrentKbdOSD2[i+8] = c;
+        hline(screen,x-20+10,y+i*3  ,x-20+8+10,c);
+        hline(screen,x-20+10,y+i*3+1,x-20+8+10,c);
+      }
+    }
+
   }
 
   if (showFlag == 0) {
@@ -236,6 +272,8 @@ void ResetOSD(void) {
   for (i=0;i<16;i++) {
     CurrentKbdOSD[i]=1; //not 0
     InUseKBD_rows[i]=1; // 1 for update
+    CurrentKbdOSD2[i]=1; //not 0
+    InUseKBD_rows2[i]=1; // 1 for update
   }
 
   //
@@ -250,6 +288,8 @@ void ResetOSD(void) {
   for (i=0;i<16;i++) {
     CurrentKbdOSD[i]=1; //not 0
     InUseKBD_rows[i]=0;
+    CurrentKbdOSD2[i]=1; //not 0
+    InUseKBD_rows2[i]=0;
   }
 
   PrintDecor();
@@ -290,7 +330,7 @@ void update_osd(void) {
     }
 
     if (OSD_KBD_Flag && InUseKBD) {
-       PutLED_KBD(SCREEN_OFFX+512-80-8-8-4-8,SCREEN_OSDY);
+       PutLED_KBD(SCREEN_OFFX+512-80-8-8-4-1,SCREEN_OSDY);
     }
 }
 
