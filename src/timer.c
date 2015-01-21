@@ -318,6 +318,14 @@ void WriteCounter(int Counter,int Value) {
      i8253[Counter].WriteCounter=i8253[Counter].RWMode;
    }
 
+   // trace timer init, planed to use for autograb mouse when pors are settings for use
+   // if ( (Counter == 1) && (i8253[Counter].CountRegister == 13)) {
+   //   printf("Default port init\n");
+   // } else if ( (Counter == 1) && (i8253[Counter].CountRegister == 0x68)) {
+   //   printf("Mouse init on port\n");
+   // } else {
+   //   printf("WriteCntr: %d : %d\n",Counter, i8253[Counter].CountRegister);
+   // }
 }
 
 // ---------------------------------------------------------

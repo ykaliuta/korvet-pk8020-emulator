@@ -90,7 +90,7 @@ void Reset(void) {
     CPU_Init();
     KBD_Init();
     FDC_Reset();
-    PPI_Init();    
+    PPI_Init();
     Serial_Init();
     InitTMR();
     ResetOSD();
@@ -102,39 +102,20 @@ void trace_bios(word pc) {
     word HL;
     int i,j;
     switch (pc) {
-        case 0xda18: {
-            printf("TRACE_BIOS: HOME\n");
-            break;
-        }
-        case 0xda1B: {
-            printf("TRACE_BIOS: sel_DSK dsk=%d\n",bc & 0xff);
-            break;
-        }
-        case 0xda1E: {
-            printf("TRACE_BIOS: set_TRK trk=%d\n",bc & 0xff);
-            break;
-        }
-        case 0xda21: {
-            printf("TRACE_BIOS: set_SEC sec=%d\n",bc & 0xff);
-            break;
-        }
-        case 0xda24: {
-            printf("TRACE_BIOS: set_DMA dma=0x%04x\n",bc);
-            break;
-        }
-        case 0xda27: {
-            printf("TRACE_BIOS: READ\n");
-            break;
-        }
-        case 0xda2A: {
-            printf("TRACE_BIOS: WRITE type=%d\n",bc & 0xff);
-            break;
-        }
+        //DEFAULT cpm addrs
+        case 0xda18: { printf("TRACE_BIOS: HOME\n"); break; }
+        case 0xda1B: { printf("TRACE_BIOS: sel_DSK dsk=%d\n",bc & 0xff); break; }
+        case 0xda1E: { printf("TRACE_BIOS: set_TRK trk=%d\n",bc & 0xff); break; }
+        case 0xda21: { printf("TRACE_BIOS: set_SEC sec=%d\n",bc & 0xff); break; }
+        case 0xda24: { printf("TRACE_BIOS: set_DMA dma=0x%04x\n",bc); break; }
+        case 0xda27: { printf("TRACE_BIOS: READ\n"); break; }
+        case 0xda2A: { printf("TRACE_BIOS: WRITE type=%d\n",bc & 0xff); break; }
 
-    // microdos
+        // microdos, DISKIO point
         case 0xE46E:  // IO 870430
         case 0xEAA3:  // IO 880630
-        case 0xEAA5: { // IO 900105
+        case 0xEAA5:  // IO 900105
+        {
             HL=CPU_GetHL();
             dma=RAM[HL+6] | (RAM[HL+7] << 8);
             printf("DSK_IO: drv=%02x chword=%02x func=%02x numb=%02x trk=%02x sec=%02x abuf=%04x htrk=%02x hsec=%02x\n",
@@ -151,17 +132,18 @@ void trace_bios(word pc) {
             break;
         }
 
-        // case 0xeabe: { //dma buf after IO
-        //     printf("DMA BUF:\n");
-        //     for (i=0;i<8;i++) {
-        //         printf("%04X: ",dma+i*16);
-        //         for (j=0;j<16;j++) {
-        //             byte v=RAM[dma+i*16+j];
-        //             printf("%02X ",v);
-        //         }
-        //         printf("\n");
-        //     }
-        // }
+        case 0xeabe:  //dma buf after IO
+        {
+            printf("DMA BUF:\n");
+            for (i=0;i<8;i++) {
+                printf("%04X: ",dma+i*16);
+                for (j=0;j<16;j++) {
+                    byte v=RAM[dma+i*16+j];
+                    printf("%02X ",v);
+                }
+                printf("\n");
+            }
+        }
     }
 }
 
@@ -222,7 +204,8 @@ int main_loop(void) {
         else if (__PC == 0xc75c) CheckCCP();
         else if (__PC == 0xcade) CheckComEXEC();
 
-        trace_bios(__PC);
+        // show special bios events like disk access
+        // trace_bios(__PC);
 
         if (__PC == dbg_HERE) dbg_TRACE=1;
 

@@ -39,6 +39,18 @@ void ChkMouse_Microsoft(void);
 void ChkMouse_MouseSystem(void);
 
 
+/*
+TODO: додбавить автодетект мыши
+если проинитились таймер и ви51
+
+  ви53
+  *(char *) 0xfb01 = 0x68;
+  *(char *) 0xfb01 = 0;
+
+  вв51
+  *(char *) 0xfb11 = 0x35;
+*/
+
 void ChkMouse(void) {
   if (MouseType == 1) ChkMouse_Microsoft();
   if (MouseType == 2) ChkMouse_MouseSystem();
