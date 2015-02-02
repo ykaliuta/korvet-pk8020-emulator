@@ -248,6 +248,11 @@ void PIC_IntRequest(int IntNum)             // Запрос на прерыва�
  IRR|=1<<IntNum;
 }
 
+void PIC_IntReset(int IntNum)             // Сброс запроса на прерывание.
+{
+ IRR&=((1<<IntNum)^0xff);
+}
+
 int CheckPIC  (void)                      // Проверка, есть запрос.
 {
  byte i;

@@ -150,10 +150,14 @@ void Disassemble_PPI2C(int Value)
     static int oldState_SoundEnable;
     int tSoundEnable;
 
-    if ((((Value&0x80)>>7) == 1) && (ext_rom_mode)) {
-        PIC_IntRequest(0);    // формируем запрос прерывания extrom по сигналу control
-    }
 
+    if (ext_rom_mode) {
+        if ( ((Value&0x80)>>7) == 1 ) {
+            PIC_IntRequest(0);    // формируем запрос прерывания extrom по сигналу control
+        } else {
+            PIC_IntReset(0);      // сбрасываем запрос прерывания
+        }
+    }
     //   XS1:32          =(Value&0x80)>>7;
     //  Reset for Analog Joystick =(Value&0x40)>>6;
     // ~SE               =(Value&0x20)>>5;
