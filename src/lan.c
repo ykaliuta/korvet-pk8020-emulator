@@ -40,6 +40,7 @@
 #include "lan.h"
 
 unsigned int 	LAN_Addr=0^0x0f;
+int fakeresult2=0;
 
 // увеличивается время поиска РМУ в сети и ожидания при потере пакетов
 
@@ -249,7 +250,7 @@ void sio_handler(int sig) {
     char c;
 
     while (LAN_incoming_available() != 0) {  // пока во входной очереди есть байты
-        read(lanfd,&c,1);      // читаем очередной байт
+        fakeresult2=read(lanfd,&c,1);      // читаем очередной байт
         lput(c);               // и в кольцевой буфер его
     }
 
@@ -260,7 +261,7 @@ char *get_rmp_ptx_path(void) {
     static char buf[1024];
     FILE *f=fopen(LAN_PTX_FILE,"r");
     if (f) {
-        fscanf(f,"RMP PTX: %s",buf);
+        fakeresult2=fscanf(f,"RMP PTX: %s",buf);
         ret=buf;
         fclose(f);
     }
@@ -354,7 +355,7 @@ void LAN_Init(void) {
     //
     // Открываем лог-файл, если он определен в конфигурации
     if (strlen(LAN_logfile) != 0) netlog=fopen(LAN_logfile,"wb");
-    if (netlog < 0) {
+    if (netlog == NULL) {
         printf("\nОшибка открытия файла %s",LAN_logfile);
         netlog=0;   // в случае ошибки от
     }

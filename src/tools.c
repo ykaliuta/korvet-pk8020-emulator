@@ -42,7 +42,7 @@ extern int Current_Scr_Mode;
 
 extern byte RAM[65535];
 extern byte ACZU[1024*2];          // 1К памяти АЦЗУ
-extern byte GZU[4][PLANESIZE*3]; // 3 слоя ГЗУ (4 страницы)
+extern byte GZU[4][PLANESIZE*(3+1)]; // 3 слоя ГЗУ (4 страницы) + слой АЦЗУ
 extern PALLETE pallete;
 
 extern int AllScreenUpdateFlag;
@@ -133,7 +133,7 @@ void Write_Dump(void) {
     char BUF[1024];
 
     F_DMP=fopen("DMP.RAM","wb");
-    fwrite(RAM,0x10000,1,F_DMP);
+    fwrite(RAM,0x10000-1,1,F_DMP);
     fclose(F_DMP);
 
     F_DMP=fopen("DMP.ACZU","wb");

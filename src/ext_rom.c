@@ -39,6 +39,9 @@ FILE* mount_cfg;                            // файл списка монти�
 char  control_flag=1;                       // Флаг анализа сигнала Control: 0-игнорируется, 1-учитвается при файловых операциях
 int  extrom_debug=1;
 
+int fakeresult=0; // remove compiler warning
+
+
 unsigned char e_cmd=0;
 unsigned char e_trk=0;
 unsigned char e_sec=0;
@@ -125,19 +128,19 @@ void init_extrom(void) {
 
         fclose (mount_cfg);
     } else {    // конфиг есть - читаем и разбираем
-        fread(drive_foldername[0],1,14,mount_cfg);
-        fread(drive_filename[0],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[0],1,14,mount_cfg);
+        fakeresult=fread(drive_filename[0],1,14,mount_cfg);
 
-        fread(drive_foldername[1],1,14,mount_cfg);
-        fread(drive_filename[1],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[1],1,14,mount_cfg);
+        fakeresult=fread(drive_filename[1],1,14,mount_cfg);
 
-        fread(drive_foldername[2],1,14,mount_cfg);
-        fread(drive_filename[2],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[2],1,14,mount_cfg);
+        fakeresult=fread(drive_filename[2],1,14,mount_cfg);
 
-        fread(drive_foldername[3],1,14,mount_cfg);
-        fread(drive_filename[3],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[3],1,14,mount_cfg);
+        fakeresult=fread(drive_filename[3],1,14,mount_cfg);
 
-        fread(diskfolder,1,14,mount_cfg);
+        fakeresult=fread(diskfolder,1,14,mount_cfg);
     }
 
 // Диск 4 (E) - Mount-диск
@@ -201,12 +204,12 @@ void emu_read_image_128(void) {
     } else {
         add_to_out_buf(EMU_API_OK);
         fseek(f_emu,16,SEEK_SET);  // поле LSPT инфосектора
-        fread(&lspt,1,2,f_emu);    // читаем SPT
+        fakeresult=fread(&lspt,1,2,f_emu);    // читаем SPT
 
         offset=(e_trk*lspt+e_sec)*128; // полное смещение до сектора
 
         fseek(f_emu,offset,SEEK_SET);
-        fread(static_buf128,1,128,f_emu);
+        fakeresult=fread(static_buf128,1,128,f_emu);
         fclose(f_emu);
     }
 }
@@ -234,7 +237,7 @@ void emu_write128(void) {
     }
     else {
         fseek(f_emu,16,SEEK_SET);  // поле LSPT инфосектора
-        fread(&lspt,1,2,f_emu);    // читаем SPT
+        fakeresult=fread(&lspt,1,2,f_emu);    // читаем SPT
         offset=(e_trk*lspt+e_sec)*128; // полное смещение до сектора
         fseek(f_emu,offset,SEEK_SET);
         fwrite(in_buffer,1,128,f_emu);
@@ -411,7 +414,7 @@ void emu_stage1(void) {
         printf("ERROR: Stage1 loader request '%d' file, but file '%s' can't be opened\n",in_buffer[0],tmp_path);
     } else {
         in_buffer_size=0;
-        out_buffer_size=fread(out_buffer+2,1,EXT_BUF_SIZE,f_emu);
+        out_buffer_size=fread(out_buffer+2,1,EXT_BUF_SIZE-2,f_emu);
         fclose(f_emu);
 
         out_buffer[0]=out_buffer[2+6];    // отсылаем загрузчику адрес размещения файла в памяти

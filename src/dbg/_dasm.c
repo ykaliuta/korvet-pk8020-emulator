@@ -52,7 +52,7 @@ void Set_DASMAddr(word Addr) {
 // Return len
 void Update_DASM(void)
 {
-  int     len,i,j;
+  int     len;
   char    BUF[1024];
   char    ASM[1024];
   char    Label[128]="";
@@ -157,7 +157,7 @@ void NormPC(void) {
 
 int _DASM(int Key) {
   int i;
-  int Key1,Shift=0;
+  int Key1;
   int len;
 
   word Addr;

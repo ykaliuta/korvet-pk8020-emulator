@@ -86,7 +86,7 @@ int Flag_DBG_LUT_Mode=0;   // 0 - all color, 1 - ACZU only
 
 void dbg_INIT(void) {
  int i;
- for (i=0;i<0x10000;i++) BreakPoint[i]=0;
+ for (i=0;i<0xffff;i++) BreakPoint[i]=0;
  tScrInit();
  InitLabel();
 }

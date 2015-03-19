@@ -1,4 +1,6 @@
-CC       = gcc.exe 
+#CC       = gcc.exe 
+#CC       = gcc
+CC       = colorgcc
 #LIBS     = -mwindows -lallegro-4.4.2-mt
 
 LIBS     = -lalleg
@@ -33,10 +35,15 @@ objs	= $(addprefix objs/,$(objs2))
 
 VPATH	= src 
 
-.PHONY: all clean depend
+.PHONY: all clean depend check
 
 # all:    kdbg.exe
 all:    kdbg
+
+check:
+	cppcheck  --inconclusive --enable=all -Isrc src/*.c src/*.h  2>!cppcheck-errors.txt
+	echo please check !cppcheck-errors.txt
+
 
 clean: 
 	mkdir -p objs/dbg
@@ -48,17 +55,17 @@ clean:
 	rm kdbg
 
 objs/%.o:	%.c
-	gcc $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 objs/%.o:	%.s
-	gcc $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 
 kdbg.exe:	$(objs)
-	@gcc $^ -o $@ $(LIBS)
+	@$(CC) $^ -o $@ $(LIBS)
 
 kdbg:	$(objs)
-	@gcc $^ -o $@ $(LIBS)
+	@$(CC) $^ -o $@ $(LIBS)
 
 
 include $(wildcard OBJS/*.d)

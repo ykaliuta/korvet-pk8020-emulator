@@ -126,7 +126,7 @@ int ACZU_InitFont(char *FileName) {
     byte wmask,m;
 
     if (F == NULL) return ERROR;
-    if (fread(KFONT,1,FONTSIZE,F) != FONTSIZE) return -2;
+    if (fread(KFONT,1,FONTSIZE,F) != FONTSIZE) {fclose(F); return -2;}
     fclose(F);
 
     // convert font to WIDE

@@ -17,4 +17,5 @@ DMPSC*.*
 1/**/*
 profiler/**/*
 *sublime*
+!cppcheck-errors.txt
 

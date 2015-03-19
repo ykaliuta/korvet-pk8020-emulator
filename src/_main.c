@@ -332,7 +332,7 @@ int do_hw_inits(void) {
 
 int main(int argc,char **argv) {
 
-    int i,j;
+    int i;
 
     //LUT_BASE_COLOR = 0x80
     assert(LUT_BASE_COLOR == 0x80); //very important for SCREEN_ShowScreen
