@@ -41,7 +41,7 @@ VPATH	= src
 all:    kdbg
 
 check:
-	cppcheck  --inconclusive --enable=all -Isrc src/*.c src/*.h  2>!cppcheck-errors.txt
+	cppcheck  -j 4 --inconclusive --enable=all -Isrc src/*.c src/*.h  2>!cppcheck-errors.txt
 	echo please check !cppcheck-errors.txt
 
 

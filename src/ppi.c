@@ -157,6 +157,7 @@ void Disassemble_PPI2C(int Value)
         } else {
             PIC_IntReset(0);      // сбрасываем запрос прерывания
         }
+        // printf("EXTMODE :: PPI2C.7=%02x\n",Value&0x80);
     }
     //   XS1:32          =(Value&0x80)>>7;
     //  Reset for Analog Joystick =(Value&0x40)>>6;

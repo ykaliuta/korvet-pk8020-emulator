@@ -356,6 +356,8 @@ void emu_send_dir() {
 
     DIR* ddisk;
     struct dirent* d;
+	int len;
+	char *ext;
 
     strcpy(tmp_path,ext_rom_emu_folder);    // имя каталога с образами
     strcat(tmp_path,diskfolder);
@@ -366,10 +368,27 @@ void emu_send_dir() {
     while ((d=readdir(ddisk)) != 0) {
         // Читаем и передаем элементы каталога
         if (d->d_name[0] != '.')  {         // скрытые файлы пропускаем
-            add_block_to_out_buf(14,d->d_name);
-            printf("* %s",d->d_name);
+
+        	// передавать только KDI без расширения
+        	// показывать !! в последних символах если имя длинное
+        	// есть ли поддержка LFN на реальном девайсе !
+ /*
+			len=strlen(d->d_name);
+        	if (len>4) {
+        		ext=d->d_name+len-4;
+        		if ((ext[0]=='.') && ((ext[1] & 0x5f)=='K') && ((ext[2] & 0x5f)=='D') && ((ext[3] & 0x5f)=='I')) {
+        			if (len>(14+3)) {d->d_name[12]='!';d->d_name[13]='!';}
+        			// else {ext[0]=0;}
+*/
+		            add_block_to_out_buf(14,d->d_name);
+		            printf("<%s>",d->d_name);
+/*		        }
+		    }
+*/
         }
     }
+    printf("\n---\n");
+
     add_to_out_buf(0);
     closedir(ddisk);
 }
@@ -382,7 +401,6 @@ void emu_send_listdir() {
     DIR* ddisk;
     struct dirent* d;
 
-
     strcpy(tmp_path,ext_rom_emu_folder);  // имя каталога с образами
     strcat(tmp_path,"/");                 // каталог на карте с образами
     // открываем каталог для чтения
@@ -392,9 +410,10 @@ void emu_send_listdir() {
         // Читаем и передаем элементы каталога
         if ((d->d_name[0] != '.') && (d->d_type == DT_DIR))  {   // скрытые файлы пропускаем, выводим только каталоги
             add_block_to_out_buf(14,d->d_name);
-            printf("* %s",d->d_name);
+	        printf("[%s]",d->d_name);
         }
     }
+    printf("\n---\n");
     add_to_out_buf(0);
     closedir(ddisk);
 }
@@ -459,7 +478,7 @@ void emu_api_cmd(void) {
     }
 
     case 0x80: { // получить имя файла образа
-        if (extrom_debug) {printf("CMD: GET image file name\n");}
+        if (extrom_debug) {printf("CMD: GET image file name %d:%s/%s (%d)\n",e_drv,drive_foldername[e_drv],drive_filename[e_drv],drive_roflag[e_drv]);}
         add_to_out_buf(EMU_API_OK);
         add_to_out_buf(drive_roflag[e_drv]);
         add_block_to_out_buf(14,drive_foldername[e_drv]);
@@ -477,7 +496,7 @@ void emu_api_cmd(void) {
     }
 
     case 0x82: { // получить состояние смонтированного образа
-        if (extrom_debug) {printf("CMD: GET mount state\n");}
+        if (extrom_debug) {printf("CMD: GET mount state %d:%d\n",e_drv,drive_status[e_drv]);}
         add_to_out_buf(drive_status[e_drv]);
         in_buffer_size=0;
         break;
@@ -500,7 +519,7 @@ void emu_api_cmd(void) {
     }
 
     case 0x85: { // Получение имени каталога с образами
-        if (extrom_debug) {printf("CMD: GET FOLDER NAME\n");}
+        if (extrom_debug) {printf("CMD: GET FOLDER NAME (%s)\n",diskfolder);}
         add_to_out_buf(EMU_API_OK);
         add_block_to_out_buf(14,diskfolder);
         in_buffer_size=0;
@@ -532,7 +551,7 @@ void emu_api_cmd(void) {
     }
 
     case 0xA0: {  // --------- включение-отключение подстановки системных дорожек
-        if (extrom_debug) {printf("CMD: substitution \n");}
+        if (extrom_debug) {printf("CMD: substitution %d/%d\n",e_drv,e_trk);}
         if (e_drv == 0) {
             add_to_out_buf(EMU_API_OK);
             if (e_trk == 0) e_substitute_system_track=0;
