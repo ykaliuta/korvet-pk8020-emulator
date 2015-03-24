@@ -364,33 +364,37 @@ void emu_send_dir() {
     strcat(tmp_path,"/");                   // каталог на карте с образами
     // открываем каталог для чтения
     ddisk=opendir(tmp_path);
-    printf("Список файлов каталога %s:\n",diskfolder);
-    while ((d=readdir(ddisk)) != 0) {
-        // Читаем и передаем элементы каталога
-        if (d->d_name[0] != '.')  {         // скрытые файлы пропускаем
+    if ( ddisk == NULL ) {
+        printf("ERROR: Missing folder %s:\n",diskfolder);
+    } else {
+        printf("Список файлов каталога %s:\n",diskfolder);
+        while ((d=readdir(ddisk)) != 0) {
+            // Читаем и передаем элементы каталога
+            if (d->d_name[0] != '.')  {         // скрытые файлы пропускаем
 
-        	// передавать только KDI без расширения
-        	// показывать !! в последних символах если имя длинное
-        	// есть ли поддержка LFN на реальном девайсе !
- /*
-			len=strlen(d->d_name);
-        	if (len>4) {
-        		ext=d->d_name+len-4;
-        		if ((ext[0]=='.') && ((ext[1] & 0x5f)=='K') && ((ext[2] & 0x5f)=='D') && ((ext[3] & 0x5f)=='I')) {
-        			if (len>(14+3)) {d->d_name[12]='!';d->d_name[13]='!';}
-        			// else {ext[0]=0;}
-*/
-		            add_block_to_out_buf(14,d->d_name);
-		            printf("<%s>",d->d_name);
-/*		        }
-		    }
-*/
+            	// передавать только KDI без расширения
+            	// показывать !! в последних символах если имя длинное
+            	// есть ли поддержка LFN на реальном девайсе !
+     /*
+    			len=strlen(d->d_name);
+            	if (len>4) {
+            		ext=d->d_name+len-4;
+            		if ((ext[0]=='.') && ((ext[1] & 0x5f)=='K') && ((ext[2] & 0x5f)=='D') && ((ext[3] & 0x5f)=='I')) {
+            			if (len>(14+3)) {d->d_name[12]='!';d->d_name[13]='!';}
+            			// else {ext[0]=0;}
+    */
+                        printf("<%s>",d->d_name);
+                        add_block_to_out_buf(14,d->d_name);
+    /*		        }
+    		    }
+    */
+            }
         }
+        closedir(ddisk);
     }
     printf("\n---\n");
 
     add_to_out_buf(0);
-    closedir(ddisk);
 }
 
 //****************************************************
