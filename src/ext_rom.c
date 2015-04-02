@@ -256,8 +256,11 @@ void emu_getfilename() {
     strncpy(drive_foldername[e_drv],diskfolder,14);    // имя файла
     drive_filename[e_drv][13]=0;
     drive_status[e_drv]=1;		                       // образ смонтирован - поднимаем флаг
-    printf(" + mount %c: %s\n",e_drv+'A',drive_filename[e_drv]);
-    if (e_trk != 0) drive_roflag[e_drv]=1;             // защита от записи
+    printf(" + mount %c: %s (readonly_flag:%d, permanent_mount:%d)\n",e_drv+'A',drive_filename[e_drv], e_trk, e_sec);
+
+    //if (e_trk != 0) drive_roflag[e_drv]=1;             // защита от записи
+    drive_roflag[e_drv]=e_trk;                         // защита от записи
+
     if (e_sec != 0) {
         // Сохраняем в конфиг
         strcpy(tmp_path,ext_rom_emu_folder);
