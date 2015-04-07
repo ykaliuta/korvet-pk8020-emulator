@@ -235,6 +235,10 @@ int main_loop(void) {
             if (turboBOOT > 0) {
                 turboBOOT -= 1;
                 flagTURBO  = 1;
+                //stop turboBOOT if F6 presset
+                if (key[KEY_F6]) {
+                    turboBOOT=0;
+                }
             } else {
                 flagTURBO = key[KEY_F6];
             }
