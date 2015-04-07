@@ -271,38 +271,48 @@ void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
     while ((i=getopt(argc, argv, 
-        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZT"
+        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZTt:"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"
     #endif
         )) != -1) {
-        switch (tolower(i)) {
+        // switch (tolower(i)) {
+        switch (i) {
         case 'h':
+        case 'H':
             help();
             exit(-1);
             break;
         case 'a':
+        case 'A':
             strcpy(Disks[0],optarg);
             break;
         case 'b':
+        case 'B':
             strcpy(Disks[1],optarg);
             break;
         case 'c':
+        case 'C':
             strcpy(Disks[2],optarg);
             break;
         case 'd':
+        case 'D':
             strcpy(Disks[3],optarg);
             break;
         case 'z':
+        case 'Z':
             floppy_disabled=1;
             break;
         case 'r':
+        case 'R':
             strcpy(RomFileName,optarg);
             break;
         case 'f':
+        case 'F':
             strcpy(FontFileName,optarg);
             break;
         case 'e':
+        case 'E':
             strcpy(ext_rom_emu_folder,optarg);
             printf("%c\n",ext_rom_emu_folder[strlen(ext_rom_emu_folder)-1]);
             if (ext_rom_emu_folder[strlen(ext_rom_emu_folder)-1] != '/') {
@@ -311,11 +321,13 @@ void parse_command_line(int argc,char **argv) {
             strcpy(ext_rom_file_name,"stage1.rom");
             ext_rom_mode=1;
             break;
-        case 'x': 
+        case 'x':
+        case 'X':
             strcpy(ext_rom_file_name,optarg);
             ext_rom_mode=1;
             break;
         case 'j':
+        case 'J':
             if (optarg[0]>='0' && optarg[0]<='9') {
                 JoystickNumber=optarg[0]-'0';
                 JoystickEnabled=1;
@@ -324,6 +336,7 @@ void parse_command_line(int argc,char **argv) {
             }
             break;
         case 'm':
+        case 'M':
             i=optarg[0]-'0';
             if (i==0 || i==1 || i==2) {
                 MouseType=i;
@@ -332,27 +345,34 @@ void parse_command_line(int argc,char **argv) {
             }
             break;
         #ifdef LAN_SUPPORT
-        case 'l': 
-            strcpy(LAN_ttdev,optarg);
-            break;
-        case 'n': 
-            sscanf(optarg,"%i",&LAN_Addr);
-            LAN_Addr=(~LAN_Addr)&0xf;
-            break;
-        case 'q': 
-            strcpy(LAN_logfile,optarg); 
-            // if (strcmp(LAN_logfile,"-") == 0) {
-            //     LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
-            // }
-            break;
-        case 't':
+            case 'l':
+            case 'L':
+                strcpy(LAN_ttdev,optarg);
+                break;
+            case 'n':
+            case 'N':
+                sscanf(optarg,"%i",&LAN_Addr);
+                LAN_Addr=(~LAN_Addr)&0xf;
+                break;
+            case 'q':
+            case 'Q':
+                strcpy(LAN_logfile,optarg);
+                // if (strcmp(LAN_logfile,"-") == 0) {
+                //     LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
+                // }
+                break;
+        #endif
+            case 'T':
             turboBOOT=50*10; // force turbo for first 10 seconds (50 frame in seconds)
             break;
-        #endif
+        case 't':
+            sscanf(optarg,"%i",&turboBOOT);
+            turboBOOT=50*turboBOOT; // force turbo for first <ARG> seconds (50 frame in seconds)
+            break;
         default:
-            printf("aborted, use -h for help\n"); 
-            exit(-1);   
-       }         
+            printf("aborted, use -h for help\n");
+            exit(-1);
+       }
     }
 }
 
