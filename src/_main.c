@@ -40,6 +40,10 @@ int FPS=0;
 int FPS_Scr=0;
 int FPS_LED=0;
 int Counter50hz=0;		// 50 hz synchronization counter
+
+int flagTURBO;
+int turboBOOT=0;        // boost turbo in frames, (50*10) - 10 virtual second
+
 extern int KBD_LED;                  // RusEngFlag
 
 extern byte SOUNDBUF[];
@@ -227,7 +231,15 @@ int main_loop(void) {
         if (Takt>=ALL_TAKT) {
     #ifdef SOUND
     //       MakeSound(); // timer
-            if (!key[KEY_F6]) {
+            // turboBOOT implementation, frames counter
+            if (turboBOOT > 0) {
+                turboBOOT -= 1;
+                flagTURBO  = 1;
+            } else {
+                flagTURBO = key[KEY_F6];
+            }
+
+            if (!flagTURBO) {
                 // были в MUTE перед этим
                 if (MuteFlag==1) {
                     AllScreenUpdateFlag=1;

@@ -12,6 +12,8 @@
 
 extern byte LUT[16];
 
+extern int turboBOOT;        // boost turbo in frames, (50*10) - 10 virtual second
+
 extern int OSD_LUT_Flag;
 extern int OSD_FPS_Flag;
 extern int OSD_FDD_Flag;
@@ -227,13 +229,15 @@ void help(void) {
     printf("\t-d <KDI.FILE> KDI disk image mounted in drive D\n");
     printf("\t-z disable floppy disk controller emulation\n");
 
+    printf("\nGeneral\n");
+    printf("\t-T Turbo boot, execute first 10 elemulator seconds on maximum speed\n");
+
     printf("\nROM\n");
     printf("\t-r <ROM.FILE> Path to MAIN ROM file\n");
     printf("\t-f <FONTROM.FILE> Path to FONT ROM file\n");
     printf("\t-x <ROM.FILE> ROM attached to EXT connector (and turn on ext rom support)\n");
     printf("\t\t\tdisable joystick support\n");
     printf("\t-E <foldername> - turn on ExtROMExtender, point to folder that emulate SD card\n");
-
 
     printf("\nMouse and Joystick\n");
     printf("\t-m <mouse type> select attached mouse type\n");
@@ -267,7 +271,7 @@ void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
     while ((i=getopt(argc, argv, 
-        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZ"
+        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZT"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"
     #endif
@@ -340,6 +344,9 @@ void parse_command_line(int argc,char **argv) {
             // if (strcmp(LAN_logfile,"-") == 0) {
             //     LAN_logfile[0]=0;   // Если указан ключ "-l-" то отказываемся от лог-файла
             // }
+            break;
+        case 't':
+            turboBOOT=50*10; // force turbo for first 10 seconds (50 frame in seconds)
             break;
         #endif
         default:
