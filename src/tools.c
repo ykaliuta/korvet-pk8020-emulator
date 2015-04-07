@@ -230,7 +230,8 @@ void help(void) {
     printf("\t-z disable floppy disk controller emulation\n");
 
     printf("\nGeneral\n");
-    printf("\t-T Turbo boot, execute first 10 elemulator seconds on maximum speed\n");
+    printf("\t-T TurboBOOT, execute first 10 emulator seconds on maximum speed\n");
+    printf("\t-t <secons>, custom turbo time\n");
 
     printf("\nROM\n");
     printf("\t-r <ROM.FILE> Path to MAIN ROM file\n");
