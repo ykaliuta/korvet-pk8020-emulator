@@ -36,6 +36,8 @@
 #define EMU_API_FAIL            0
 #define EMU_API_OK              1
 
+#define EMU_FNAME_SIZE			14
+
 
 extern int ext_rom_mode;
 extern FILE* extrom_file;

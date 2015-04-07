@@ -30,14 +30,16 @@ FILE* extrom_file;
 char  ext_rom_file_name[1024]="not set";    // имя файла с образом ROM
 int   ext_rom_addr_changed=0;               // =1 while EXT ROM BOOT (rom loader only write in PPI3B,PPI3C)
 char  ext_rom_emu_folder[1024]="";          // папка которая прикидывается SDCARD эмулятора
-char  drive_filename[5][14];                // имена файлов для монтирования образа
-char  drive_foldername[5][14];              // имена каталогов, хранящих файлы
+char  drive_filename[5][EMU_FNAME_SIZE+2];                // имена файлов для монтирования образа
+char  drive_foldername[5][EMU_FNAME_SIZE+2];              // имена каталогов, хранящих файлы
 char  drive_status[5];                      // состояние образа - 0 - не смонтирован, 1 - смонтирован
 char  drive_roflag[5];                      // разрешение записи: 0-чтение/запись   1-только чтение
-char  diskfolder[14];                       // имя каталога по умолчанию, из которго берутся образы
+char  diskfolder[EMU_FNAME_SIZE+2];                       // имя каталога по умолчанию, из которго берутся образы
 FILE* mount_cfg;                            // файл списка монтирования
 char  control_flag=1;                       // Флаг анализа сигнала Control: 0-игнорируется, 1-учитвается при файловых операциях
-int  extrom_debug=1;
+
+// 0 - no dbg, 1 - all, 2 - mute read&write
+int  extrom_debug=2;
 
 int fakeresult=0; // remove compiler warning
 
@@ -112,35 +114,35 @@ void init_extrom(void) {
 
         strcpy(diskfolder,"DISK");
 
-        fwrite(drive_foldername[0],1,14,mount_cfg);
-        fwrite(drive_filename[0],1,14,mount_cfg);
+        fwrite(drive_foldername[0],1,EMU_FNAME_SIZE,mount_cfg);
+        fwrite(drive_filename[0],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fwrite(drive_foldername[1],1,14,mount_cfg);
-        fwrite(drive_filename[1],1,14,mount_cfg);
+        fwrite(drive_foldername[1],1,EMU_FNAME_SIZE,mount_cfg);
+        fwrite(drive_filename[1],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fwrite(drive_foldername[2],1,14,mount_cfg);
-        fwrite(drive_filename[2],1,14,mount_cfg);
+        fwrite(drive_foldername[2],1,EMU_FNAME_SIZE,mount_cfg);
+        fwrite(drive_filename[2],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fwrite(drive_foldername[3],1,14,mount_cfg);
-        fwrite(drive_filename[3],1,14,mount_cfg);
+        fwrite(drive_foldername[3],1,EMU_FNAME_SIZE,mount_cfg);
+        fwrite(drive_filename[3],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fwrite(diskfolder,1,14,mount_cfg);
+        fwrite(diskfolder,1,EMU_FNAME_SIZE,mount_cfg);
 
         fclose (mount_cfg);
     } else {    // конфиг есть - читаем и разбираем
-        fakeresult=fread(drive_foldername[0],1,14,mount_cfg);
-        fakeresult=fread(drive_filename[0],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[0],1,EMU_FNAME_SIZE,mount_cfg);
+        fakeresult=fread(drive_filename[0],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fakeresult=fread(drive_foldername[1],1,14,mount_cfg);
-        fakeresult=fread(drive_filename[1],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[1],1,EMU_FNAME_SIZE,mount_cfg);
+        fakeresult=fread(drive_filename[1],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fakeresult=fread(drive_foldername[2],1,14,mount_cfg);
-        fakeresult=fread(drive_filename[2],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[2],1,EMU_FNAME_SIZE,mount_cfg);
+        fakeresult=fread(drive_filename[2],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fakeresult=fread(drive_foldername[3],1,14,mount_cfg);
-        fakeresult=fread(drive_filename[3],1,14,mount_cfg);
+        fakeresult=fread(drive_foldername[3],1,EMU_FNAME_SIZE,mount_cfg);
+        fakeresult=fread(drive_filename[3],1,EMU_FNAME_SIZE,mount_cfg);
 
-        fakeresult=fread(diskfolder,1,14,mount_cfg);
+        fakeresult=fread(diskfolder,1,EMU_FNAME_SIZE,mount_cfg);
     }
 
 // Диск 4 (E) - Mount-диск
@@ -194,12 +196,12 @@ void emu_read_image_128(void) {
     f_emu=fopen(tmp_path,"rb");
     if (drive_status[e_drv]==0) {   // диск не смонтирован
         add_to_out_buf(EMU_API_FAIL);   // даем отлуп в интерфейс
-        printf(" - диск не смонтирован\n");
+        printf(" ! диск не смонтирован\n");
         return;                         // обрываем операцию
     }
     if (f_emu == 0) {
         add_to_out_buf(EMU_API_FAIL);
-        printf("ERROR: can't open %s\n",tmp_path);
+        printf(" ! ERROR: can't open %s\n",tmp_path);
         drive_status[e_drv]=0;   // снимаем флаг смонтированного диска
     } else {
         add_to_out_buf(EMU_API_OK);
@@ -232,7 +234,7 @@ void emu_write128(void) {
     strcat(tmp_path,drive_filename[e_drv]);
     f_emu=fopen(tmp_path,"r+b");
     if (f_emu == 0) {
-        printf("ERROR: can't open for write %s\n",tmp_path);
+        printf(" ! ERROR: can't open for write %s\n",tmp_path);
         drive_status[e_drv]=0;         // снимаем флаг смонтированного диска
     }
     else {
@@ -252,9 +254,14 @@ void emu_write128(void) {
 //****************************************************
 void emu_getfilename() {
 
-    strncpy(drive_filename[e_drv],in_buffer,14);       // имя файла
-    strncpy(drive_foldername[e_drv],diskfolder,14);    // имя файла
-    drive_filename[e_drv][13]=0;
+    if (e_drv>3) {
+        printf(" + mount ERROR - drive %c: !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n",e_drv+'A');
+        return;
+    }
+
+    strncpy(drive_filename[e_drv],in_buffer,EMU_FNAME_SIZE);       // имя файла
+    strncpy(drive_foldername[e_drv],diskfolder,EMU_FNAME_SIZE);    // имя файла
+    drive_filename[e_drv][EMU_FNAME_SIZE-1]=0;
     drive_status[e_drv]=1;		                       // образ смонтирован - поднимаем флаг
     printf(" + mount %c: %s (readonly_flag:%d, permanent_mount:%d)\n",e_drv+'A',drive_filename[e_drv], e_trk, e_sec);
 
@@ -266,9 +273,9 @@ void emu_getfilename() {
         strcpy(tmp_path,ext_rom_emu_folder);
         strcat(tmp_path,"MOUNT.CFG");
         mount_cfg=fopen(tmp_path,"r+");
-        fseek(mount_cfg,28*e_drv,SEEK_SET);
-        fwrite(diskfolder,1,14,mount_cfg);             // каталог берем по умолчанию
-        fwrite(drive_filename[e_drv],1,14,mount_cfg);  // имя файла - из параметров команды
+        fseek(mount_cfg,(EMU_FNAME_SIZE*2)*e_drv,SEEK_SET);
+        fwrite(diskfolder,1,EMU_FNAME_SIZE,mount_cfg);             // каталог берем по умолчанию
+        fwrite(drive_filename[e_drv],1,EMU_FNAME_SIZE,mount_cfg);  // имя файла - из параметров команды
         fclose(mount_cfg);
     }
     // проверяем наличие файла
@@ -278,7 +285,7 @@ void emu_getfilename() {
     strcat(tmp_path,drive_filename[e_drv]);
     f_emu=fopen(tmp_path,"r");
     if (f_emu == 0) {
-        printf(" - файл не найден\n");
+        printf(" ! файл не найден '%s'\n",tmp_path);
         drive_status[e_drv]=0;	                       // опускае флаг готовности диска
     }
     else fclose(f_emu);
@@ -294,22 +301,27 @@ void emu_setfolder() {
 
     strcpy(tmp_path,ext_rom_emu_folder);
     strcat(tmp_path,"/");
-    strncat(tmp_path,in_buffer,14); // имя файла
+    strncat(tmp_path,in_buffer,EMU_FNAME_SIZE); // имя файла
+
+    printf(" + set default folder '%s'\n",in_buffer);
+
     nfolder=opendir(tmp_path);
     if (nfolder == 0) {
-        printf("Нет каталога %s\n",tmp_path);
+        printf(" ! Нет каталога '%s'\n",tmp_path);
+        printf(" - Каталог остался '%s'\n",diskfolder);
         return;
     }
     closedir(nfolder);
-    strncpy(diskfolder,in_buffer,14); // имя файла
-    printf("Новый каталог: %s\n",diskfolder);
+
+    strncpy(diskfolder,in_buffer,EMU_FNAME_SIZE); // имя файла
+    printf(" + Новый каталог: %s\n",diskfolder);
     if (e_sec != 0) {
         // сохраняем в конфиг
         strcpy(tmp_path,ext_rom_emu_folder);
         strcat(tmp_path,"MOUNT.CFG");
         mount_cfg=fopen(tmp_path,"r+");
-        fseek(mount_cfg,112,SEEK_SET);
-        fwrite(diskfolder,1,14,mount_cfg);
+        fseek(mount_cfg,(EMU_FNAME_SIZE*2*4),SEEK_SET);
+        fwrite(diskfolder,1,EMU_FNAME_SIZE,mount_cfg);
         fclose(mount_cfg);
     }
 }
@@ -329,8 +341,8 @@ void emu_createkdi() {
         0x00, 0xc0, 0x00, 0x20, 0x00, 0x02, 0x00, 0x10
     };
 
-    strncpy(drive_filename[e_drv],in_buffer,14); // имя файла
-    drive_filename[e_drv][13]=0;
+    strncpy(drive_filename[e_drv],in_buffer,EMU_FNAME_SIZE); // имя файла
+    drive_filename[e_drv][EMU_FNAME_SIZE-1]=0;
     printf(" + create %c: %s\n",e_drv+'A',drive_filename[e_drv]);
     strcpy(tmp_path,ext_rom_emu_folder);  // имя каталога с образами
     strcat(tmp_path,diskfolder);
@@ -368,9 +380,9 @@ void emu_send_dir() {
     // открываем каталог для чтения
     ddisk=opendir(tmp_path);
     if ( ddisk == NULL ) {
-        printf("ERROR: Missing folder %s:\n",diskfolder);
+        printf(" ! ERROR: Missing folder %s:\n",diskfolder);
     } else {
-        printf("Список файлов каталога %s:\n",diskfolder);
+        printf(" . Список файлов каталога %s:\n",diskfolder);
         while ((d=readdir(ddisk)) != 0) {
             // Читаем и передаем элементы каталога
             if (d->d_name[0] != '.')  {         // скрытые файлы пропускаем
@@ -383,11 +395,11 @@ void emu_send_dir() {
             	if (len>4) {
             		ext=d->d_name+len-4;
             		if ((ext[0]=='.') && ((ext[1] & 0x5f)=='K') && ((ext[2] & 0x5f)=='D') && ((ext[3] & 0x5f)=='I')) {
-            			if (len>(14+3)) {d->d_name[12]='!';d->d_name[13]='!';}
+            			if (len>(EMU_FNAME_SIZE+3)) {d->d_name[EMU_FNAME_SIZE-2]='!';d->d_name[EMU_FNAME_SIZE-1]='!';}
             			// else {ext[0]=0;}
     */
                         printf("<%s>",d->d_name);
-                        add_block_to_out_buf(14,d->d_name);
+                        add_block_to_out_buf(EMU_FNAME_SIZE,d->d_name);
     /*		        }
     		    }
     */
@@ -412,11 +424,11 @@ void emu_send_listdir() {
     strcat(tmp_path,"/");                 // каталог на карте с образами
     // открываем каталог для чтения
     ddisk=opendir(tmp_path);
-    printf("Список каталогов карты:\n");
+    printf(" . Список каталогов карты:\n");
     while ((d=readdir(ddisk)) != 0) {
         // Читаем и передаем элементы каталога
         if ((d->d_name[0] != '.') && (d->d_type == DT_DIR))  {   // скрытые файлы пропускаем, выводим только каталоги
-            add_block_to_out_buf(14,d->d_name);
+            add_block_to_out_buf(EMU_FNAME_SIZE,d->d_name);
 	        printf("[%s]",d->d_name);
         }
     }
@@ -463,7 +475,7 @@ void emu_api_cmd(void) {
     }
 
     case 1: { // read sector
-        if (extrom_debug) {printf("CMD: READ sector\n");}
+        if (extrom_debug>0 && extrom_debug!=2) {printf("CMD: READ sector\n");}
         emu_read_image_128();
         if (drive_status[e_drv] == 1) add_block_to_out_buf(128,static_buf128);
         in_buffer_size=0;
@@ -471,7 +483,7 @@ void emu_api_cmd(void) {
     }
 
     case 2: { // write sector
-        if (extrom_debug) {printf("CMD: WRITE sector\n");}
+        if (extrom_debug>0 && extrom_debug!=2) {printf("CMD: WRITE sector\n");}
         if ((drive_status[e_drv]==0) || (drive_roflag[e_drv] == 1)) {   // диск не смонтирован или запрещена запись
             add_to_out_buf(EMU_API_FAIL);                               // даем отлуп в интерфейс
             printf(" - запись недоступна или диск не смонтирова\n");
@@ -488,8 +500,8 @@ void emu_api_cmd(void) {
         if (extrom_debug) {printf("CMD: GET image file name %d:%s/%s (%d)\n",e_drv,drive_foldername[e_drv],drive_filename[e_drv],drive_roflag[e_drv]);}
         add_to_out_buf(EMU_API_OK);
         add_to_out_buf(drive_roflag[e_drv]);
-        add_block_to_out_buf(14,drive_foldername[e_drv]);
-        add_block_to_out_buf(14,drive_filename[e_drv]);
+        add_block_to_out_buf(EMU_FNAME_SIZE,drive_foldername[e_drv]);
+        add_block_to_out_buf(EMU_FNAME_SIZE,drive_filename[e_drv]);
         in_buffer_size=0;
         break;
     }
@@ -528,7 +540,7 @@ void emu_api_cmd(void) {
     case 0x85: { // Получение имени каталога с образами
         if (extrom_debug) {printf("CMD: GET FOLDER NAME (%s)\n",diskfolder);}
         add_to_out_buf(EMU_API_OK);
-        add_block_to_out_buf(14,diskfolder);
+        add_block_to_out_buf(EMU_FNAME_SIZE,diskfolder);
         in_buffer_size=0;
         break;
     }
@@ -632,7 +644,12 @@ void parse_write(void) {
             crc=e_cmd+e_drv+e_trk+e_sec-1;
 
             if (extrom_debug) {
-                printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d CRC:%02x (%02x)%s\n",e_cmd,e_drv,e_trk,e_sec,e_crc,crc, e_crc==crc ? "" : " - ERROR !!!");
+                if ((extrom_debug ==2 ) && ((e_cmd == 0x01) || (e_cmd == 0x02)) )// do not spam about read & write
+                {
+                    // mute read&write dbg
+                } else {
+                    printf("CMD: %02x, DRV:%02x, TRK: %03d, SEC: %02d CRC:%02x (%02x)%s\n",e_cmd,e_drv,e_trk,e_sec,e_crc,crc, e_crc==crc ? "" : " - ERROR !!!");
+                }
             }
 
             if (crc == e_crc) {
@@ -653,7 +670,7 @@ void parse_write(void) {
     }
 
     case EMU_STAGE2_GETFILENAME: {
-        if (in_buffer_size == 14) {
+        if (in_buffer_size == EMU_FNAME_SIZE) {
             emu_getfilename();
             in_buffer_size=0;
             emu_stage=EMU_STAGE2_WAITCMD;
@@ -662,7 +679,7 @@ void parse_write(void) {
     }
 
     case EMU_STAGE2_CREATE_KDI: {
-        if (in_buffer_size == 14) {
+        if (in_buffer_size == EMU_FNAME_SIZE) {
             emu_createkdi();
             in_buffer_size=0;
             emu_stage=EMU_STAGE2_WAITCMD;
@@ -671,7 +688,7 @@ void parse_write(void) {
     }
 
     case EMU_STAGE2_GETFOLDER: {
-        if (in_buffer_size == 14) {
+        if (in_buffer_size == EMU_FNAME_SIZE) {
             emu_setfolder();
             in_buffer_size=0;
             emu_stage=EMU_STAGE2_WAITCMD;
