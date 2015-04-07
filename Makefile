@@ -66,7 +66,7 @@ kdbg.exe:	$(objs)
 
 kdbg:	$(objs)
 	@$(CC) $^ -o $@ $(LIBS)
-
+	strip $@
 
 include $(wildcard OBJS/*.d)
 include $(wildcard OBJS/DBG/*.d)
