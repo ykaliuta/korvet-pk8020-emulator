@@ -277,7 +277,6 @@ void parse_command_line(int argc,char **argv) {
         "n:N:l:L:q:Q:"
     #endif
         )) != -1) {
-        // switch (tolower(i)) {
         switch (i) {
         case 'h':
         case 'H':
@@ -363,7 +362,7 @@ void parse_command_line(int argc,char **argv) {
                 // }
                 break;
         #endif
-            case 'T':
+        case 'T':
             turboBOOT=50*10; // force turbo for first 10 seconds (50 frame in seconds)
             break;
         case 't':
