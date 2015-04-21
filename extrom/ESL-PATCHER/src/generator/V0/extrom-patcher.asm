@@ -197,7 +197,7 @@ bios_found:
 	or 	a
 	jp 	nz,bios_not_found
 
-	call 	show_mount_info
+ 	call 	show_mount_info
 
 ; 	halt
 	ret

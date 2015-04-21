@@ -6,6 +6,23 @@ API_GET_MOUNT_STATUS 	EQU	0x82
 ; 	db '0         1         2         3         4         5         6   '
 ; 	db '0123456789012345678901234567890123456789012345678901234567890123'
 ; 	db 0
+
+msgBootFromImage:
+	db 	'--EXTROM: Booting from image: ',0
+show_boot_image_name:
+	ld 	hl,msgBootFromImage
+	call 	PSTR
+
+
+	ld 	(DRV),a
+
+	ld 	a,0
+	ld 	(drive_rw_status),a
+	call 	get_mount_info
+	call 	build_emu_name
+
+	jp 	show_disk_info
+
 show_mount_info:
 
 	ld 	hl,msg_default_mount

@@ -373,6 +373,7 @@ void emu_send_dir() {
     struct dirent* d;
 	int len;
 	char *ext;
+    int file_count=0;
 
     strcpy(tmp_path,ext_rom_emu_folder);    // имя каталога с образами
     strcat(tmp_path,diskfolder);
@@ -400,6 +401,7 @@ void emu_send_dir() {
     */
                         printf("<%s>",d->d_name);
                         add_block_to_out_buf(EMU_FNAME_SIZE,d->d_name);
+                        file_count++;
     /*		        }
     		    }
     */
@@ -407,7 +409,7 @@ void emu_send_dir() {
         }
         closedir(ddisk);
     }
-    printf("\n---\n");
+    printf("\n--- files in folder=%d\n",file_count);
 
     add_to_out_buf(0);
 }
@@ -419,6 +421,7 @@ void emu_send_listdir() {
 
     DIR* ddisk;
     struct dirent* d;
+    int dir_count=0;
 
     strcpy(tmp_path,ext_rom_emu_folder);  // имя каталога с образами
     strcat(tmp_path,"/");                 // каталог на карте с образами
@@ -430,9 +433,10 @@ void emu_send_listdir() {
         if ((d->d_name[0] != '.') && (d->d_type == DT_DIR))  {   // скрытые файлы пропускаем, выводим только каталоги
             add_block_to_out_buf(EMU_FNAME_SIZE,d->d_name);
 	        printf("[%s]",d->d_name);
+            dir_count++;
         }
     }
-    printf("\n---\n");
+    printf("\n--- dir count=%d\n",dir_count);
     add_to_out_buf(0);
     closedir(ddisk);
 }
