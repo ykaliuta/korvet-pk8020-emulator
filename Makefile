@@ -1,14 +1,6 @@
-#CC       = gcc.exe 
-#CC       = gcc
-CC       = colorgcc
-#LIBS     = -mwindows -lallegro-4.4.2-mt
 
-LIBS     = -lalleg
-#CFLAGS   = -MMD -ggdb -Isrc
-CFLAGS   = -O3 -g -MMD -fomit-frame-pointer -funroll-loops -Isrc
-#CFLAGS   = -O -MMD -funroll-loops -Isrc
-#LIBS     = -lalleg -pg -g 
-#CFLAGS   = -pg -g -fno-omit-frame-pointer -MMD -Isrc
+LDLIBS     = $(shell pkg-config allegro --libs)
+CFLAGS   = -g -Isrc
 
 sources = _main.c \
 			tools.c \
@@ -30,43 +22,31 @@ sources = _main.c \
 			dbg/gt_main.c
 
 objs1	= $(patsubst %.c,%.o,$(sources))
-objs2	= $(patsubst %.s,%.o,$(objs1))
-objs	= $(addprefix objs/,$(objs2))
+objs	= $(addprefix objs/,$(objs1))
 
 VPATH	= src 
 
 .PHONY: all clean depend check
 
-# all:    kdbg.exe
 all:    kdbg
 
 check:
 	cppcheck  -j 4 --inconclusive --enable=all -Isrc src/*.c src/*.h  2>!cppcheck-errors.txt
 	echo please check !cppcheck-errors.txt
 
-
 clean: 
-	mkdir -p objs/dbg
-	rm -r objs/*.o
-	rm -r objs/*.d
-	rm -r objs/dbg/*.o
-	rm -r objs/dbg/*.d
-	mkdir -p objs/dbg
-	rm kdbg
+	rm -rf objs
+	rm -f kdbg
 
-objs/%.o:	%.c
+objs objs/dbg:
+	mkdir -p $@
+
+objs/%.o:	%.c | objs objs/dbg
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-objs/%.o:	%.s
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-
-kdbg.exe:	$(objs)
-	@$(CC) $^ -o $@ $(LIBS)
 
 kdbg:	$(objs)
-	@$(CC) $^ -o $@ $(LIBS)
-	strip $@
+	$(CC) $^ -o $@ $(LDLIBS)
 
-include $(wildcard OBJS/*.d)
-include $(wildcard OBJS/DBG/*.d)
+-include $(wildcard objs/*.d)
+-include $(wildcard objs/dbg/*.d)
