@@ -65,7 +65,7 @@ struct _TIMER i8253[4];
 
 // OUT_ routines
 
-inline void ADD_OUT(int CH,int Value) {
+static inline void ADD_OUT(int CH,int Value) {
   if (!MuteFlag) {
     TIMERBUF[BytePtr]=Value&SoundEnable;
   }
@@ -367,7 +367,7 @@ void InitTMR(void)                      // Инициализация при с�
   PrevTakt=0;
 }
 
-inline int DoTimer(void){
+int DoTimer(void){
  DoTMR(0,(Takt-PrevTakt)*20/25);
 
 // printf("DoTimer: %06d - %06d\n",Takt,PrevTakt);
