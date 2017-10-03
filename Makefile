@@ -1,6 +1,7 @@
 
-LDLIBS     = $(shell pkg-config allegro --libs)
-CFLAGS   = -g -Isrc
+LDLIBS = $(shell pkg-config allegro --libs)
+CFLAGS = -g -Isrc
+CFLAGS += -Wno-deprecated-declarations
 
 sources = _main.c \
 			tools.c \
