@@ -380,6 +380,7 @@ int main(int argc,char **argv) {
 
     #ifdef TRACETIMER
     F_TIMER=fopen("_timer.log","wb");
+    setlinebuf(F_TIMER);
     #endif
 
     #ifdef WAV
