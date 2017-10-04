@@ -229,8 +229,8 @@ int main_loop(void) {
     #endif
 
         if (Takt>=ALL_TAKT) {
+            Timer50HzTick();
     #ifdef SOUND
-    //       MakeSound(); // timer
             // turboBOOT implementation, frames counter
             if (turboBOOT > 0) {
                 turboBOOT -= 1;
@@ -250,7 +250,7 @@ int main_loop(void) {
                 }
 
                 MuteFlag=0;
-                MakeSound(); // timer
+                MakeSound();
 
                 while (!(p = get_audio_stream_buffer(stream)))  rest(0);
                 memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
@@ -270,9 +270,9 @@ int main_loop(void) {
                     MUTE_BUF();
                 }
                 MuteFlag=1;
-                MakeSound(); // timer
+                MakeSound();
             }
-    #endif
+   #endif
             Counter50hz=0;
 
             PIC_IntRequest(4);
