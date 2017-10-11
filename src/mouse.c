@@ -19,6 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "korvet.h"
 #include <allegro.h>
 
 int MouseType = 1; //0 - disabled, 1 - MSMouse, 2-MouseSystem

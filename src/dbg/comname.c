@@ -29,6 +29,7 @@
 //  2003-11-05 - v 1.0
 
 #include "dbg.h"
+#include "korvet.h"
 
 extern int SYSREG;
 //                          filename.ext
