@@ -34,7 +34,7 @@ int JoystickUseFlag=0; // for main.c how many tick show usejoystik indicator
 
 char *flags(int flags) {
    static char f[1024]="";
-   sprintf(f,"(%04x :: %s %s %s %s %s %s %s)", 
+   sprintf(f,"(%04x :: %s %s %s %s %s %s %s)",
       flags,
       flags & JOYFLAG_DIGITAL ? "DIGITAL" : "x",
       flags & JOYFLAG_ANALOGUE ? "ANALOGUE" : "x",
@@ -58,27 +58,27 @@ void show_joystick_info(void) {
       for(j=0;j<joy[i].num_buttons;j++){
          printf("\t\t\tbutton %2d: bool: %2d : name %s\n", j,joy[i].button[j].b,joy[i].button[j].name);
       }
-      
+
       printf("\t\tnum_sticks: %d\n", joy[i].num_sticks);
       for(j=0;j<joy[i].num_sticks;j++){
          printf("\t\t\tstick %2d: flags: %s : num_axis %2d : name: %2s\n", j,flags(joy[i].stick[j].flags),joy[i].stick[j].num_axis,joy[i].stick[j].name);
          for(k=0;k<joy[i].stick[j].num_axis;k++){
-            printf("\t\t\t\t axis: %2d : analog pos %5d: d1: %4d : d2 %4d : name: %s\n", 
+            printf("\t\t\t\t axis: %2d : analog pos %5d: d1: %4d : d2 %4d : name: %s\n",
                j,
                joy[i].stick[j].axis[k].pos,
                joy[i].stick[j].axis[k].d1,
                joy[i].stick[j].axis[k].d2,
                joy[i].stick[j].axis[k].name
             );
-         }             
+         }
       }
    }
 
 }
 
 int Init_Joystick(void) {
- 
-   if (JoystickEnabled) {    
+
+   if (JoystickEnabled) {
       JoystickFlag=1;
 
       if (install_joystick(JOY_TYPE_AUTODETECT) != 0) {
@@ -107,7 +107,7 @@ int Init_Joystick(void) {
          show_joystick_info();
          exit(-1);
       }
-   } 
+   }
    // else {
    //    printf("Joystick support to enabled (-j for enable)\n");
    // }

@@ -51,7 +51,7 @@ void  InitSerialQueue(void) {
 
 void RS232_Write(int Addr, byte Value){return;}
 byte RS232_Read(int Addr) {
- if (Addr & 1) return 0;       // Ctrl  
+ if (Addr & 1) return 0;       // Ctrl
  else return GetSerialQueue(); // Data
 }
 

@@ -52,7 +52,7 @@ static void SetStateStep() {
     VG.RegStatus=DskStatus&0x40;
 
     CntReady=0x10;  // ESL, неготовность на несколько комманд чтениия
-    
+
     if (VG.RegCom&0x08) VG.RegStatus|=0x20;
     if (!VG.RegTrack) VG.RegStatus|=0x04;
         //// Биты 7,3,4

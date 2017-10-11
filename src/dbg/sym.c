@@ -21,8 +21,8 @@
  */
 #include "dbg.h"
 
-#define x 29 
-#define y 10 
+#define x 29
+#define y 10
 
 byte SymFileName[1024]="";
 

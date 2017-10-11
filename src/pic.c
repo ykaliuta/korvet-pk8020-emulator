@@ -237,7 +237,7 @@ byte PIC_Read(int Addr)
         } else RetValue=(picReadSR)?IRR:ISR;
 
         return RetValue;
-   } 
+   }
    case 1: {
         return IMR;break;} //IMR
  }

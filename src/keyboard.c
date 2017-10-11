@@ -39,7 +39,7 @@ int AliasTab[]={
                  KEY_ENTER_PAD , KEY_ENTER,
                  KEY_SEMICOLON , KEY_COLON, // fix windows allegro bug (colon does'nt work under windows)
                };
-#define MAXALIAS 6 
+#define MAXALIAS 6
 
 /*
  		         D0  D1  D2  D3  D4  D5  D6  D7
@@ -103,7 +103,7 @@ void KBD_Select() {
   }
 
   for (x=0;x<8;x++)
-   for (y=0;y<12;y++) 
+   for (y=0;y<12;y++)
      KBD[x][y]=(WorkLayout == KBD_QWERTY)?KBD0[x][y]:KBD1[x][y];
 
   KeyboadUpdateFlag=0;

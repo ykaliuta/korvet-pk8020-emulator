@@ -174,7 +174,7 @@ int _DASM(int Key) {
        case KEY_RIGHT: { if ( (Key&0xff) == KK_Ctrl ) {zone->BaseAddr+=1;Key=-1;}break;}
 
        case KEY_UP  : {
-                       if (zone->Y == 0          ) { 
+                       if (zone->Y == 0          ) {
                               if      (GetCmdLen(zone->BaseAddr-3) == 3) i=3;
                               else if (GetCmdLen(zone->BaseAddr-2) == 2) i=2;
                               else if (GetCmdLen(zone->BaseAddr-1) == 1) i=1;
@@ -198,25 +198,25 @@ int _DASM(int Key) {
                       }
        case KEY_F2:   {
                        WR_BreakPoint(Addr,RD_BreakPoint(Addr)^bpCPU);
-                       break;   
+                       break;
                       }
        case KEY_F4:   {
                        dbg_HERE=Addr;
                        Key=KEY_F9<<8; // emulate RUN
-                       break;   
+                       break;
                       }
-       case KEY_K:   { 
+       case KEY_K:   {
                        if ( (Key&0xff) == KK_Ctrl ) {
                          int tmp=GetCmdLen(Addr);
                          for(i=0;i<tmp;i++) Emulator_Write(Addr+i,0);
                        }
-                       break;   
+                       break;
                       }
-       case KEY_N:   { 
+       case KEY_N:   {
                        if ( (Key&0xff) == KK_Ctrl ) {
                          dbg_REG.PC=Addr;
                        }
-                       break;   
+                       break;
                       }
     }
 
@@ -243,7 +243,7 @@ int _DASM(int Key) {
                            }
 
                            if (L != NULL) strcpy(BUF,L->Name);
- 
+
                            tmp = LineEdit(BUF,LABELLEN,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
 
                            if (tmp > 0) {
@@ -257,13 +257,13 @@ int _DASM(int Key) {
                                   for(i=0;i<tmp;i++) simulate_keypress(KEY_UP<<8);
                                   for(i=0;i<tmp;i++) simulate_keypress(KEY_DOWN<<8);
                                 }
-                              } else {          // edit old label 
+                              } else {          // edit old label
                                 DeleteLabel(Addr);
                                 AddLabel(Addr,BUF);
                               }
                            }
                            break;
-          }             
+          }
           case zADDR  : {
                            int tmp;
                            if (KEY_ENTER != Key>>8) simulate_keypress(Key);
@@ -276,7 +276,7 @@ int _DASM(int Key) {
                               for(i=0;i<tmp;i++) simulate_keypress(KEY_DOWN<<8);
                            }
                            break;
-          }             
+          }
           case zHEX   : {
                            int tmp;
                            if (KEY_ENTER != Key>>8) simulate_keypress(Key);
@@ -297,7 +297,7 @@ int _DASM(int Key) {
                              simulate_keypress(KEY_RIGHT<<8);
                            }
                            break;
-          }             
+          }
           case zDASM  : {
                           int i,j;
                           char BUF[128];

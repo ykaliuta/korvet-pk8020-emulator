@@ -79,7 +79,7 @@ void UpdateGameTool(void) {
 
   tScreenPutString("                                                                                        ",C_Default,0,GT_Y+1);
 
-  for (y=GT_Y+2;y<GT_Y+7;y++) 
+  for (y=GT_Y+2;y<GT_Y+7;y++)
    tScreenPutString("                                                                                       ",C_Default,0,y);
 
   if ( (GT_Used>0) && (GT_Used <= 15) ) {
@@ -94,7 +94,7 @@ void UpdateGameTool(void) {
      if (y == GT_Y+7) {y=GT_Y+2;x+=25;}
     }
   } else {
-     if (GT_Used>15) 
+     if (GT_Used>15)
        tScreenPutString(" too many values ... ",C_Default,45,GT_Y+4);
   }
 

@@ -54,7 +54,7 @@ void tDoUpdate(void) {
 }
 
 // PUBLIC routines
-void tFontSelect(int Fnt) { 
+void tFontSelect(int Fnt) {
 
   if (Fnt == KORVET_FONT) {
     tFont=(scr_Second_Font)?KORVET_FONT1:KORVET_FONT0;
@@ -73,7 +73,7 @@ void tShowAll(void) {
 
   for (y=0;y<TSCRY*TSCRX;y++) tScrUpdateFlag[y]=1;
 
-  for (y=0;y<16+1;y++) 
+  for (y=0;y<16+1;y++)
     for (x=64-1;x<TSCRX;x++) tScrUpdateFlag[y*TSCRX+x]=0;
 }
 
@@ -95,14 +95,14 @@ void tScrInit(void) {
 void  tScreenPutChar(int ch, int attr, int col, int row) {
   int update=0;
   int addr=row*TSCRX+col;
-  
+
   if (tScrBufChr[addr] != ch) {tScrUpdateFlag[addr]=1;update=1;}
   tScrBufChr[addr] = ch;
   if (tScrBufAtr[addr] != attr) {tScrUpdateFlag[addr]=1;update=1;}
   tScrBufAtr[addr] = attr;
   if (tScrBufFnt[addr] != tFont) {tScrUpdateFlag[addr]=1;update=1;}
   tScrBufFnt[addr++] = tFont;
-  
+
   if (update) tDoUpdate();
 }
 
@@ -120,7 +120,7 @@ void  tScreenPutString(byte *str, int attr, int col, int row) {
     if (tScrBufFnt[addr] != tFont) {tScrUpdateFlag[addr]=1;update=1;}
     tScrBufFnt[addr++] = tFont;
   }
-  
+
   if (update) tDoUpdate();
 }
 
@@ -149,7 +149,7 @@ void  tScreenUpdateLine(void *buf, int row) {
     ch=*(byte *)buf++;
     if (tScrBufChr[addr] != ch) {tScrUpdateFlag[addr]=1;update=1;}
     tScrBufChr[addr] = ch;
-    
+
     ch=*(byte *)buf++;
     if (tScrBufAtr[addr] != ch) {tScrUpdateFlag[addr]=1;update=1;}
     tScrBufAtr[addr] = ch;

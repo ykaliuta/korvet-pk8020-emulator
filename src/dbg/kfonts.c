@@ -1,5 +1,5 @@
 /* kfonts.c
- * 
+ *
  *  Source for data encoded from KFONTS.dat .
  *  Do not hand edit.
  */

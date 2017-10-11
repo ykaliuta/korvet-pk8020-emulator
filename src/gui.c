@@ -41,7 +41,7 @@ int dofile_proc(int msg, DIALOG *d, int c,int Drive)
 
    /* call the parent object */
    ret = d_button_proc(msg, d, c);
-  
+
    if (ret == D_CLOSE) {
      sprintf(message,"Select file for Drive '%c'",Drive+'A');
      strcpy(path,Disks[Drive]);
@@ -58,7 +58,7 @@ int dofile_proc(int msg, DIALOG *d, int c,int Drive)
         DskVG();
         VG.System=i;
      }
-     return D_REDRAW; 
+     return D_REDRAW;
    }
 
    return ret;

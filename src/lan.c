@@ -20,13 +20,13 @@
  *
  */
 
-/* 
+/*
  * This code writen by Alexander Stepanov  forth32 <at> mail.ru
  * http://zx-pk.ru/showthread.php?t=23456
  * http://zx-pk.ru/showthread.php?t=23458
  * and bit modified by Sergey Erokhin
  * jun 2014
- */ 
+ */
 
 #include <allegro.h>
 #include <stdio.h>
@@ -57,7 +57,7 @@ void LAN_poll(void) {};
 #else
 
 char        LAN_ttdev[1000];     // последовательный порт сети
-char        LAN_logfile[1000]="";  // Имя файла для лога 
+char        LAN_logfile[1000]="";  // Имя файла для лога
 
 
 //*******************************************************************
@@ -329,7 +329,7 @@ void LAN_Init(void) {
             } else {
                 printf("can't create %s, -s RMU can't work !\n",LAN_PTX_FILE);
             }
-           
+
         } else {
             printf("\nНевозможно определить имя подчиненного терминала");
         }
@@ -365,7 +365,7 @@ void LAN_Init(void) {
     // настройка обработчика сигнала SIGIO
     memset(&iosig,0,sizeof(iosig));  // чистим от мусора
     iosig.sa_handler=sio_handler;   // адрес обработчика
-    
+
     // формирование маски сигнала SIGIO
     sigemptyset(&ss);
     sigaddset(&ss, SIGIO);         // Список блокирующихся сигналов

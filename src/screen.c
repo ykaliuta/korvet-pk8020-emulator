@@ -521,7 +521,7 @@ void SCREEN_ShowScreen(void) {
             } // for (in line loop)
 
             bmp_unwrite_line(BITMAP_KORVET);
-            
+
             //update 2x bitmat if required
             if (blit2x_flag) {
                 // scele line to 2x
@@ -551,12 +551,12 @@ void SCREEN_ShowScreen(void) {
 
       // void blit(BITMAP *source, BITMAP *dest, int source_x, int source_y, int dest_x, int dest_y, int width, int height);
       if (blit2x_flag) {
-          blit(BITMAP_KORVET2x, screen, 
+          blit(BITMAP_KORVET2x, screen,
                 0,y_min*2,
                 SCREEN_OFFX, (y_min*2)+SCREEN_OFFY,
                 512*2,y_lines_to_scr*2);
       } else {
-          blit(BITMAP_KORVET, screen, 
+          blit(BITMAP_KORVET, screen,
                 0,y_min,
                 SCREEN_OFFX, y_min+SCREEN_OFFY,
                 512,y_lines_to_scr);

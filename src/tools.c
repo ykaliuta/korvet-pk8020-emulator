@@ -197,8 +197,8 @@ void ReadConfig(void) {
     KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
 
     #ifdef LAN_SUPPORT
-    // Секция [lan]    
-    LAN_Addr              =get_config_hex("lan","ADDR",0);  
+    // Секция [lan]
+    LAN_Addr              =get_config_hex("lan","ADDR",0);
     LAN_Addr=(~LAN_Addr)&0xf;
     strcpy(LAN_ttdev     ,get_config_string("lan","DEVICE",""));
     //strcpy(LAN_logfile   ,get_config_string("lan","LOG",""));
@@ -265,13 +265,13 @@ void help(void) {
     printf("\n");
     printf("\t-n - (0..15) RMU network address\n");
     printf("\t-q - file name for logging network traffic\n");
-    #endif    
+    #endif
 }
 
 void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
-    while ((i=getopt(argc, argv, 
+    while ((i=getopt(argc, argv,
         "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZTt:"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"

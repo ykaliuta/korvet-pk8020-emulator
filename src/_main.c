@@ -225,7 +225,7 @@ int main_loop(void) {
         Takt+=CPU_Exec1step();
 
     #ifdef LAN_SUPPORT
-        LAN_poll();  
+        LAN_poll();
     #endif
 
         if (Takt>=ALL_TAKT) {
@@ -369,7 +369,7 @@ int main(int argc,char **argv) {
     InitPrinter();
     Init_Joystick();
 
-    #ifdef LAN_SUPPORT  
+    #ifdef LAN_SUPPORT
     LAN_Init();
     #endif
 
@@ -383,7 +383,7 @@ int main(int argc,char **argv) {
 
     i=do_hw_inits();
     if (i != 0) return i;
-    
+
     fflush(stdout);
     SCREEN_SetGraphics(SCR_EMULATOR);
     clear_to_color(screen, 254);

@@ -106,7 +106,7 @@ void FlushPrinterBuf(void) {
     static int iter=0;
     if (PrintBufCntr) {
       if (PrinterFILE == NULL) {
-          PrinterFILE=fopen(FileNamePrinter,"ab");        
+          PrinterFILE=fopen(FileNamePrinter,"ab");
       }
       fwrite(PrinterBuffer,1,PrintBufCntr,PrinterFILE);
       textprintf_ex(screen,font,20,20,255,0,"PRN: %d",iter++);
@@ -127,7 +127,7 @@ int InitPrinter(void) {
 
 void DestroyPrinter(void) {
     FlushPrinterBuf();
-    if (PrinterFILE) 
+    if (PrinterFILE)
       fclose(PrinterFILE);
 }
 

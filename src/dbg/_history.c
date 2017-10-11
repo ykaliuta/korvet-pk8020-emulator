@@ -37,11 +37,11 @@ void Update_HISTORY(void) {
   for (i=HISTORYLEN-1;i>=0;i--) {
      if (j<0) j=HISTORYLEN-1;
      DASM(ASM,dbg_HISTORY[j]);
-     sprintf(BUF,"%04x : %-28s",dbg_HISTORY[j],ASM); 
+     sprintf(BUF,"%04x : %-28s",dbg_HISTORY[j],ASM);
      tScreenPutString(BUF,C_Default,x,y+i);
      j--;
   }
-}       
+}
 
 void AddPC(word PC) {
   dbg_HISTORY[dbg_HISTORYPTR]=PC;

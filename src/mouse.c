@@ -104,7 +104,7 @@ void ChkMouse_Microsoft(void) {
 
   mickeyx2=mickeyx;
   mickeyy2=mickeyy;
-  btn2    =btn; 
+  btn2    =btn;
 }
 
 // specila verson for Kwasi
@@ -132,13 +132,13 @@ void ChkMouse_Microsoft(void) {
 LB is left button state (0=pressed, 1=released)
 CB is center button state (0=pressed, 1=released)
 RB is right button state (0=pressed, 1=released)
-X7-X0 movement in X direction since last packet in signed byte 
+X7-X0 movement in X direction since last packet in signed byte
       format (-128..+127), positive direction right
-Y7-Y0 movement in Y direction since last packet in signed byte 
+Y7-Y0 movement in Y direction since last packet in signed byte
       format (-128..+127), positive direction up
-X7'-X0' movement in X direction since sending of X7-X0 packet in signed byte 
+X7'-X0' movement in X direction since sending of X7-X0 packet in signed byte
       format (-128..+127), positive direction right
-Y7'-Y0' movement in Y direction since sending of Y7-Y0 in signed byte 
+Y7'-Y0' movement in Y direction since sending of Y7-Y0 in signed byte
       format (-128..+127), positive direction up
 
 The last two bytes in the packet (bytes 4 and 5) contains information
@@ -170,5 +170,5 @@ void ChkMouse_MouseSystem(void) {
 
   mickeyx2=mickeyx;
   mickeyy2=mickeyy;
-  btn2    =btn; 
+  btn2    =btn;
 }

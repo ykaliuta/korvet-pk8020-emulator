@@ -22,7 +22,7 @@
 // Korvet ETALON emulator project
 // (c) 2000-2003 Sergey Erokhin aka ESL
 // (c) 2003      Korvet Team.
-// portition copyright WinUAE team, 
+// portition copyright WinUAE team,
 // special thanks for FONT & OSD Ideas
 
 #include <allegro.h>
@@ -86,7 +86,7 @@ static void write_tdnumber (BITMAP *bmp,int x, int y, int num)
 {
     int i,j,c;
     char *numptr;
-    
+
     for (i = 0; i < TD_NUM_HEIGHT; i++) {
       numptr = numbers + num * TD_NUM_WIDTH + NUMBERS_NUM * TD_NUM_WIDTH * i;
       for (j = 0; j < TD_NUM_WIDTH; j++) {
@@ -94,7 +94,7 @@ static void write_tdnumber (BITMAP *bmp,int x, int y, int num)
            case 'x' : c=0xff;break;
            case '+' : c=0xfe;break;
            case '-' : c=0x00;break;
-        } 
+        }
         putpixel (bmp, x+j ,y+i , c);
       }
     }

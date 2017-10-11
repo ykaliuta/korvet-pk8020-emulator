@@ -44,7 +44,7 @@ void NormPC();
 
 int (*_dbg[MAXDBG])(int Key)={_REGS,_DASM,_DUMP};
 int  dbgMODE =1;    //текущий режим отладчика.
- 
+
 int  dbg_TRACE=0;   //если =1 то остановится ПЕРЕД выполнением комманды
 word dbg_HERE =0xffff;   //адрес остановки при нажатии клавиши F4 (HERE)
 int  InDBG    =0;
@@ -120,7 +120,7 @@ void SetDBGLut(int Flag) {
   byte LUT_ACZU[16]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xF,0xF,0xF,0xF,0xF,0xF,0xF,0xF};
   if (Flag) {
       if (Flag_DBG_LUT_Mode) for (i=0;i<16;i++) LUT[i]=LUT_ACZU[i];
-      else                   for (i=0;i<16;i++) LUT[i]=i;  
+      else                   for (i=0;i<16;i++) LUT[i]=i;
   } else {
     for (i=0;i<16;i++) {LUT[i]=Save_LUT[i];};
   }

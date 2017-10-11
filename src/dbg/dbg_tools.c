@@ -124,8 +124,8 @@ int HEXEDIT(int Value,int Len,int x,int y) {
   int mask;
   int Ok=1;
 
-  
-  work=(4 == Len)?Value&0xffff:Value&0xff; 
+
+  work=(4 == Len)?Value&0xffff:Value&0xff;
 
   while (flEdit) {
      sprintf(buf,(4 == Len)?"%04X":"%02X",work);
@@ -188,7 +188,7 @@ int LineEdit(char *src,int maxlen,int x,int y) {
      }
 
      switch (Key>>8) {
-        case KEY_BACKSPACE  : 
+        case KEY_BACKSPACE  :
         case KEY_DEL  : {
                          if (Len) {
                            if ( KEY_BACKSPACE == (Key>>8) ) {

@@ -72,7 +72,7 @@ int RWDialog(int mode) { //1 - write
   if (strlen(FileName) == 0) return 0 ;
 
   tmp=HEXEDIT(Begin,4,x+9,y+3);
-  if (tmp<0) return 0; 
+  if (tmp<0) return 0;
   Begin=tmp;UpdateRW(mode);
 
   if (mode) {

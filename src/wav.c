@@ -31,8 +31,8 @@ fmt 	c	4	RIFF
 1	u16	1	wChanels
 22050	u32	1	SamplesPerSec
 22050	u32	1	AvgSamplesPerSec
-1	u16	1	wBlockAllign	
-8	u16	1	wBitsPerSample; 
+1	u16	1	wBlockAllign
+8	u16	1	wBitsPerSample;
 data	c	4	RIFF
 ????	u32	1	Len
 	b	l	Data

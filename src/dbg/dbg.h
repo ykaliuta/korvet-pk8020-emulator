@@ -73,7 +73,7 @@ typedef signed char    offset;
 #define C_ReadWrite  0x0a
 #define C_NEQ        0x0b
 #define C_HELP       0x4F
- 
+
 #define zLABEL	1
 #define zADDR	2
 #define	zHEX	3

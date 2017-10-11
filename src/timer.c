@@ -52,10 +52,10 @@ struct _TIMER {
 
 	int	LatchCounter; 	// Определяет какой байт сейчас читается если
 				// залочено.
-	int	WriteCounter;	// Определяет какой байт сейчас пишется 
+	int	WriteCounter;	// Определяет какой байт сейчас пишется
 	int	ReadCounter;	// Определяет какой байт сейчас читается
-	
-	int 	OUT;	
+
+	int 	OUT;
 	int	StartFlag;	// 1 если счетчик считает
         int	NextTickLoad;	// 1 если на след. такте надо загрузить счетчик
 };
@@ -101,7 +101,7 @@ void mode0_do(int Counter,int Takt) {
       i8253[Counter].NextTickLoad=0;
       Takt--;
    }
- 
+
    while (Takt--) {
      if (i8253[Counter].StartFlag) {
         if ( i8253[Counter].CountingElement-- ) {
@@ -114,7 +114,7 @@ void mode0_do(int Counter,int Takt) {
      } else {
             ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
      }
-   } 
+   }
 }
 
 // MODE 1: HARDWARE RETRIGGRTABLE ONE-SHOT ------------------------------------
@@ -126,7 +126,7 @@ void mode1_WriteNewValue(int Counter,int RWMode) {}
 void mode1_do(int Counter,int Takt) {
    while (Takt--) {
      ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
-   } 
+   }
 }
 
 // MODE 2: RATE GENERATOR -----------------------------------------------------
@@ -159,7 +159,7 @@ void mode2_do(int Counter,int Takt) {
      } else {
        ADD_OUT(Counter,1);
      }
-   } 
+   }
 }
 
 // MODE 3: SQUARE WAVE MODE ---------------------------------------------------
@@ -192,7 +192,7 @@ void mode3_do(int Counter,int Takt) {
          if (1 == i8253[Counter].CountingElement) {
            i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
            i8253[Counter].OUT = 0;
-         } 
+         }
 
          if (!i8253[Counter].CountingElement) {
            if (i8253[Counter].OUT == 1) i8253[Counter].CountingElement=3;
@@ -200,8 +200,8 @@ void mode3_do(int Counter,int Takt) {
               i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
               i8253[Counter].OUT = 1;
            }
-         } 
-       } else {                                // EVEN count  
+         }
+       } else {                                // EVEN count
          i8253[Counter].CountingElement-=2;
          if (!i8253[Counter].CountingElement) {
            i8253[Counter].CountingElement = i8253[Counter].CountRegister;
@@ -212,7 +212,7 @@ void mode3_do(int Counter,int Takt) {
      } else {
        ADD_OUT(Counter,1);
      }
-   } 
+   }
 }
 
 // MODE 4: SOFTWARE TRIGGERED STROBE ------------------------------------------
@@ -243,7 +243,7 @@ void mode4_do(int Counter,int Takt) {
      } else {
        ADD_OUT(Counter,1);
      }
-   } 
+   }
 }
 
 // MODE 5: HARDWARE TRIGGERED STROBE (RETRIGGERABLE) --------------------------
@@ -254,7 +254,7 @@ void mode5_WriteNewValue(int Counter,int RWMode) {}
 void mode5_do(int Counter,int Takt) {
    while (Takt--) {
      ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
-   } 
+   }
 }
 
 void WriteControlWord(int Value) {
@@ -263,13 +263,13 @@ void WriteControlWord(int Value) {
   int RWMode =(Value&0x30)>>4;
   int Mode   =(Value&0x0e)>>1;
   int BCDFlag=(Value&0x01);
- 
+
   if (0 == RWMode) { // Counter Latch command
     // ???? counter = 3 ??? 5253?, 8254 - Read Back CMD ....
     if (0 == i8253[Counter].RWMode) {// latch command ignored if already latched.
       i8253[Counter].OutputLatch  = i8253[Counter].CountingElement;
       i8253[Counter].LatchCounter = i8253[Counter].RWMode;
-    }; 
+    };
   } else { // Set Chanel MODE
 
     if (Mode & 0x02) Mode &= 0x03; // mode 6,7 -> mode 2,3
@@ -277,7 +277,7 @@ void WriteControlWord(int Value) {
     i8253[Counter].Mode           = Mode;
     i8253[Counter].RWMode         = RWMode;
     i8253[Counter].BCDFlag        = BCDFlag;
-//    i8253[Counter].CountRegister  = 0;        // 
+//    i8253[Counter].CountRegister  = 0;        //
     i8253[Counter].WriteCounter   = RWMode;   // Prepare for Write;
 
     switch(i8253[Counter].Mode) {
@@ -312,9 +312,9 @@ void WriteCounter(int Counter,int Value) {
    } else if (i8253[Counter].WriteCounter & 0x02) { // 10, 11 - Most significat
      i8253[Counter].CountRegister  = (i8253[Counter].CountRegister & 0x00ff) | (Value<<8);
      i8253[Counter].WriteCounter  ^= 0x02;
-   } 
+   }
 
-   if (0 == i8253[Counter].WriteCounter) { 
+   if (0 == i8253[Counter].WriteCounter) {
      i8253[Counter].WriteCounter=i8253[Counter].RWMode;
    }
 
@@ -395,7 +395,7 @@ void Timer_Write(int Addr, byte Value)
 //  if (Addr&3 == 3) DoTimer();
   DoTimer();
   switch (Addr & 3) {
-    case 0: 
+    case 0:
     case 1:
     case 2: WriteCounter(Addr&3,Value);break;
     case 3: WriteControlWord(Value);break;

@@ -34,7 +34,7 @@
 struct ZONE DUMP_ZONE={ 0 , // Y
                         10, // YLine
                         19, // Base Y
-                        0 , // BaseAddr 
+                        0 , // BaseAddr
                         1,(1+1+16+1+16+1),
                        {{  0      ,15,zLABEL},
                         { 17      , 4,zADDR },
