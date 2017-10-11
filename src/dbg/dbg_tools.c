@@ -48,8 +48,6 @@ byte FieldCHR[20][255]={
 
 int DBG_Walker(int Key,struct ZONE *Z,int y) {
 
-  char BUF[64];
-
   int x;
   int RetKey = Key;
   char *CC;
@@ -72,7 +70,7 @@ int DBG_Walker(int Key,struct ZONE *Z,int y) {
                         break;
                      }
      default:        {
-                        if ((CC=strchr(FieldCHR[Z->Field[Z->Cursor].Type],Key>>8 )) != NULL) {
+                        if ((CC=strchr((char *)FieldCHR[Z->Field[Z->Cursor].Type],Key>>8 )) != NULL) {
                            RetKey=(zEDIT<<8) | Z->Field[Z->Cursor].Type ;
                         }
                         break;
@@ -154,13 +152,12 @@ int HEXEDIT(int Value,int Len,int x,int y) {
 int LineEdit(char *src,int maxlen,int x,int y) {
   int  pos=0;
   int  Len;
-  byte buf[128];
-  byte tmps[128];
-  int  work;
+  char buf[128];
+  char tmps[128];
   int  flEdit=1;
-  int  Key,Key1;
+  int  Key;
+  char Key1;
   int  Ok=1;
-  char *tmp;
   int  i;
 
   strcpy(buf,src);
@@ -176,7 +173,7 @@ int LineEdit(char *src,int maxlen,int x,int y) {
      tSetNewAttr(C_EditCursor,1,x+pos,y);
 
      Key=readkey();
-     Key1=Key&0xff;
+     Key1=(char)(Key&0xff);
 
 
      if (isprint(Key1)) {

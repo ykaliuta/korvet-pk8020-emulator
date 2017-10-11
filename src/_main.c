@@ -152,7 +152,7 @@ void trace_bios(word pc) {
 }
 
 
-int main_loop(void) {
+static void main_loop(void) {
     unsigned char *p;
 
     Takt=0;
@@ -296,7 +296,7 @@ int main_loop(void) {
     }
 }
 
-int do_hw_inits(void) {
+static int do_hw_inits(void) {
     #ifdef DBG
     dbg_INIT();
     #endif
@@ -344,6 +344,8 @@ int do_hw_inits(void) {
 
     install_int_ex(Timer_1S, SECS_TO_TIMER(1));
     install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
+
+    return 0;
 }
 
 int main(int argc,char **argv) {

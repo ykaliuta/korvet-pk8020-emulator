@@ -54,12 +54,10 @@ struct ZONE DUMP_ZONE={ 0 , // Y
                       };
 
 void Update_DUMP(void) {
-  int x,y,i;
-  byte BUF[1024];
+  int x,y;
+  char BUF[1024];
   byte ch,color;
-  int Key;
   word Addr;
-
   char Label[128]="";
   _Label *L;
 
@@ -108,13 +106,9 @@ void Update_DUMP(void) {
 
 int _DUMP(int Key){
   int i;
-  int Key1,Shift=0;
-
+  int Key1;
   word Addr;
-
-
   char BUF[128];
-
   struct ZONE    *zone=&DUMP_ZONE;
 /*
   tSetUpdate(0);
@@ -192,7 +186,6 @@ int _DUMP(int Key){
                            int tmp;
                            _Label *L;
                            char BUF[128]="";
-                           char BUF1[128]="";
 
                            L=FindAddrLabel(Addr);
 

@@ -76,7 +76,7 @@ void show_joystick_info(void) {
 
 }
 
-int Init_Joystick(void) {
+void Init_Joystick(void) {
 
    if (JoystickEnabled) {
       JoystickFlag=1;

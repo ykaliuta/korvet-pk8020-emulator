@@ -102,7 +102,7 @@ void tSetUpdate(int i);
 void tFontSelect(int Fnt);
 void tShowAll(void);
 void tScreenPutChar(int ch, int attr, int col, int row);
-void tScreenPutString(byte *str, int attr, int col, int row);
+void tScreenPutString(char *str, int attr, int col, int row);
 void tScreenClear(void);
 void tScreenUpdateLine(void *buf, int row);
 void tScreenRetrieve(byte *SCR);

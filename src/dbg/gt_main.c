@@ -65,7 +65,7 @@ int GT_Used=0;
 
 
 void UpdateGameTool(void) {
-  byte BUF[1024];
+  char BUF[1024];
   int i;
   int x,y;
   char mode[2+1][5]={[1] "BYTE",[2] "WORD"};

@@ -26,14 +26,13 @@
 int x=29;
 int y=9;
 
-byte FileName[1024]="";
+char FileName[1024]="";
 int Begin=0;
 int End  =0xffff;
 int Addr;
 
 void UpdateRW(int endfl) {
-  byte buf[128];
-  int tmp;
+  char buf[128];
 
   tSetUpdate(0);
 
@@ -47,10 +46,7 @@ void UpdateRW(int endfl) {
 int RWDialog(int mode) { //1 - write
 
   char Title[2][16]={"- Read memory"," Write memory"};
-  byte buf[128];
   int tmp;
-  int i;
-  FILE *F;
 
   tSetUpdate(0);
 
@@ -85,7 +81,6 @@ int RWDialog(int mode) { //1 - write
 }
 
 void WriteMEM(void) {
-  int i;
   FILE *F;
 
   if (!RWDialog(1)) return;

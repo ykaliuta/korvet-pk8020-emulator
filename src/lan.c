@@ -192,8 +192,7 @@ void LAN_Write(int Addr,byte Value) {
 //********************************************************
 byte LAN_Read(int Addr) {
 
-    unsigned char c=0,nl=0;
-    unsigned int ql;  // размер выходной очереди
+    unsigned char c=0;
     byte res=0x80;    // DSR=1 как в реальном корвете
 
     if (lanfd<=0) return 0;  // открытого сетевого порта нет
@@ -225,7 +224,6 @@ byte LAN_Read(int Addr) {
     else {
 
         // *** регистр состояния ***
-        ql=LAN_wepmty();               // читаем размер очереди передатчика
         if (LAN_wepmty()) res|=5;	// очередь пуста -    TxEmpty=1  TxRDY=1
         // иначе         -    TxEmpty=0  TxRDY=0
         if (lq_empty()) return res;   // данных нет -  RxRdy=0

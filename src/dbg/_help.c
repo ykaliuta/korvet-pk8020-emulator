@@ -61,7 +61,7 @@ char *_help_common[64]= {
   "    ",
 };
 
-byte *_help_REGISTERS[64]={
+char *_help_REGISTERS[64]={
   "-== REGISTERS window ==-",
   "",
   "    Enter           - edit any registers value",
@@ -79,7 +79,7 @@ byte *_help_REGISTERS[64]={
   "",
 };
 
-byte *_help_DASM[64]={
+char *_help_DASM[64]={
   "-== DASM window ==-",
   "",
   "    Ctrl+Left/Right - shift DUMP windows to Addr-1/+1",
@@ -97,7 +97,7 @@ byte *_help_DASM[64]={
   "",
 };
 
-byte *_help_DUMP[64]={
+char *_help_DUMP[64]={
   "-== DUMP window ==-",
   "",
   "    Ctrl+Left/Right - shift DUMP windows to Addr-1/+1",
@@ -113,7 +113,7 @@ byte *_help_DUMP[64]={
   "",
 };
 
-byte *_help_GAMETOOL[64]={
+char *_help_GAMETOOL[64]={
   "-== GAMETOOL window ==-",
   "",
   "    Allow find values related to LIFE/ENERGY/etc for game cheating  ... ",
@@ -129,7 +129,7 @@ byte *_help_GAMETOOL[64]={
   "",
 };
 
-byte **_help_idx[MAXDBG+1]={
+char **_help_idx[MAXDBG+1]={
   _help_REGISTERS,
   _help_DASM,
   _help_DUMP,

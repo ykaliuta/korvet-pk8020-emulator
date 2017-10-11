@@ -140,7 +140,7 @@ int GetPrinterStatus(void) {
   return ret;
 }
 
-int SetPrinterStrobe(int Value) {
+void SetPrinterStrobe(int Value) {
   static int PrevStrobe=0;
 
   if ( Value && (PrevStrobe == 0) ) {

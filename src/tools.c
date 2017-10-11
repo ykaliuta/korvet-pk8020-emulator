@@ -129,8 +129,6 @@ void dump_gzu(int page) {
 void Write_Dump(void) {
 
     FILE *F_DMP;
-
-    int i,j;
     word reg;
     char BUF[1024];
 

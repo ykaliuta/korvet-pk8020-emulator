@@ -61,7 +61,7 @@ static void SetStateStep() {
 
 
 
-void DskVG() {
+void DskVG(void) {
 
     int i;
     int Attr;
@@ -248,7 +248,8 @@ void DskVG() {
             DskStatus|=(Attr)<<6;
             AcsS="rb+";
             if (Attr) AcsS="rb";
-            if (Str=fopen(DskFileName,AcsS)) DskStatus|=0x04;
+            Str=fopen(DskFileName,AcsS);
+            if (Str) DskStatus|=0x04;
         }
         DskStatus|=0x80;
         break;
@@ -299,7 +300,6 @@ void DiskVG(byte Oper) {
     VG.OperIO=Oper;
     if (Oper==0xA) ChDir(DskPth);
     DskVG();
-ExitP:
     if (Oper==0xA) ChDir(StPth);
 }
 

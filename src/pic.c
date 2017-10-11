@@ -121,7 +121,7 @@ void PIC_init(void)
 void PIC_Write(int Addr,byte Value)
 {
  static int SlavePrg=0;
- int i,j;
+ int i;
 
  switch (Addr&1) {
    case 0: {
@@ -236,11 +236,12 @@ byte PIC_Read(int Addr)
           else RetValue=(picLowINT+1)&0x07;
         } else RetValue=(picReadSR)?IRR:ISR;
 
-        return RetValue;
+        break;
    }
    case 1: {
-        return IMR;break;} //IMR
+        RetValue = IMR;break;} //IMR
  }
+ return RetValue;
 }
 
 void PIC_IntRequest(int IntNum)             // Запрос на прерывание.
@@ -256,9 +257,8 @@ void PIC_IntReset(int IntNum)             // Сброс запроса на пр
 int CheckPIC  (void)                      // Проверка, есть запрос.
 {
  byte i;
- byte Low;
 // Биты в рег. запроса & то чего нет в маске | то что есть в работе
- i=FindMaxBit(IRR & ~IMR | ISR);       // найти максиммальный запрос с учетом маски
+ i=FindMaxBit((IRR & ~IMR) | ISR);       // найти максиммальный запрос с учетом маски
 
  if ( (i == 8) || (i == FindMaxBit(ISR)))  return 0; // NOP
  return i;
@@ -271,7 +271,7 @@ int DoPIC  (void)                      // Обработка запросов.
  byte i;
  byte Low;
 // Биты в рег. запроса & то чего нет в маске | то что есть в работе
- i=FindMaxBit(IRR & ~IMR | ISR);       // найти максиммальный запрос с учетом маски
+ i=FindMaxBit((IRR & ~IMR) | ISR);       // найти максиммальный запрос с учетом маски
 
  if ( (i == 8) || (i == FindMaxBit(ISR)))  return -1; // NOP
 
@@ -302,8 +302,6 @@ void Byte2Bin(char *str,byte b)
 void ShowPICdbg(void)
 {
 
- int i;
- char BUF[1024];
  char MASKA[9]   ="00000000";
  char MODE[5][30]={"FIn",
                    "ShA",

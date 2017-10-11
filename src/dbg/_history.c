@@ -30,8 +30,8 @@ int dbg_HISTORYPTR=0;
 void Update_HISTORY(void) {
   int x=90,y=19;
   int i,j;
-  byte BUF[128];
-  byte ASM[128];
+  char BUF[128];
+  char ASM[128];
 
   j=dbg_HISTORYPTR-1;
   for (i=HISTORYLEN-1;i>=0;i--) {

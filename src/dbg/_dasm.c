@@ -160,12 +160,8 @@ void NormPC(void) {
 int _DASM(int Key) {
   int i;
   int Key1;
-  int len;
-
   word Addr;
-
   char BUF[128];
-
   struct ZONE  *zone=&DASM_ZONE;
 
   tSetUpdate(0);
@@ -235,7 +231,6 @@ int _DASM(int Key) {
                            int tmp;
                            _Label *L;
                            char BUF[128]="";
-                           char BUF1[128]="";
 
                            L=FindAddrLabel(Addr);
 
@@ -303,7 +298,7 @@ int _DASM(int Key) {
           case zDASM  : {
                           int i,j;
                           char BUF[128];
-                          char code[8];
+                          byte code[8];
 
                           DASM(BUF,Addr);
                           i=0;

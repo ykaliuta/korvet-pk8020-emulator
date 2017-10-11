@@ -149,7 +149,7 @@ have been sent.
 */
 
 void ChkMouse_MouseSystem(void) {
-  static unsigned char b1,b2,b3;
+  static unsigned char b2,b3;
 
   get_mouse_mickeys(&mickeyx, &mickeyy);
 

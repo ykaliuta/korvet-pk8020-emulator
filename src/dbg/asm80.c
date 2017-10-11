@@ -228,7 +228,6 @@ int ASMStr(char *Sstr,byte *Sdst)
  char  tmp[100];
  char  *ptmp;
  int   op1=0,op2=0,mask1=0,mask2=0,len=0;
- int   i;
  int   ERR=0;
 
  strcpy(src,Sstr);

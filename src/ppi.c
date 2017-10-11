@@ -118,8 +118,6 @@ byte Assemble_PPI1A(void)
 
 void DisassembleVIREG_PPI1C(byte Value)
 {
-    static unsigned char cntr=0;
-
     scr_Page_Acces =(Value&0xc0)>>6;    // ViReg:xx000000
     scr_Attr_Write =(Value&0x30)>>4;    // ViReg:00xx0000
     scr_Wide_Mode  =(Value&0x08)>>3;    // ViReg:0000x000
@@ -366,7 +364,7 @@ byte PPI3_Read(int Addr) {
     int Value;
     switch (Addr  & 0x03) {
     case 0: {
-        if ((!ext_rom_mode) || (((PPI2_C&0x80) == 0))&& (control_flag==1)) {
+        if ((!ext_rom_mode) || ((((PPI2_C&0x80) == 0))&& (control_flag==1))) {
             Value=PPI3_A; // если control=0 - читаем что записали, иначе - ОШИБКА ШИНЫ
         }
         else {

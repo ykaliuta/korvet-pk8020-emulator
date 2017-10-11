@@ -84,6 +84,7 @@
 
 #define LUT_BASE_COLOR 0x80
 
+#define BIT(nr) (1UL << (nr))
 
 #ifndef _TYPEDEF_
 typedef unsigned char  byte;
@@ -100,7 +101,7 @@ void Memory_Init(void);
 void Emulator_Write(int Addres,byte Value);
 byte Emulator_Read(int Addres);
 byte RD_BreakPoint(int Addr);
-byte WR_BreakPoint(int Addr,byte Value);
+void WR_BreakPoint(int Addr,byte Value);
 
 void FDC_Init(void);
 void FDC_Reset(void);
@@ -111,7 +112,7 @@ byte FDC_Read(int Addr);
 void KBD_Init(void);
 int  KEYBOARD_Read(int Addr,int InternalMode);
 
-int GZU_Init(void);
+void GZU_Init(void);
 void GZU_Write(int Addr,byte Value);
 byte GZU_Read(int Addr);
 
@@ -120,7 +121,7 @@ void ACZU_Write(int Addr,byte Value);
 byte ACZU_Read(int Addr);
 
 void SCREEN_Init(void);
-int SCREEN_SetGraphics(int ScrMode);
+void SCREEN_SetGraphics(int ScrMode);
 int SCREEN_SetText(void);
 void SCREEN_ShowScreen(void);
 
@@ -172,9 +173,9 @@ void UpdateKBD_OSD(int Addr);
 int InitPrinter(void);
 void DestroyPrinter(void);
 int GetPrinterStatus(void);
-int SetPrinterStrobe(int Value);
+void SetPrinterStrobe(int Value);
 
-int Init_Joystick(void);
+void Init_Joystick(void);
 int Read_Joystick(void);
 
 void update_rus_lat(void);

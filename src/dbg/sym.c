@@ -24,11 +24,9 @@
 #define x 29
 #define y 10
 
-byte SymFileName[1024]="";
+char SymFileName[1024]="";
 
 void UpdateSymRW(int endfl) {
-  byte buf[128];
-  int tmp;
 
   tSetUpdate(0);
 
@@ -41,10 +39,7 @@ void UpdateSymRW(int endfl) {
 int SymDialog(int mode) { //1 - write
 
   char Title[2][16]={"- SYM  Read"," SYM  Write"};
-  byte buf[128];
   int tmp;
-  int i;
-  FILE *F;
 
   tSetUpdate(0);
 
@@ -65,10 +60,8 @@ int SymDialog(int mode) { //1 - write
 }
 
 void WriteSYM(void) {
-  int i;
   FILE *F;
   _Label *L;
-  char BUF[1024];
   int Addr;
 
   if (!SymDialog(1)) return;
@@ -86,8 +79,6 @@ void WriteSYM(void) {
 }
 
 void ReadSYM(void) {
-  int i;
-  int b;
   FILE *F;
   char *tmp;
   char *tmp1;

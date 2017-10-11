@@ -169,9 +169,11 @@ void PutLED_FPS(int x,int y,int i) {
   if (d3 > 15) d3=15; // check if value >10000
 
   if (d3)       masked_blit(DIGITS[d3],screen,0,0,x+2+1+7*0,y+2,7,7);
-  if (d3 || d2) masked_blit(DIGITS[d2],screen,0,0,x+2+1+7*1,y+2,7,7);
-                masked_blit(DIGITS[d1],screen,0,0,x+2+1+7*2,y+2,7,7);
-                masked_blit(DIGITS[d0],screen,0,0,x+2+1+7*3,y+2,7,7);
+  if (d3 || d2)
+      masked_blit(DIGITS[d2],screen,0,0,x+2+1+7*1,y+2,7,7);
+  /* !!! TODO should it be under the if? */
+  masked_blit(DIGITS[d1],screen,0,0,x+2+1+7*2,y+2,7,7);
+  masked_blit(DIGITS[d0],screen,0,0,x+2+1+7*3,y+2,7,7);
 
 }
 

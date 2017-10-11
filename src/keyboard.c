@@ -144,16 +144,14 @@ int KEYBOARD_Read(int Addr,int InternalMode) {
   for (i=0;i<KEY_MAX;i++)      {KeyAlias[i]=key[i];}
   for (i=0;i<MAXALIAS*2;i+=2) {if (KeyAlias[AliasTab[i]]) KeyAlias[AliasTab[i+1]]=1;}
 
-  if (Addr&0x100) Line=8;
+  /* See the address layout above */
+  if (Addr & 0x100)
+      Line=8;
 
-  if (Addr&0x0001) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0002) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0004) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0008) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0010) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0020) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0040) Value|=ChkMattrixLine(Line);Line++;
-  if (Addr&0x0080) Value|=ChkMattrixLine(Line);Line++;
+  for (i = 0; i <= 7; i++, Line++) {
+      if (Addr & BIT(i))
+          Value |= ChkMattrixLine(Line);
+  }
 
   return Value;
 }

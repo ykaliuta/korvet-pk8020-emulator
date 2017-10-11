@@ -160,7 +160,6 @@ int ACZU_InitFont(char *FileName) {
 // fixed by Eduard Kalinovsky
 
 void ACZU_MakeFrameBuffer(void) {
-    byte *p;
     byte *src=ACZU;
     byte *dst=GZU[scr_Page_Acces]+3;
     byte *chrdst;
@@ -271,12 +270,6 @@ void GZU_Write(int Addr,byte Value) {
     byte *GZU_Ptr=GZU[scr_Page_Acces]+(Addr&0x3fff)*4;
     byte mask;
 
-    int a0,a1,a2,c0,c1,c2;
-
-    a0=*(GZU_Ptr+0);
-    a1=*(GZU_Ptr+1);
-    a2=*(GZU_Ptr+2);
-
     LineUpdateFlag[(Addr&0x3fff)>>6]=1;
 
     if (NCREG & COLORMD) { //Color mode
@@ -297,10 +290,6 @@ void GZU_Write(int Addr,byte Value) {
             *(GZU_Ptr+2)=(*(GZU_Ptr+2) & ~Value) | mask;
         }
     }
-
-    c0=*(GZU_Ptr+0);
-    c1=*(GZU_Ptr+1);
-    c2=*(GZU_Ptr+2);
 }
 
 byte GZU_Read(int Addr) {
@@ -328,7 +317,7 @@ byte GZU_Read(int Addr) {
     return Value;
 }
 
-int GZU_Init(void) {
+void GZU_Init(void) {
     int i,j;
     // clear memory
     for (i=0; i<4; i++)
@@ -359,7 +348,7 @@ void LUT_Update(int BWFlag) {
     //esl calulated shifted to 8
     int BW_Array_ESL[]= {0,8,10,13,16,19,22,25,29,33,37,42,46,51,56,60};
     //ddp photo bw
-    int BW_Array_DDP[]= {4/4, 20/4, 34/4, 50/4, 62/4, 78/4, 93/4, 108/4, 123/4, 140/4, 155/4, 171/4, 184/4, 199/4, 215/4, 231/4};
+    /* int BW_Array_DDP[]= {4/4, 20/4, 34/4, 50/4, 62/4, 78/4, 93/4, 108/4, 123/4, 140/4, 155/4, 171/4, 184/4, 199/4, 215/4, 231/4}; */
 
     for (i=0; i<16; i++) {
         // COLOR PALETTE
@@ -397,10 +386,8 @@ void LUT_Init(void) {
 
 // ================================================================== LUT
 // ---------------------------------------------------------------------- SCREEN
-int SCREEN_SetGraphics(int ScrMode) {
-    int tmp;
+void SCREEN_SetGraphics(int ScrMode) {
     static int oldWindowed=0;
-    int response=0;
     int WindowSizeX=0;
     int WindowSizeY=0;
 
@@ -419,7 +406,7 @@ int SCREEN_SetGraphics(int ScrMode) {
             SCREEN_XMAX=512;
             SCREEN_YMAX=256;
 
-            response=set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
+            set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
             FlagScreenScale=0;
 
         } else {
@@ -436,7 +423,7 @@ int SCREEN_SetGraphics(int ScrMode) {
                 SCREEN_YMAX=256;
             }
 
-            response=set_gfx_mode(GFX_AUTODETECT_WINDOWED, WindowSizeX, WindowSizeY, 0, 0);
+            set_gfx_mode(GFX_AUTODETECT_WINDOWED, WindowSizeX, WindowSizeY, 0, 0);
 
             SCREEN_OFFX=2;//((WindowSizeX-512)/2);
             SCREEN_OFFY=2;//((WindowSizeY-256-70)/2); // 70 - fullscreen shift for bottom text
@@ -461,12 +448,10 @@ int SCREEN_SetText(void) {
 //void ShowSCREEN(void) {
 
 void SCREEN_ShowScreen(void) {
-    int 		x,y,i,j;
-    int updated;
+    int 		x,y;
     int lines_updated=0;
 
     byte 		     c1,c2,c3,c4;
-    byte 		     VGA_Frame[512*256];
     byte            *GZU_Ptr;            // Указатель на область ГЗУ
     unsigned int  	*d_VGA_Ptr;          // Указатель на область буфера виртуального экрана
 
@@ -479,7 +464,6 @@ void SCREEN_ShowScreen(void) {
     static BITMAP  *BITMAP_KORVET = NULL;
     static BITMAP  *BITMAP_KORVET2x = NULL;
     static unsigned int *BITMAP_PTR;
-    static unsigned int *BITMAP_PTR2X;
 
     if (!BITMAP_KORVET) {
         BITMAP_KORVET=create_bitmap_ex(8,512,256);

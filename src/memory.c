@@ -229,5 +229,5 @@ void Memory_Init(void)
 }
 
 byte RD_BreakPoint(int Addr)           { return BreakPoint[Addr&0xffff];};
-byte WR_BreakPoint(int Addr,byte Value){ BreakPoint[Addr&0xffff]=Value;};
+void WR_BreakPoint(int Addr,byte Value){ BreakPoint[Addr&0xffff]=Value;};
 
