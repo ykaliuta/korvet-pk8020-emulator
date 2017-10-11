@@ -170,14 +170,42 @@ typedef struct
  unsigned int  Addr;
 } _Label;
 
+void InitLabel(void);
 int AddLabel(word Addr,char *Name);
 int DeleteLabel(word Addr);
 _Label *FindAddrLabel(word Addr);
 _Label *FindNameLabel(char *Name);
+void AddKorvetLabel(void);
 
 void WriteSYM(void);
 void ReadSYM(void);
+void WriteMEM(void);
+void ReadMEM(void);
 
 extern int scr_Second_Font;	// Флаг выбора второго знакогенератора ViReg:00000x00
+
+void Update_REGS(void);
+void Update_DASM(void);
+void Update_DUMP(void);
+void Update_HISTORY(void);
+void UpdateCOMNAME(void);
+void UpdateGameTool(void);
+void tDoUpdate(void);
+void Update_Screen(void);
+
+void GameTools(void);
+int GetCmdLen(word Addr);
+int GetBreakColor(word Addr,int Type);
+
+int DASM(char *S,word A);
+int DBG_Walker(int Key,struct ZONE *Z,int y);
+int HEXEDIT(int Value,int Len,int x,int y);
+int LineEdit(char *src,int maxlen,int x,int y);
+int ASMStr(char *Sstr,byte *Sdst);
+byte GetVisibleChar(byte Chr);
+void Set_DASMAddr(word Addr);
+
+void draw_hline(int x,int y,int len,int color);
+void draw_vline(int x,int y,int len,int color);
 
 #endif

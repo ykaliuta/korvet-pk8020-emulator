@@ -93,28 +93,51 @@ typedef signed char    offset;
 #define _TYPEDEF_
 #endif
 
+void CPU_Init(void);
+int CPU_Exec1step (void);
+
+void Memory_Init(void);
 void Emulator_Write(int Addres,byte Value);
 byte Emulator_Read(int Addres);
+byte RD_BreakPoint(int Addr);
+byte WR_BreakPoint(int Addr,byte Value);
 
+void FDC_Init(void);
+void FDC_Reset(void);
 void FDC_Write_DRVREG(byte Value);
 void FDC_Write(int Addr, byte Value);
 byte FDC_Read(int Addr);
 
+void KBD_Init(void);
 int  KEYBOARD_Read(int Addr,int InternalMode);
 
+int GZU_Init(void);
 void GZU_Write(int Addr,byte Value);
 byte GZU_Read(int Addr);
 
+int ACZU_Init(void);
 void ACZU_Write(int Addr,byte Value);
 byte ACZU_Read(int Addr);
 
-void LUT_Write(byte Value);
+void SCREEN_Init(void);
+int SCREEN_SetGraphics(int ScrMode);
+int SCREEN_SetText(void);
+void SCREEN_ShowScreen(void);
 
+void LUT_Init(void);
+void LUT_Write(byte Value);
+void LUT_Update(int BWFlag);
+void PutLED_Lut(int x,int y,int i,int c);
+
+void PIC_init(void);
 byte PIC_Read(int Addr);
 void PIC_Write(int Addr,byte Value);
 
 void PIC_IntRequest(int IntNum);             // Запрос на прерывание.
-
+int DoPIC(void);
+int CheckPIC(void);
+void PIC_IntReset(int IntNum);
+void ShowPICdbg(void);
 
 void PPI1_Write(int Addr, byte Value);
 byte PPI1_Read(int Addr);
@@ -125,16 +148,61 @@ byte PPI2_Read(int Addr);
 void PPI3_Write(int Addr, byte Value);
 byte PPI3_Read(int Addr);
 
-void PPI_init();
+void PPI_Init(void);
+void ShowPPIdbg(void);
 
+void Serial_Init(void);
 void RS232_Write(int Addr, byte Value);
 byte RS232_Read(int Addr);
+void AddSerialQueue(byte b);
 
+void InitTMR(void);
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
+void MakeSound(void);
+int DoTimer(void);
+
+void InitOSD(void);
+void DestroyOSD(void);
+void ResetOSD(void);
+void update_osd(void);
+void UpdateKBD_OSD(int Addr);
+
+int InitPrinter(void);
+void DestroyPrinter(void);
+int GetPrinterStatus(void);
+int SetPrinterStrobe(int Value);
+
+int Init_Joystick(void);
+int Read_Joystick(void);
 
 void update_rus_lat(void);
-void ResetOSD(void);
+void Debug_LUT(int Debug_Key);
+void Write_Dump(void);
+void MUTE_BUF(void);
+void ReadConfig(void);
+void parse_command_line(int argc,char **argv);
+void check_missing_images(void);
+void PrintDecor(void);
+
+void CheckROM(void);
+void CheckCCP(void);
+void CheckComEXEC(void);
+
+void dbg_INIT(void);
+void doDBG(void);
+
+void LAN_Init(void);
+void LAN_Write(int Addr,byte Value);
+byte LAN_Read(int Addr);
+
+void GUI(void);
+void AddPC(word pc);
+void ChkMouse(void);
+int GetFileAttr(char *t);
+int ChDir(char *t);
+byte FDC_Read_DRVREG(void);
+byte ext_rom_api_read(void);
 
 #endif
 
