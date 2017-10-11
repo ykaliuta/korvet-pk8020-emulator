@@ -28,13 +28,16 @@
  * jun 2014
  */
 
+#define _XOPEN_SOURCE 700
+#define _GNU_SOURCE /* for ptsname_r() */
 #include <allegro.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/poll.h>
 #include <stdlib.h>
 #include <termios.h>
-
 #include <time.h>
+#include <unistd.h>
 
 #include "korvet.h"
 #include "lan.h"
@@ -337,7 +340,7 @@ void LAN_Init(void) {
     }
 
     // Настройка физических параметров последовательного порта
-    bzero(&sioparm, sizeof(sioparm));
+    memset(&sioparm, 0, sizeof(sioparm));
     sioparm.c_cflag = B19200 | CS8 | CLOCAL | CREAD | PARENB | PARODD;  // 19200-8-О-1, аппаратные линии управления потоком игнорируются
     sioparm.c_iflag = 0;  // INPCK;
     sioparm.c_oflag = 0;
@@ -376,7 +379,7 @@ void LAN_Init(void) {
         exit(0);
     }
     fcntl(lanfd, F_SETOWN ,getpid());   // Разрешаем генерацию сигнала SIGIO
-    fcntl(lanfd, F_SETFL, FASYNC);	    // включаем асинхронный режим
+    fcntl(lanfd, F_SETFL, O_ASYNC);	    // включаем асинхронный режим
 
     i3pending=0;   // ждущих прерываний нет
     // инициализация кольцевого буфера
