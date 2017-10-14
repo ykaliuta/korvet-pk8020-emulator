@@ -331,6 +331,8 @@ void MUTE_BUF(void) {
 
 void help(void) {
     printf("\nAvailable keys\n\n");
+    printf("\t-h this help\n");
+    printf("\t-v increase output verbosity (use up to 4 times)");
 
     printf("Disk Images\n");
     printf("\t-a <KDI.FILE> KDI disk image mounted in drive A\n");
@@ -382,7 +384,7 @@ void parse_command_line(int argc,char **argv) {
     int i;
     // parse command line option -A filename -B filename
     while ((i=getopt(argc, argv,
-        "hHa:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZTt:"
+        "hHva:A:b:B:c:C:d:D:x:X:r:R:j:J:m:M:f:F:e:E:zZTt:"
     #ifdef LAN_SUPPORT
         "n:N:l:L:q:Q:"
     #endif
@@ -392,6 +394,9 @@ void parse_command_line(int argc,char **argv) {
         case 'H':
             help();
             exit(-1);
+            break;
+        case 'v':
+            verbose_level_inc();
             break;
         case 'a':
         case 'A':
