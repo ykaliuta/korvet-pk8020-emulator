@@ -16,23 +16,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-/*
- * This file contatin definitions for the host abstraction layer
- */
+#ifndef _HOST_EVENTS_H_
+#define _HOST_EVENTS_H_
 
-#ifndef _HOST_HOST_H_
-#define _HOST_HOST_H_
+#include <stdbool.h>
 
-#include "host-config.h"
-#include "host-events.h"
+enum event_type {
+    HOST_NOTHING = 0,
+};
 
-#define BIT(nr) (1UL << (nr))
-#define BIT_TEST(val, nr) (((val) & BIT(nr)) != 0)
-#define BIT_CLEAR(val, nr) ((val) &= ~(BIT(nr)))
-#define BIT_SET(val, nr) ((val) |= BIT(nr))
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+struct host_event {
+    enum event_type type;
+};
 
-int host_init(void);
-void host_shutdown(void);
+int host_events_init(void);
+void host_events_shutdown(void);
+void host_event_wait(struct host_event *ev);
+bool host_event_pop(struct host_event *ev);
+void host_event_push(struct host_event *ev);
+char *host_event_to_str(struct host_event *ev);
 
 #endif

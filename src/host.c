@@ -17,22 +17,27 @@
  */
 
 /*
- * This file contatin definitions for the host abstraction layer
+ * This file contatin the implementation of the host abstraction layer
  */
 
-#ifndef _HOST_HOST_H_
-#define _HOST_HOST_H_
+#include "host.h"
+#include "verbose.h"
 
-#include "host-config.h"
-#include "host-events.h"
+int host_init(void)
+{
+    int rc;
 
-#define BIT(nr) (1UL << (nr))
-#define BIT_TEST(val, nr) (((val) & BIT(nr)) != 0)
-#define BIT_CLEAR(val, nr) ((val) &= ~(BIT(nr)))
-#define BIT_SET(val, nr) ((val) |= BIT(nr))
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+    rc = host_events_init();
+    if (rc != 0)
+        goto err;
 
-int host_init(void);
-void host_shutdown(void);
+    return 0;
+err:
+    return rc;
+}
 
-#endif
+void host_shutdown(void)
+{
+    host_events_shutdown();
+}
+

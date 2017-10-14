@@ -87,8 +87,6 @@
 
 #define LUT_BASE_COLOR 0x80
 
-#define BIT(nr) (1UL << (nr))
-
 #ifndef _TYPEDEF_
 typedef unsigned char  byte;
 typedef unsigned short word;

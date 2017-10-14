@@ -23,6 +23,7 @@ sources = _main.c \
 			dbg/gt_main.c
 
 sources += host-config.c libconfini/confini.c
+sources += host.c host-events.c queue.c
 
 objs1	= $(patsubst %.c,%.o,$(sources))
 objs	= $(addprefix objs/,$(objs1))

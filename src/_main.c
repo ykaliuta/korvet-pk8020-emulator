@@ -21,6 +21,7 @@
  */
 
 #include "korvet.h"
+#include "host.h"
 #include "vg.h"
 #include <assert.h>
 #include "lan.h"
@@ -388,6 +389,8 @@ int main(int argc,char **argv) {
     i=do_hw_inits();
     if (i != 0) return i;
 
+    host_init();
+
     fflush(stdout);
     SCREEN_SetGraphics(SCR_EMULATOR);
     clear_to_color(screen, 254);
@@ -401,6 +404,8 @@ int main(int argc,char **argv) {
     SCREEN_ShowScreen();
 
     main_loop();
+
+    host_shutdown();
 
     #ifdef WAV
     CloseWAV();
@@ -426,4 +431,3 @@ int main(int argc,char **argv) {
     return 0;
 }
 END_OF_MAIN();
-

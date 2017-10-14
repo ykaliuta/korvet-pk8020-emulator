@@ -20,7 +20,7 @@
  *
  */
 #include "korvet.h"
-
+#include "host.h"
 
 int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
