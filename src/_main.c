@@ -29,6 +29,8 @@
 #include "dbg/dbg.h"
 #endif
 
+int verbose;
+
 int VBLANK=0;
 int SoundEnable=0;
 int Takt;
