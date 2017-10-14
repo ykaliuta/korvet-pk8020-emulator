@@ -22,6 +22,8 @@ sources = _main.c \
 			dbg/label.c dbg/asm80.c dbg/readwrite.c dbg/sym.c dbg/lbl_korvet.c dbg/comname.c \
 			dbg/gt_main.c
 
+sources += host-config-allegro.c
+
 objs1	= $(patsubst %.c,%.o,$(sources))
 objs	= $(addprefix objs/,$(objs1))
 

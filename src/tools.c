@@ -1,4 +1,5 @@
 #include "korvet.h"
+#include "host.h"
 #include "vg.h"
 #include <assert.h>
 #include <getopt.h>
@@ -172,34 +173,145 @@ void Write_Dump(void) {
 
 void ReadConfig(void) {
     char section[]="korvet";
-    set_config_file("./korvet.cfg");
-    strcpy(Disks[0]      ,get_config_string(section,"DriveA","disk/disk.kdi"));
-    strcpy(Disks[1]      ,get_config_string(section,"DriveB","disk/disk1.kdi"));
-    strcpy(Disks[2]      ,get_config_string(section,"DriveC","disk/disk2.kdi"));
-    strcpy(Disks[3]      ,get_config_string(section,"DriveD","disk/disk3.kdi"));
+    struct config_entry arr[] = {
+	{
+            .type = CONFIG_TYPE_STRING,
+            .name = "DriveA",
+            .section = section,
+            .storage = Disks[0],
+            .max_size = sizeof(Disks[0]),
+            .p_default = "disk/disk.kdi",
+	},
+	{
+            .type = CONFIG_TYPE_STRING,
+            .name = "DriveB",
+            .section = section,
+            .storage = Disks[1],
+            .max_size = sizeof(Disks[1]),
+            .p_default = "disk/disk1.kdi",
+	},
+	{
+            .type = CONFIG_TYPE_STRING,
+            .name = "DriveC",
+            .section = section,
+            .storage = Disks[2],
+            .max_size = sizeof(Disks[2]),
+            .p_default = "disk/disk2.kdi",
+	},
+	{
+            .type = CONFIG_TYPE_STRING,
+            .name = "DriveD",
+            .section = section,
+            .storage = Disks[3],
+            .max_size = sizeof(Disks[3]),
+            .p_default = "disk/disk3.kdi",
+	},
+        {
+            .type = CONFIG_TYPE_STRING,
+            .name = "FONT",
+            .section = section,
+            .storage = FontFileName,
+            .max_size = sizeof(FontFileName),
+            .p_default = "data/korvet2.fnt",
+	},
+        {
+            .type = CONFIG_TYPE_STRING,
+            .name = "ROM",
+            .section = section,
+            .storage = RomFileName,
+            .max_size = sizeof(RomFileName),
+            .p_default = "data/rom.rom",
+	},
+        {
+            .type = CONFIG_TYPE_STRING,
+            .name = "MAPPER",
+            .section = section,
+            .storage = MapperFileName,
+            .max_size = sizeof(MapperFileName),
+            .p_default = "data/mapper.mem",
+	},
+	{
+            .type = CONFIG_TYPE_INT,
+            .name = "GZU_Pages",
+            .section = section,
+            .storage = &scr_GZU_Size_Mask,
+            .max_size = sizeof(int),
+            .i_default = 4,
+	},
+	{
+            .type = CONFIG_TYPE_INT,
+            .name = "OSD_LUT",
+            .section = section,
+            .storage = &OSD_LUT_Flag,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "OSD_FPS",
+            .section = section,
+            .storage = &OSD_FPS_Flag,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "OSD_FDD",
+            .section = section,
+            .storage = &OSD_FDD_Flag,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "OSD_KBD",
+            .section = section,
+            .storage = &OSD_KBD_Flag,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "SCALE_WINDOW",
+            .section = section,
+            .storage = &FlagScreenScale,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "KEYBOARD_MODE",
+            .section = section,
+            .storage = &KeyboardLayout,
+            .max_size = sizeof(int),
+            .i_default = KBD_AUTO,
+	},
+#ifdef LAN_SUPPORT
+        {
+            .type = CONFIG_TYPE_INT,
+            .name = "ADDR",
+            .section = "lan",
+            .storage = &LAN_Addr,
+            .max_size = sizeof(int),
+            .i_default = 0,
+	},
+        {
+            .type = CONFIG_TYPE_STRING,
+            .name = "DEVICE",
+            .section = "lan",
+            .storage = LAN_ttdev,
+            .max_size = sizeof(LAN_ttdev),
+            .p_default = "",
+	},
+#endif
+    };
 
-    strcpy(FontFileName  ,get_config_string(section,"FONT","data/korvet2.fnt"));
-    strcpy(RomFileName   ,get_config_string(section,"ROM","data/rom.rom"));
-    strcpy(MapperFileName,get_config_string(section,"MAPPER","data/mapper.mem"));
+    host_config_parse("./korvet.cfg", arr, ARRAY_SIZE(arr));
 
-    scr_GZU_Size_Mask    =get_config_hex(section,"GZU_Pages",4);
-    scr_GZU_Size_Mask    =(scr_GZU_Size_Mask == 1) ? 0:0x0f;
-
-    OSD_LUT_Flag         =get_config_hex(section,"OSD_LUT",0);
-    OSD_FPS_Flag         =get_config_hex(section,"OSD_FPS",0);
-    OSD_FDD_Flag         =get_config_hex(section,"OSD_FDD",0);
-    OSD_KBD_Flag         =get_config_hex(section,"OSD_KBD",0);
-
-    FlagScreenScale      =get_config_hex(section,"SCALE_WINDOW",0);
-
-    KeyboardLayout       =get_config_hex(section,"KEYBOARD_MODE",KBD_AUTO);
+    scr_GZU_Size_Mask = (scr_GZU_Size_Mask == 1) ? 0 : 0x0f;
 
     #ifdef LAN_SUPPORT
-    // Секция [lan]
-    LAN_Addr              =get_config_hex("lan","ADDR",0);
-    LAN_Addr=(~LAN_Addr)&0xf;
-    strcpy(LAN_ttdev     ,get_config_string("lan","DEVICE",""));
-    //strcpy(LAN_logfile   ,get_config_string("lan","LOG",""));
+    LAN_Addr = (~LAN_Addr) & 0xf;
     #endif
 }
 
