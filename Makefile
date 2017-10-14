@@ -22,7 +22,7 @@ sources = _main.c \
 			dbg/label.c dbg/asm80.c dbg/readwrite.c dbg/sym.c dbg/lbl_korvet.c dbg/comname.c \
 			dbg/gt_main.c
 
-sources += host-config-allegro.c
+sources += host-config.c libconfini/confini.c
 
 objs1	= $(patsubst %.c,%.o,$(sources))
 objs	= $(addprefix objs/,$(objs1))
@@ -41,8 +41,10 @@ clean:
 	rm -rf objs
 	rm -f kdbg
 
-objs objs/dbg:
+objs objs/dbg objs/libconfini:
 	mkdir -p $@
+
+objs/libconfini/confini.o: | objs/libconfini
 
 objs/%.o:	%.c | objs objs/dbg
 	$(CC) $(CFLAGS) -c -o $@ $<
