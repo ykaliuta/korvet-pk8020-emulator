@@ -33,6 +33,7 @@
 #endif
 
 struct main_ctx {
+    bool quitting; /* Main loop exit flag */
     bool turbo;
     /* boost turbo in frames, (50*10) - 10 virtual second */
     unsigned turbo_boot_cnt;
@@ -300,6 +301,63 @@ static bool turbo_update(struct main_ctx *ctx)
     return in_turbomode(ctx);
 }
 
+static void process_kbd(struct main_ctx *ctx)
+{
+    if (key[KEY_F12])
+        ctx->quitting = true;
+
+    if (key[KEY_F7]) {
+        Debug_LUT_start();
+        while (key[KEY_F7])
+            ;
+        Debug_LUT_end();
+    }
+
+    if (key[KEY_F8]) {
+        if ((key_shifts & KB_ALT_FLAG)) {
+            Write_Dump();
+            while ((key_shifts & KB_ALT_FLAG));
+        } else {
+            FlagScreenScale^=1;
+            SCREEN_SetGraphics(SCR_EMULATOR);
+            update_osd();
+        }
+        while (key[KEY_F8]);
+    }
+
+    if (key[KEY_F9]) {
+
+        if (!(key_shifts & KB_ALT_FLAG)) {
+#ifdef DBG
+            while (key[KEY_F9]);
+            dbg_schedule_run();
+#endif
+        } else {
+            while(key[KEY_ALT]);
+            while(key[KEY_F9]);
+            GUI();
+            while(key[KEY_ESC]);
+        }
+    }
+
+    if (key[KEY_F10]) {
+        BW_Flag^=1;
+        LutUpdateFlag=1;
+        while (key[KEY_F10]);
+    }
+
+    if (key[KEY_F11]) {
+        Takt=0;
+        Reset();
+        while(key[KEY_F11]);
+    }
+}
+
+static bool main_quitting(struct main_ctx *ctx)
+{
+    return ctx->quitting;
+}
+
 static void main_loop(void)
 {
     struct main_ctx _ctx;
@@ -307,53 +365,12 @@ static void main_loop(void)
 
     main_ctx_init(ctx);
 
-    while (!key[KEY_F12]) {
+    for (;;) {
+        process_kbd(ctx);
 
-        if (key[KEY_F7]) {
-            Debug_LUT_start();
-            while (key[KEY_F7])
-                ;
-            Debug_LUT_end();
-        }
-
-        if (key[KEY_F8]) {
-            if ((key_shifts & KB_ALT_FLAG)) {
-                Write_Dump();
-                while ((key_shifts & KB_ALT_FLAG));
-            } else {
-                FlagScreenScale^=1;
-                SCREEN_SetGraphics(SCR_EMULATOR);
-                update_osd();
-            }
-            while (key[KEY_F8]);
-        }
-
-        if (key[KEY_F9]) {
-
-            if (!(key_shifts & KB_ALT_FLAG)) {
-    #ifdef DBG
-                while (key[KEY_F9]);
-                dbg_schedule_run();
-    #endif
-            } else {
-                while(key[KEY_ALT]);
-                while(key[KEY_F9]);
-                GUI();
-                while(key[KEY_ESC]);
-            }
-        }
-
-        if (key[KEY_F10]) {
-            BW_Flag^=1;
-            LutUpdateFlag=1;
-            while (key[KEY_F10]);
-        }
-
-        if (key[KEY_F11]) {
-            Takt=0;
-            Reset();
-            while(key[KEY_F11]);
-        }
+        /* Exit here */
+        if (main_quitting(ctx))
+            break;
 
         trace_tick(); /* defined above */
         /* can start debugger if hits breakpoint */
