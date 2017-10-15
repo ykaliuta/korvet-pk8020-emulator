@@ -18,12 +18,15 @@ sources = _main.c \
 			timer.c \
 			wav.c gui.c osd.c \
 			mouse.c joystick.c \
-			ext_rom.c \
-			dbg/dbg.c dbg/_dasm.c dbg/dasm80.c \
+			ext_rom.c
+
+ifneq ($(DBG),no)
+sources += dbg/dbg.c dbg/_dasm.c dbg/dasm80.c \
 			dbg/_dump.c dbg/_regs.c dbg/_help.c \
 			dbg/_history.c dbg/dbg_tools.c dbg/scremul.c dbg/kfonts.c \
 			dbg/label.c dbg/asm80.c dbg/readwrite.c dbg/sym.c dbg/lbl_korvet.c dbg/comname.c \
 			dbg/gt_main.c
+endif
 
 sources += host-config.c libconfini/confini.c
 sources += host.c host-events.c queue.c

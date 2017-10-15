@@ -88,6 +88,20 @@ typedef signed char    offset;
 
 void CPU_Init(void);
 int CPU_Exec1step (void);
+word CPU_GetPC(void);
+word CPU_GetSP(void);
+word CPU_GetHL(void);
+word CPU_GetDE(void);
+word CPU_GetBC(void);
+word CPU_GetAF(void);
+word CPU_GetI(void);
+
+void CPU_SetPC(word Val);
+void CPU_SetSP(word Val);
+void CPU_SetHL(word Val);
+void CPU_SetDE(word Val);
+void CPU_SetBC(word Val);
+void CPU_SetAF(word Val);
 
 void Memory_Init(void);
 void Emulator_Write(int Addres,byte Value);
