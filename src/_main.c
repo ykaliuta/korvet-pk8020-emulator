@@ -147,6 +147,20 @@ void trace_bios(word pc) {
     }
 }
 
+static void trace_tick()
+{
+#ifdef DBG
+    word  __PC=CPU_GetPC();
+
+    if (__PC == 0x0000) CheckROM();
+    else if (__PC == 0xc75c) CheckCCP();
+    else if (__PC == 0xcade) CheckComEXEC();
+
+     /* show special bios events like disk access */
+     /* trace_bios(__PC); */
+
+#endif
+}
 
 static bool turbo_key_pressed(void)
 {
@@ -326,20 +340,9 @@ static void main_loop(void)
             while(key[KEY_F11]);
         }
 
-    #ifdef DBG
-        word  __PC=CPU_GetPC();
-
-        if (__PC == 0x0000) CheckROM();
-        else if (__PC == 0xc75c) CheckCCP();
-        else if (__PC == 0xcade) CheckComEXEC();
-
-        // show special bios events like disk access
-        // trace_bios(__PC);
-
+        trace_tick(); /* defined above */
         /* can start debugger if hits breakpoint */
         dbg_tick();
-
-    #endif
 
         Takt+=CPU_Exec1step();
 
