@@ -62,11 +62,6 @@ extern int AllScreenUpdateFlag;  // Флаг необходимости обно
 
 AUDIOSTREAM *stream;
 
-#ifdef DBG
-extern word dbg_HERE;  // Адрес останова при пошаговом выполнении
-extern int  dbg_TRACE;  // Флаг необходимости вызова отладчика
-#endif
-
 extern const char AboutMSG[];
 
 // timer routine for measuring
@@ -309,7 +304,7 @@ static void main_loop(void)
             if (!(key_shifts & KB_ALT_FLAG)) {
     #ifdef DBG
                 while (key[KEY_F9]);
-                dbg_TRACE=1;
+                dbg_schedule_run();
     #endif
             } else {
                 while(key[KEY_ALT]);
@@ -341,14 +336,8 @@ static void main_loop(void)
         // show special bios events like disk access
         // trace_bios(__PC);
 
-        if (__PC == dbg_HERE) dbg_TRACE=1;
-
-        if (RD_BreakPoint(__PC)&bpCPU) {
-            dbg_TRACE=1;/*TraceCause=4;CauseAddr=CPU_GetPC()*/;
-        }
-        if (dbg_TRACE) doDBG();
-
-        AddPC(__PC);
+        /* can start debugger if hits breakpoint */
+        dbg_tick();
 
     #endif
 

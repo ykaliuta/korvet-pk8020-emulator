@@ -192,6 +192,11 @@ void CheckComEXEC(void);
 
 void dbg_INIT(void);
 void doDBG(void);
+#ifdef DBG
+void dbg_tick(void);
+#else
+static inline void dbg_tick(void) {};
+#endif
 
 void LAN_Init(void);
 void LAN_Write(int Addr,byte Value);

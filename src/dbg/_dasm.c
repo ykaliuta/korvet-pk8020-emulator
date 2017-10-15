@@ -25,8 +25,6 @@
 #include <allegro.h>
 
 extern struct CPUREG dbg_REG;
-extern int           dbg_TRACE;   //если =1 то остановится ПЕРЕД выполнением комманды
-extern word          dbg_HERE;    //адрес остановки при нажатии клавиши F4 (HERE)
 
 /*
    int           Y;       // Y координата курсора в окне (0..YLine) относительно окна
@@ -199,7 +197,7 @@ int _DASM(int Key) {
                        break;
                       }
        case KEY_F4:   {
-                       dbg_HERE=Addr;
+                       dbg_breakpoint_set(Addr);
                        Key=KEY_F9<<8; // emulate RUN
                        break;
                       }

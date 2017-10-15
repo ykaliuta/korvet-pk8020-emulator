@@ -28,12 +28,6 @@
 
 //#include "i8080.h"
 
-
-#ifdef DBG
-extern word dbg_HERE;  // Адрес останова при пошаговом выполнении
-extern int  dbg_TRACE;  // Флаг необходимости вызова отладчика
-#endif
-
 char RomFileName[1024]="data/rom.rom";
 char MapperFileName[1024]="data/mapper.mem";
 #define noDEBUG_MEMORY
@@ -123,7 +117,9 @@ void Emulator_Write(int Addres,byte Value)
 {
   int RamType;
 #ifdef DBG
-  if (!InDBG && (BreakPoint[Addres] & bpWRMEM) )  {dbg_TRACE=1;} // SetTrace
+  if (!InDBG && (BreakPoint[Addres] & bpWRMEM) )  {
+      dbg_schedule_run();
+  } // SetTrace
 #endif
 
 
@@ -177,7 +173,9 @@ byte Emulator_Read(int Addres)
   int RamType;
 
 #ifdef DBG
-  if (!InDBG && (BreakPoint[Addres] & bpRDMEM) ) {dbg_TRACE=1;} // SetTrace
+  if (!InDBG && (BreakPoint[Addres] & bpRDMEM) ) {
+      dbg_schedule_run();
+  } // SetTrace
 #endif
   // чтение из памяти - 85% времени
   if ( 0 == (RamType=MemMapper[SYSREG][(Addres&0xff00)>>8])) {

@@ -22,6 +22,7 @@
 #include "dbg.h"
 #include "../korvet.h"
 
+#include <stdbool.h>
 
 extern int SCREEN_OFFX;
 extern int SCREEN_OFFY;
@@ -45,8 +46,8 @@ void NormPC();
 int (*_dbg[MAXDBG])(int Key)={_REGS,_DASM,_DUMP};
 int  dbgMODE =1;    //текущий режим отладчика.
 
-int  dbg_TRACE=0;   //если =1 то остановится ПЕРЕД выполнением комманды
-word dbg_HERE =0xffff;   //адрес остановки при нажатии клавиши F4 (HERE)
+static int  dbg_TRACE=0;   //если =1 то остановится ПЕРЕД выполнением комманды
+static word dbg_HERE =0xffff;   //адрес остановки при нажатии клавиши F4 (HERE)
 int  InDBG    =0;
 
 // =1 if CALL      0 1 2 3 4 5 6 7 8 9 a b c d e f
@@ -269,11 +270,18 @@ void doDBG(void) {
 
     switch (Key) {
 
-      case (KEY_F7  <<8)         : {dbg_TRACE=1;Exit=1;break;}
-      case (KEY_F8  <<8)         : {if (TCall[Emulator_Read(dbg_REG.PC)]) dbg_HERE=dbg_REG.PC+GetCmdLen(dbg_REG.PC);
-                                    else dbg_TRACE=1;
-                                    Exit=1;break;
-                                   }
+      case (KEY_F7  <<8)         : {
+          dbg_schedule_run();
+          Exit=1;
+          break;
+      }
+      case (KEY_F8  <<8)           : {
+          if (TCall[Emulator_Read(dbg_REG.PC)])
+              dbg_breakpoint_set(dbg_REG.PC+GetCmdLen(dbg_REG.PC));
+          else dbg_schedule_run();
+          Exit=1;
+          break;
+      }
       case (KEY_F9  <<8)         : {Exit=1;break;}
       case (KEY_F10 <<8)         : {BW_Flag^=1;break;}
     }
@@ -298,3 +306,33 @@ void doDBG(void) {
   DBG_Pallete_Pasive();
 }
 
+void dbg_schedule_run(void)
+{
+    dbg_TRACE = true;
+}
+
+static bool dbg_run_scheduled(void)
+{
+    return dbg_TRACE;
+}
+
+void dbg_breakpoint_set(word Addr)
+{
+    dbg_HERE = Addr;
+}
+
+void dbg_tick(void)
+{
+        word  __PC=CPU_GetPC();
+
+        if (__PC == dbg_HERE)
+            dbg_schedule_run();
+
+        if (RD_BreakPoint(__PC) & bpCPU)
+            dbg_schedule_run();
+
+        if (dbg_run_scheduled())
+            doDBG();
+
+        AddPC(__PC);
+}

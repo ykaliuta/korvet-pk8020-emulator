@@ -208,4 +208,7 @@ void Set_DASMAddr(word Addr);
 void draw_hline(int x,int y,int len,int color);
 void draw_vline(int x,int y,int len,int color);
 
+void dbg_schedule_run(void);
+void dbg_breakpoint_set(word Addr);
+
 #endif
