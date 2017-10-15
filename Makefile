@@ -3,6 +3,9 @@ LDLIBS = $(shell pkg-config allegro --libs)
 CFLAGS = -g -Isrc
 CFLAGS += -Wall -Wno-deprecated-declarations
 
+# can update CFLAGS
+-include config.mk
+
 sources = _main.c \
 			tools.c \
 			vg.c \

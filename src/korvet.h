@@ -52,15 +52,6 @@
 /*code specific to mingw compilers*/
 #endif
 
-
-#define LAN_SUPPORT
-
-#define DBG
-#define noEGA
-#define SOUND
-#define noWAV
-#define noTRACETIMER
-
 #define RAMSIZE         (64*1024)
 
 #define PLANESIZE 	16384
