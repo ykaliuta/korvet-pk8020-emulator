@@ -48,8 +48,6 @@ int  dbgMODE =1;    //текущий режим отладчика.
 int  dbg_TRACE=0;   //если =1 то остановится ПЕРЕД выполнением комманды
 word dbg_HERE =0xffff;   //адрес остановки при нажатии клавиши F4 (HERE)
 int  InDBG    =0;
-int  dbg_Cause=0;
-int  dbg_CauseAddr=0;
 
 // =1 if CALL      0 1 2 3 4 5 6 7 8 9 a b c d e f
 byte  TCall[256]= {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00

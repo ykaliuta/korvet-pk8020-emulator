@@ -32,8 +32,6 @@
 #ifdef DBG
 extern word dbg_HERE;  // Адрес останова при пошаговом выполнении
 extern int  dbg_TRACE;  // Флаг необходимости вызова отладчика
-extern int  dbg_Cause;
-extern int  dbg_CauseAddr;
 #endif
 
 char RomFileName[1024]="data/rom.rom";
@@ -125,7 +123,7 @@ void Emulator_Write(int Addres,byte Value)
 {
   int RamType;
 #ifdef DBG
-  if (!InDBG && (BreakPoint[Addres] & bpWRMEM) )  {dbg_TRACE=1;dbg_Cause=3;dbg_CauseAddr=Addres;} // SetTrace
+  if (!InDBG && (BreakPoint[Addres] & bpWRMEM) )  {dbg_TRACE=1;} // SetTrace
 #endif
 
 
@@ -179,7 +177,7 @@ byte Emulator_Read(int Addres)
   int RamType;
 
 #ifdef DBG
-  if (!InDBG && (BreakPoint[Addres] & bpRDMEM) ) {dbg_TRACE=1;dbg_Cause=2;dbg_CauseAddr=Addres;} // SetTrace
+  if (!InDBG && (BreakPoint[Addres] & bpRDMEM) ) {dbg_TRACE=1;} // SetTrace
 #endif
   // чтение из памяти - 85% времени
   if ( 0 == (RamType=MemMapper[SYSREG][(Addres&0xff00)>>8])) {
