@@ -516,8 +516,6 @@ int main(int argc,char **argv) {
 
     main_loop();
 
-    host_shutdown();
-
     #ifdef WAV
     CloseWAV();
     #endif
@@ -526,6 +524,9 @@ int main(int argc,char **argv) {
     DestroyPrinter();
     SCREEN_SetText();
     DestroyTimer();
+
+    host_shutdown();
+    allegro_exit();
 
     #ifdef LAN_SUPPORT
     if (LAN_Addr == 0x0f) { // remove ptx file only when RMU
