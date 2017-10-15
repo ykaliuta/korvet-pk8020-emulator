@@ -62,10 +62,6 @@ extern int AllScreenUpdateFlag;  // Флаг необходимости обно
 
 AUDIOSTREAM *stream;
 
-#ifdef TRACETIMER
-FILE *F_TIMER;
-#endif
-
 #ifdef DBG
 extern word dbg_HERE;  // Адрес останова при пошаговом выполнении
 extern int  dbg_TRACE;  // Флаг необходимости вызова отладчика
@@ -376,9 +372,8 @@ static void main_loop(void)
 
             ChkMouse();
 
-    #ifdef TRACETIMER
-            fprintf(F_TIMER,"V: %08d\n",Takt);
-    #endif
+            TimerTrace("V: %08d\n",Takt);
+
             if (LutUpdateFlag) LUT_Update(BW_Flag);
             SCREEN_ShowScreen();
 
@@ -472,10 +467,7 @@ int main(int argc,char **argv) {
     LAN_Init();
     #endif
 
-    #ifdef TRACETIMER
-    F_TIMER=fopen("_timer.log","wb");
-    setlinebuf(F_TIMER);
-    #endif
+    InitTimer();
 
     #ifdef WAV
     OpenWAV("korvet.wav");
@@ -509,19 +501,13 @@ int main(int argc,char **argv) {
     DestroyOSD();
     DestroyPrinter();
     SCREEN_SetText();
-
-    printf("\n\n\n%s\n",AboutMSG);
-
-    #ifdef TRACETIMER
-    fclose(F_TIMER);
-    #endif
+    DestroyTimer();
 
     #ifdef LAN_SUPPORT
     if (LAN_Addr == 0x0f) { // remove ptx file only when RMU
         unlink(LAN_PTX_FILE);
     }
     #endif
-
 
     return 0;
 }

@@ -150,11 +150,18 @@ byte RS232_Read(int Addr);
 void AddSerialQueue(byte b);
 
 void InitTMR(void);
+void InitTimer(void);
+void DestroyTimer(void);
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
 void MakeSound(void);
 int DoTimer(void);
 void Timer50HzTick(void);
+#ifdef TRACETIMER
+int TimerTrace(const char *fmt, ...);
+#else
+#define TimerTrace(...)
+#endif
 
 void InitOSD(void);
 void DestroyOSD(void);

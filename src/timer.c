@@ -20,13 +20,14 @@
  *
  */
 #include "korvet.h"
+#include <stdarg.h>
+#include <stdio.h>
 
 //extern screen,font;
 #ifdef TRACETIMER
 extern int Takt;
-extern FILE *F_TIMER;
+static FILE *F_TIMER;
 #endif
-
 
 // -------------------------------------------------------------------------
 // Переменная из модуля Звука (Флаг разрешения звука)
@@ -377,20 +378,16 @@ int DoTimer(void){
 
 byte Timer_Read(int Addr)
 {
- static unsigned short ret=0;
-#ifdef TRACETIMER
- fprintf(F_TIMER,"R: %08d %04x\n",Takt,Addr);
-#endif
- //DoTimer();
- return ret++;
+    static unsigned short ret;
+
+    TimerTrace("R: %08d %04x\n",Takt,Addr);
+    return ret++;
 }
 
 
 void Timer_Write(int Addr, byte Value)
 {
-#ifdef TRACETIMER
- fprintf(F_TIMER,"W: %08d %04x=%02x\n",Takt,Addr,Value);
-#endif
+  TimerTrace("W: %08d %04x=%02x\n",Takt,Addr,Value);
 //  if (Addr&3 == 0) DoTimer();
 //  if (Addr&3 == 3) DoTimer();
   DoTimer();
@@ -432,5 +429,32 @@ void Timer50HzTick(void)
   PrevTakt -= ALL_TAKT;
 }
 
-// ---------------------------------------------------------
+void InitTimer(void)
+{
+#ifdef TRACETIMER
+    F_TIMER=fopen("_timer.log","wb");
+    setlinebuf(F_TIMER);
+#endif
+}
 
+void DestroyTimer(void)
+{
+#ifdef TRACETIMER
+    fclose(F_TIMER);
+#endif
+}
+
+#ifdef TRACETIMER
+int TimerTrace(const char *fmt, ...)
+{
+    va_list ap;
+    int ret;
+
+    va_start(ap, fmt);
+    ret = vfprintf(F_TIMER, fmt, ap);
+    va_end(ap);
+
+    return ret;
+}
+#endif
+// ---------------------------------------------------------

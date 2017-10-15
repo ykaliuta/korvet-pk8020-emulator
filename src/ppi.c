@@ -25,11 +25,6 @@
 
 #define noPPI_DEBUG
 
-#ifdef TRACETIMER
-extern int Takt;
-extern FILE *F_TIMER;
-#endif
-
 extern char  control_flag;
 
 extern int SYSREG;
@@ -176,9 +171,7 @@ void Disassemble_PPI2C(int Value)
     SoundEnable=tSoundEnable;
     oldState_SoundEnable=SoundEnable;
 
-    #ifdef TRACETIMER
-    fprintf(F_TIMER,"S: %08d %d\n",Takt,SoundEnable);
-    #endif
+    TimerTrace("S: %08d %d\n",Takt,SoundEnable);
 }
 
 int Assemble_PPI2C(void)
