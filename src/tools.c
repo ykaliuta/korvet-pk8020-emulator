@@ -73,15 +73,20 @@ extern int JoystickNumber;
 extern int MouseType; //1 - MSMouse, 2-MouseSystem
 
 
-void Debug_LUT(int Debug_Key) {
-    byte SaveLut[16];
-    byte i;
+static byte SaveLut[16];
+void Debug_LUT_start(void)
+{
+    int i;
     for (i=0; i<16; i++) {
         SaveLut[i]=LUT[i];
         LUT[i]=i;
     }
     LUT_Update(BW_Flag);
-    while (key[Debug_Key]);
+}
+
+void Debug_LUT_end(void)
+{
+    int i;
     for (i=0; i<16; i++) {
         LUT[i]=SaveLut[i];
     }

@@ -192,7 +192,8 @@ void Init_Joystick(void);
 int Read_Joystick(void);
 
 void update_rus_lat(void);
-void Debug_LUT(int Debug_Key);
+void Debug_LUT_start(void);
+void Debug_LUT_end(void);
 void Write_Dump(void);
 void MUTE_BUF(void);
 void ReadConfig(void);

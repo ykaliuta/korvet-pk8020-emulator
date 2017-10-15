@@ -298,7 +298,10 @@ static void main_loop(void)
     while (!key[KEY_F12]) {
 
         if (key[KEY_F7]) {
-            Debug_LUT(KEY_F7);
+            Debug_LUT_start();
+            while (key[KEY_F7])
+                ;
+            Debug_LUT_end();
         }
 
         if (key[KEY_F8]) {
