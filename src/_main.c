@@ -20,6 +20,8 @@
  *
  */
 
+#define pr_fmt(fmt) "Main: " fmt
+
 #include "korvet.h"
 #include "host.h"
 #include "vg.h"
@@ -155,10 +157,139 @@ void trace_bios(word pc) {
 }
 
 
-static void main_loop(void) {
+static bool turbo_key_pressed(void)
+{
+    return key[KEY_F6] != 0;
+}
+
+static bool in_turboboot(void)
+{
+    return turboBOOT > 0;
+}
+
+static void turboboot_tick(void)
+{
+    turboBOOT--;
+}
+
+/* returns if the mode has been just changed */
+static bool turbomode_set(bool enable)
+{
+    bool old = flagTURBO;
+
+    flagTURBO = enable;
+    return old != flagTURBO;
+}
+
+static bool turboboot_disable(void)
+{
+    turboBOOT = 0;
+    return turbomode_set(false);
+}
+
+static bool in_turbomode(void)
+{
+    return flagTURBO != 0;
+}
+
+static bool turbomode_update(void)
+{
+    bool turbo_key = turbo_key_pressed();
+
+    if (in_turboboot() && turbo_key) {
+        pr_vdebug("Turbo key pressed, disabling turbo boot\n");
+        return turboboot_disable();
+    }
+
+    if (in_turboboot()) { /* and no KEY */
+        turboboot_tick();
+        return false;
+    }
+
+    /* normal turbo mode, enabled while the key is pressed */
+    return turbomode_set(turbo_key);
+}
+
+static bool turbo_enabling(bool changed)
+{
+    return changed && in_turbomode();
+}
+
+#ifdef SOUND
+
+static void sound_mute_set(bool enable)
+{
+    MuteFlag = enable;
+}
+
+static bool sound_muted(void)
+{
+    return MuteFlag;
+}
+
+static void sound_update(bool in_turbo, bool changed)
+{
     unsigned char *p;
 
+    sound_mute_set(in_turbo);
+
+    if (in_turbo && changed) {
+            MUTE_BUF();
+            MUTE_BUF();
+            MUTE_BUF();
+            MUTE_BUF();
+            MUTE_BUF();
+            MUTE_BUF();
+    }
+
+    /* It updates counter's buffer even on mute */
+    MakeSound();
+
+    if (sound_muted())
+        return;
+
+    while (!(p = get_audio_stream_buffer(stream)))  rest(0);
+    memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
+#ifdef WAV
+    AddWAV(p,AUDIO_BUFFER_SIZE);
+#endif
+    free_audio_stream_buffer(stream);
+}
+#else
+static inline void sound_update(bool in_turbo, bool changed) {};
+static void sound_mute_set(bool enable) {};
+#endif
+
+static void update_init_state(void)
+{
     Takt=0;
+
+    if (in_turboboot()) {
+        pr_vdebug("Turbo boot enabled (%d), enabling turbo mode\n",
+                  turboBOOT);
+        turbomode_set(true);
+        sound_mute_set(true);
+    }
+}
+
+static bool turbo_update(void)
+{
+    bool turbo_changed;
+
+    turbo_changed = turbomode_update();
+
+    if (turbo_enabling(turbo_changed))
+        AllScreenUpdateFlag=1;
+
+    sound_update(in_turbomode(), turbo_changed);
+
+    return in_turbomode();
+}
+
+static void main_loop(void)
+{
+    update_init_state();
+
     while (!key[KEY_F12]) {
 
         if (key[KEY_F7]) {
@@ -233,49 +364,12 @@ static void main_loop(void) {
 
         if (Takt>=ALL_TAKT) {
             Timer50HzTick();
-    #ifdef SOUND
-            // turboBOOT implementation, frames counter
-            if (turboBOOT > 0) {
-                turboBOOT -= 1;
-                flagTURBO  = 1;
-                //stop turboBOOT if F6 presset
-                if (key[KEY_F6]) {
-                    turboBOOT=0;
-                }
-            } else {
-                flagTURBO = key[KEY_F6];
+
+            if (!turbo_update()) {
+                while (!Counter50hz)
+                    rest(0);
             }
 
-            if (!flagTURBO) {
-                // были в MUTE перед этим
-                if (MuteFlag==1) {
-                    AllScreenUpdateFlag=1;
-                }
-
-                MuteFlag=0;
-                MakeSound();
-
-                while (!(p = get_audio_stream_buffer(stream)))  rest(0);
-                memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
-    #ifdef WAV
-                AddWAV(p,AUDIO_BUFFER_SIZE);
-    #endif
-                free_audio_stream_buffer(stream);
-                while (!Counter50hz) rest(0);
-            } else {
-                if (MuteFlag == 0) {
-                    // mute sund
-                    MUTE_BUF();
-                    MUTE_BUF();
-                    MUTE_BUF();
-                    MUTE_BUF();
-                    MUTE_BUF();
-                    MUTE_BUF();
-                }
-                MuteFlag=1;
-                MakeSound();
-            }
-   #endif
             Counter50hz=0;
 
             PIC_IntRequest(4);
