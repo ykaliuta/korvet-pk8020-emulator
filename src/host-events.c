@@ -57,8 +57,15 @@ bool host_event_pop(struct host_event *ev)
 
 void host_event_push(struct host_event *ev)
 {
+    char *str;
+
     while (queue_is_full(event_queue))
         pr_once("Event queue got stuck\n");
+
+    str = host_event_to_str(ev);
+    pr_vdebug("pushing event: %s\n", str);
+    free(str);
+
     queue_push(event_queue, ev);
 }
 
@@ -124,6 +131,8 @@ static void key_callback(int event)
     enum key_mods mod;
     struct host_event ev;
     enum event_type ev_type;
+
+    pr_vdebug("key callback for scancode %d\n", scancode);
 
     mod = host_scancode_to_mod(scancode);
     is_mod = (mod != HOST_MOD_NONE);
