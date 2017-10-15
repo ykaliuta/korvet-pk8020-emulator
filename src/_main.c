@@ -32,6 +32,12 @@
 #include "dbg/dbg.h"
 #endif
 
+struct main_ctx {
+    bool turbo;
+    /* boost turbo in frames, (50*10) - 10 virtual second */
+    unsigned turbo_boot_cnt;
+};
+
 int verbose;
 
 int VBLANK=0;
@@ -46,8 +52,7 @@ int FPS_Scr=0;
 int FPS_LED=0;
 int Counter50hz=0;		// 50 hz synchronization counter
 
-int flagTURBO;
-int turboBOOT=0;        // boost turbo in frames, (50*10) - 10 virtual second
+int turboBOOT; /* gets cmdline value here */
 
 extern int KBD_LED;                  // RusEngFlag
 
@@ -162,62 +167,62 @@ static void trace_tick()
 #endif
 }
 
-static bool turbo_key_pressed(void)
+static bool turbo_key_pressed(struct main_ctx *ctx)
 {
     return key[KEY_F6] != 0;
 }
 
-static bool in_turboboot(void)
+static bool in_turboboot(struct main_ctx *ctx)
 {
-    return turboBOOT > 0;
+    return ctx->turbo_boot_cnt > 0;
 }
 
-static void turboboot_tick(void)
+static void turboboot_tick(struct main_ctx *ctx)
 {
-    turboBOOT--;
+    ctx->turbo_boot_cnt--;
 }
 
 /* returns if the mode has been just changed */
-static bool turbomode_set(bool enable)
+static bool turbomode_set(struct main_ctx *ctx, bool enable)
 {
-    bool old = flagTURBO;
+    bool old = ctx->turbo;
 
-    flagTURBO = enable;
-    return old != flagTURBO;
+    ctx->turbo = enable;
+    return old != ctx->turbo;
 }
 
-static bool turboboot_disable(void)
+static bool turboboot_disable(struct main_ctx *ctx)
 {
-    turboBOOT = 0;
-    return turbomode_set(false);
+    ctx->turbo_boot_cnt = 0;
+    return turbomode_set(ctx, false);
 }
 
-static bool in_turbomode(void)
+static bool in_turbomode(struct main_ctx *ctx)
 {
-    return flagTURBO != 0;
+    return ctx->turbo;
 }
 
-static bool turbomode_update(void)
+static bool turbomode_update(struct main_ctx *ctx)
 {
-    bool turbo_key = turbo_key_pressed();
+    bool turbo_key = turbo_key_pressed(ctx);
 
-    if (in_turboboot() && turbo_key) {
+    if (in_turboboot(ctx) && turbo_key) {
         pr_vdebug("Turbo key pressed, disabling turbo boot\n");
-        return turboboot_disable();
+        return turboboot_disable(ctx);
     }
 
-    if (in_turboboot()) { /* and no KEY */
-        turboboot_tick();
+    if (in_turboboot(ctx)) { /* and no KEY */
+        turboboot_tick(ctx);
         return false;
     }
 
     /* normal turbo mode, enabled while the key is pressed */
-    return turbomode_set(turbo_key);
+    return turbomode_set(ctx, turbo_key);
 }
 
-static bool turbo_enabling(bool changed)
+static bool turbo_enabling(struct main_ctx *ctx, bool changed)
 {
-    return changed && in_turbomode();
+    return changed && in_turbomode(ctx);
 }
 
 #ifdef SOUND
@@ -265,35 +270,42 @@ static inline void sound_update(bool in_turbo, bool changed) {};
 static void sound_mute_set(bool enable) {};
 #endif
 
-static void update_init_state(void)
+static void main_ctx_init(struct main_ctx *ctx)
 {
+    /* hopefully will be moved to some local context */
     Takt=0;
 
-    if (in_turboboot()) {
+    memset(ctx, 0, sizeof(*ctx));
+    ctx->turbo_boot_cnt = turboBOOT;
+
+    if (in_turboboot(ctx)) {
         pr_vdebug("Turbo boot enabled (%d), enabling turbo mode\n",
                   turboBOOT);
-        turbomode_set(true);
+        turbomode_set(ctx, true);
         sound_mute_set(true);
     }
 }
 
-static bool turbo_update(void)
+static bool turbo_update(struct main_ctx *ctx)
 {
     bool turbo_changed;
 
-    turbo_changed = turbomode_update();
+    turbo_changed = turbomode_update(ctx);
 
-    if (turbo_enabling(turbo_changed))
+    if (turbo_enabling(ctx, turbo_changed))
         AllScreenUpdateFlag=1;
 
-    sound_update(in_turbomode(), turbo_changed);
+    sound_update(in_turbomode(ctx), turbo_changed);
 
-    return in_turbomode();
+    return in_turbomode(ctx);
 }
 
 static void main_loop(void)
 {
-    update_init_state();
+    struct main_ctx _ctx;
+    struct main_ctx *ctx = &_ctx;
+
+    main_ctx_init(ctx);
 
     while (!key[KEY_F12]) {
 
@@ -356,7 +368,7 @@ static void main_loop(void)
         if (Takt>=ALL_TAKT) {
             Timer50HzTick();
 
-            if (!turbo_update()) {
+            if (!turbo_update(ctx)) {
                 while (!Counter50hz)
                     rest(0);
             }
