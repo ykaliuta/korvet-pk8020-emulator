@@ -19,14 +19,31 @@
 #ifndef _HOST_EVENTS_H_
 #define _HOST_EVENTS_H_
 
+#include "host.h"
 #include <stdbool.h>
 
 enum event_type {
     HOST_NOTHING = 0,
+    HOST_KEY_DOWN = 1,
+    HOST_KEY_UP,
+};
+
+/* bit positions and constants, so keep 0 free */
+enum key_mods {
+    HOST_MOD_NONE = 0,
+    HOST_MOD_SHIFT = 1,
+    HOST_MOD_ALT = 2,
+    HOST_MOD_CTRL = 3,
 };
 
 struct host_event {
     enum event_type type;
+    union {
+        struct key_event {
+            bitmap_t mods;
+            int code;
+        } key;
+    };
 };
 
 int host_events_init(void);

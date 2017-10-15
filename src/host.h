@@ -23,6 +23,8 @@
 #ifndef _HOST_HOST_H_
 #define _HOST_HOST_H_
 
+typedef unsigned int bitmap_t;
+
 #include "host-config.h"
 #include "host-events.h"
 
