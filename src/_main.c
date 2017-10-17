@@ -301,55 +301,107 @@ static bool turbo_update(struct main_ctx *ctx)
     return in_turbomode(ctx);
 }
 
+typedef void (*key_handler)(struct main_ctx *ctx, int key);
+
+static void handle_quit(struct main_ctx *ctx, int key)
+{
+    ctx->quitting = true;
+}
+
+static void handle_dump(struct main_ctx *ctx, int key)
+{
+    Write_Dump();
+}
+
+static void handle_scale(struct main_ctx *ctx, int key)
+{
+    FlagScreenScale ^= 1;
+    SCREEN_SetGraphics(SCR_EMULATOR);
+    update_osd();
+}
+
+static void handle_debug_lut_start(struct main_ctx *ctx, int key)
+{
+    Debug_LUT_start();
+}
+static void handle_debug_lut_end(struct main_ctx *ctx, int key)
+{
+    Debug_LUT_end();
+}
+
+static void handle_dbg(struct main_ctx *ctx, int key)
+{
+#ifdef DBG
+    dbg_schedule_run();
+#endif
+}
+
+static void handle_gui(struct main_ctx *ctx, int key)
+{
+    GUI();
+}
+
+static void handle_bw(struct main_ctx *ctx, int key)
+{
+    BW_Flag ^= 1;
+    LutUpdateFlag = 1;
+}
+
+static void handle_reset(struct main_ctx *ctx, int key)
+{
+    Takt=0;
+    Reset();
+}
+
+static key_handler keys_nomods[] = {
+    [KEY_F7] = handle_debug_lut_start,
+    [KEY_F8] = handle_scale,
+    [KEY_F9] = handle_dbg,
+    [KEY_F10] = handle_bw,
+    [KEY_F11] = handle_reset,
+    [KEY_F12] = handle_quit,
+};
+
+static key_handler keys_up_nomods[] = {
+    [KEY_F7] = handle_debug_lut_end,
+};
+static key_handler keys_alt[] = {
+    [KEY_F8] = handle_dump,
+    [KEY_F9] = handle_gui,
+};
+
+static key_handler *key_handlers[HOST_KEY_MAX][HOST_MOD_MAX] = {
+    [HOST_KEY_DOWN][HOST_MOD_NONE] = keys_nomods,
+    [HOST_KEY_DOWN][HOST_MOD_ALT] = keys_alt,
+    [HOST_KEY_UP][HOST_MOD_NONE] = keys_up_nomods,
+};
+
 static void process_kbd(struct main_ctx *ctx)
 {
-    if (key[KEY_F12])
-        ctx->quitting = true;
+    struct host_event ev;
+    key_handler *handlers = NULL;
+    key_handler handler = NULL;
 
-    if (key[KEY_F7]) {
-        Debug_LUT_start();
-        while (key[KEY_F7])
-            ;
-        Debug_LUT_end();
-    }
+    if (!host_event_pop(&ev))
+        return;
 
-    if (key[KEY_F8]) {
-        if ((key_shifts & KB_ALT_FLAG)) {
-            Write_Dump();
-            while ((key_shifts & KB_ALT_FLAG));
-        } else {
-            FlagScreenScale^=1;
-            SCREEN_SetGraphics(SCR_EMULATOR);
-            update_osd();
-        }
-        while (key[KEY_F8]);
-    }
+    switch (ev.type) {
+    case HOST_KEY_DOWN:
+    case HOST_KEY_UP:
+        if (ev.key.mods == 0)
+            handlers = key_handlers[ev.type][HOST_MOD_NONE];
+        else if (BIT_TEST(ev.key.mods, HOST_MOD_ALT))
+            handlers = key_handlers[ev.type][HOST_MOD_ALT];
 
-    if (key[KEY_F9]) {
+        if (handlers != NULL)
+            handler = handlers[ev.key.code];
 
-        if (!(key_shifts & KB_ALT_FLAG)) {
-#ifdef DBG
-            while (key[KEY_F9]);
-            dbg_schedule_run();
-#endif
-        } else {
-            while(key[KEY_ALT]);
-            while(key[KEY_F9]);
-            GUI();
-            while(key[KEY_ESC]);
-        }
-    }
+        if (handler != NULL)
+            handler(ctx, ev.key.code);
 
-    if (key[KEY_F10]) {
-        BW_Flag^=1;
-        LutUpdateFlag=1;
-        while (key[KEY_F10]);
-    }
-
-    if (key[KEY_F11]) {
-        Takt=0;
-        Reset();
-        while(key[KEY_F11]);
+        break;
+    default:
+        pr_error("Unhandled event\n");
     }
 }
 

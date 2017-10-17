@@ -28,12 +28,15 @@ enum event_type {
     HOST_KEY_UP,
 };
 
+#define HOST_KEY_MAX (HOST_KEY_UP + 1)
+
 /* bit positions and constants, so keep 0 free */
 enum key_mods {
     HOST_MOD_NONE = 0,
     HOST_MOD_SHIFT = 1,
     HOST_MOD_ALT = 2,
     HOST_MOD_CTRL = 3,
+    HOST_MOD_MAX,
 };
 
 struct host_event {

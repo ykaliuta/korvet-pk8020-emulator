@@ -1,6 +1,6 @@
 
 LDLIBS = $(shell pkg-config allegro --libs)
-CFLAGS = -g -Isrc
+CFLAGS = -g -O0 -Isrc
 CFLAGS += -Wall -Wno-deprecated-declarations
 
 # can update CFLAGS
