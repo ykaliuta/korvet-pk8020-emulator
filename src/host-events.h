@@ -55,5 +55,7 @@ void host_event_wait(struct host_event *ev);
 bool host_event_pop(struct host_event *ev);
 void host_event_push(struct host_event *ev);
 char *host_event_to_str(struct host_event *ev);
+void host_events_pause(void);
+void host_events_resume(void);
 
 #endif

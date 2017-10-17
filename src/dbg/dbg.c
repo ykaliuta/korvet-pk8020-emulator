@@ -21,6 +21,7 @@
  */
 #include "dbg.h"
 #include "../korvet.h"
+#include "../host.h"
 
 #include <stdbool.h>
 
@@ -331,8 +332,11 @@ void dbg_tick(void)
         if (RD_BreakPoint(__PC) & bpCPU)
             dbg_schedule_run();
 
-        if (dbg_run_scheduled())
+        if (dbg_run_scheduled()) {
+            host_events_pause();
             doDBG();
+            host_events_resume();
+        }
 
         AddPC(__PC);
 }

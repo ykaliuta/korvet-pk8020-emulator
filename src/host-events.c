@@ -42,6 +42,7 @@
 /* Globals */
 static struct queue *event_queue;
 static bitmap_t current_mods;
+static bool paused;
 
 void host_event_wait(struct host_event *ev)
 {
@@ -58,6 +59,9 @@ bool host_event_pop(struct host_event *ev)
 void host_event_push(struct host_event *ev)
 {
     char *str;
+
+    if (paused)
+        return;
 
     while (queue_is_full(event_queue))
         pr_once("Event queue got stuck\n");
@@ -149,6 +153,16 @@ static void key_callback(int event)
 
     host_event_kbd_init(&ev, ev_type, current_mods, scancode);
     host_event_push(&ev);
+}
+
+void host_events_pause(void)
+{
+    paused = true;
+}
+
+void host_events_resume(void)
+{
+    paused = false;
 }
 
 int host_events_init(void)
