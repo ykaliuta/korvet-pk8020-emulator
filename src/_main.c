@@ -410,6 +410,28 @@ static bool main_quitting(struct main_ctx *ctx)
     return ctx->quitting;
 }
 
+static void main_50hz_tick(struct main_ctx *ctx)
+{
+    Counter50hz=0;
+
+    PIC_IntRequest(4);
+
+    ChkMouse();
+
+    TimerTrace("V: %08d\n",Takt);
+
+    if (LutUpdateFlag) LUT_Update(BW_Flag);
+    SCREEN_ShowScreen();
+
+    FPS++;
+
+    Takt-=ALL_TAKT;
+
+    update_osd();
+
+    // update_rus_lat();
+}
+
 static void main_loop(void)
 {
     struct main_ctx _ctx;
@@ -442,24 +464,7 @@ static void main_loop(void)
                     rest(0);
             }
 
-            Counter50hz=0;
-
-            PIC_IntRequest(4);
-
-            ChkMouse();
-
-            TimerTrace("V: %08d\n",Takt);
-
-            if (LutUpdateFlag) LUT_Update(BW_Flag);
-            SCREEN_ShowScreen();
-
-            FPS++;
-
-            Takt-=ALL_TAKT;
-
-            update_osd();
-
-            // update_rus_lat();
+            main_50hz_tick(ctx);
         }
     }
 }
