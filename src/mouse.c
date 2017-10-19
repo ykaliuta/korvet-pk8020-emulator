@@ -24,39 +24,17 @@
 
 int MouseType = 1; //0 - disabled, 1 - MSMouse, 2-MouseSystem
 
-int mickeyx = 0;
-int mickeyy = 0;
-int btn=0;
+static int mickeyx = 0;
+static int mickeyy = 0;
+static int btn=0;
 
-int mickeyx2 = 0;
-int mickeyy2 = 0;
-int btn2=0;
+static int mickeyx2 = 0;
+static int mickeyy2 = 0;
+static int btn2=0;
 
-int k_mousex = 0;
-int k_mousey = 0;
-int k_mouseb = 0;
-
-void ChkMouse_Microsoft(void);
-void ChkMouse_MouseSystem(void);
-
-
-/*
-TODO: додбавить автодетект мыши
-если проинитились таймер и ви51
-
-  ви53
-  *(char *) 0xfb01 = 0x68;
-  *(char *) 0xfb01 = 0;
-
-  вв51
-  *(char *) 0xfb11 = 0x35;
-*/
-
-void ChkMouse(void) {
-  if (MouseType == 1) ChkMouse_Microsoft();
-  if (MouseType == 2) ChkMouse_MouseSystem();
-}
-
+/* static int k_mousex = 0; */
+/* static int k_mousey = 0; */
+/* static int k_mouseb = 0; */
 
 /*
                1st byte        2nd byte         3rd byte
@@ -74,38 +52,39 @@ void ChkMouse(void) {
 Right Button ────┘            X increment      Y increment
 */
 
-void ChkMouse_Microsoft(void) {
-  static unsigned char b1,b2,b3;
+static void ChkMouse_Microsoft(void)
+{
+    static unsigned char b1,b2,b3;
 
-  get_mouse_mickeys(&mickeyx, &mickeyy);
-  btn  =(mouse_b & 2)?0x20:0;
-  btn |=(mouse_b & 1)?0x10:0;
+    get_mouse_mickeys(&mickeyx, &mickeyy);
+    btn  =(mouse_b & 2)?0x20:0;
+    btn |=(mouse_b & 1)?0x10:0;
 
-  if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
-    b2=mickeyx;
-    b3=mickeyy;
+    if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
+        b2=mickeyx;
+        b3=mickeyy;
 
-    b1=0x40 | btn | ((b3&0xc0)>>4) | ((b2&0xc0)>>6);
-    b2 &= 0x3f;
-    b3 &= 0x3f;
+        b1=0x40 | btn | ((b3&0xc0)>>4) | ((b2&0xc0)>>6);
+        b2 &= 0x3f;
+        b3 &= 0x3f;
 
-    AddSerialQueue(b1);
-    AddSerialQueue(b2);
-    AddSerialQueue(b3);
+        AddSerialQueue(b1);
+        AddSerialQueue(b2);
+        AddSerialQueue(b3);
 /*
-    // Korvet mouse? (Paralel)
-    if (mickeyx) {k_mousex+=(mickeyx>0)?1:-1;}
-    if (mickeyy) {k_mousey+=(mickeyy>0)?1:-1;}
+// Korvet mouse? (Paralel)
+if (mickeyx) {k_mousex+=(mickeyx>0)?1:-1;}
+if (mickeyy) {k_mousey+=(mickeyy>0)?1:-1;}
 
-    btn  =(mouse_b & 2)?0x10:0;
-    btn |=(mouse_b & 1)?0x20:0;
-    k_mouseb = (k_mouseb != btn)?btn:k_mouseb;
+btn  =(mouse_b & 2)?0x10:0;
+btn |=(mouse_b & 1)?0x20:0;
+k_mouseb = (k_mouseb != btn)?btn:k_mouseb;
 */
-  }
+    }
 
-  mickeyx2=mickeyx;
-  mickeyy2=mickeyy;
-  btn2    =btn;
+    mickeyx2=mickeyx;
+    mickeyy2=mickeyy;
+    btn2    =btn;
 }
 
 // specila verson for Kwasi
@@ -148,28 +127,47 @@ have been sent.
 
 */
 
-void ChkMouse_MouseSystem(void) {
-  static unsigned char b2,b3;
+static void ChkMouse_MouseSystem(void)
+{
+    static unsigned char b2,b3;
 
-  get_mouse_mickeys(&mickeyx, &mickeyy);
+    get_mouse_mickeys(&mickeyx, &mickeyy);
 
-  btn  = 0x80;
-  btn |=(mouse_b & 2)?0:0x1;
-  btn |=(mouse_b & 1)?0:0x4;
-  btn |=(mouse_b & 4)?0:0x2;
+    btn  = 0x80;
+    btn |=(mouse_b & 2)?0:0x1;
+    btn |=(mouse_b & 1)?0:0x4;
+    btn |=(mouse_b & 4)?0:0x2;
 
-  if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
-    b2=mickeyx;
-    b3=(256-mickeyy)&0xff;
+    if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
+        b2=mickeyx;
+        b3=(256-mickeyy)&0xff;
 
-    AddSerialQueue(btn);
-    AddSerialQueue(b2);
-    AddSerialQueue(b3);
-    AddSerialQueue(0);
-    AddSerialQueue(0);
-  }
+        AddSerialQueue(btn);
+        AddSerialQueue(b2);
+        AddSerialQueue(b3);
+        AddSerialQueue(0);
+        AddSerialQueue(0);
+    }
 
-  mickeyx2=mickeyx;
-  mickeyy2=mickeyy;
-  btn2    =btn;
+    mickeyx2=mickeyx;
+    mickeyy2=mickeyy;
+    btn2    =btn;
+}
+
+/*
+TODO: додбавить автодетект мыши
+если проинитились таймер и ви51
+
+  ви53
+  *(char *) 0xfb01 = 0x68;
+  *(char *) 0xfb01 = 0;
+
+  вв51
+  *(char *) 0xfb11 = 0x35;
+*/
+
+void ChkMouse(void)
+{
+    if (MouseType == 1) ChkMouse_Microsoft();
+    if (MouseType == 2) ChkMouse_MouseSystem();
 }
