@@ -25,7 +25,7 @@
 int KeyboardLayout;               // mode
 int KeyboadUpdateFlag=0;          // =1 if need rebuld keyboard layout
 
-int KeyAlias[KEY_MAX];
+static volatile int KeyAlias[KEY_MAX];
 
 // extern int KBD_LED;
 int KBD_LED=2;                  // RusEngFlag
@@ -129,6 +129,19 @@ int ChkMattrixLine(int N)
   return Value;
 }
 
+void KBD_update(int key, bool pressed)
+{
+    int i;
+
+    KeyAlias[key] = pressed;
+    pr_vdebug("key %d pressed %d\n", key, pressed);
+
+    for (i = 0; i < MAXALIAS * 2; i += 2 ) {
+        if (key == AliasTab[i])
+            KeyAlias[AliasTab[i + 1]] = pressed;
+    }
+}
+
 int KEYBOARD_Read(int Addr,int InternalMode) {
   int Value=0;
   int Line=0;
@@ -141,9 +154,6 @@ int KEYBOARD_Read(int Addr,int InternalMode) {
 
   if (KeyboadUpdateFlag) {KBD_Select();}
 
-  for (i=0;i<KEY_MAX;i++)      {KeyAlias[i]=key[i];}
-  for (i=0;i<MAXALIAS*2;i+=2) {if (KeyAlias[AliasTab[i]]) KeyAlias[AliasTab[i+1]]=1;}
-
   /* See the address layout above */
   if (Addr & 0x100)
       Line=8;
@@ -155,7 +165,6 @@ int KEYBOARD_Read(int Addr,int InternalMode) {
 
   return Value;
 }
-
 
 char *PrintKBD(int Addr,int y) {
 
@@ -194,4 +203,3 @@ char *PrintKBD(int Addr,int y) {
  *ptr='\0';
  return BUFFER;
 }
-

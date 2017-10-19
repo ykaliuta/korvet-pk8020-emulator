@@ -23,11 +23,10 @@
 #include "verbose.h"
 
 #include <allegro.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h> /* for mode definitions */
 #include <ctype.h>
@@ -117,6 +116,7 @@ byte FDC_Read(int Addr);
 
 void KBD_Init(void);
 int  KEYBOARD_Read(int Addr,int InternalMode);
+void KBD_update(int key, bool pressed);
 
 void GZU_Init(void);
 void GZU_Write(int Addr,byte Value);

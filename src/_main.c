@@ -398,6 +398,8 @@ static void process_kbd(struct main_ctx *ctx)
 
         if (handler != NULL)
             handler(ctx, ev.key.code);
+        else
+            KBD_update(ev.key.code, ev.type == HOST_KEY_DOWN);
 
         break;
     default:
