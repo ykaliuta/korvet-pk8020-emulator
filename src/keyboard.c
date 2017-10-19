@@ -94,39 +94,39 @@ int KBD1[8][12]={
 int KBD[8][12];
 
 void KBD_Select() {
-  int x,y;
-  int WorkLayout=KeyboardLayout;
+    int x,y;
+    int WorkLayout=KeyboardLayout;
 
-  if (WorkLayout == KBD_AUTO) {
-     if (KBD_LED == 2) {WorkLayout=KBD_QWERTY;}
-     else {WorkLayout=KBD_JCUKEN;}
-  }
+    if (WorkLayout == KBD_AUTO) {
+        if (KBD_LED == 2) {WorkLayout=KBD_QWERTY;}
+        else {WorkLayout=KBD_JCUKEN;}
+    }
 
-  for (x=0;x<8;x++)
-   for (y=0;y<12;y++)
-     KBD[x][y]=(WorkLayout == KBD_QWERTY)?KBD0[x][y]:KBD1[x][y];
+    for (x=0;x<8;x++)
+        for (y=0;y<12;y++)
+            KBD[x][y]=(WorkLayout == KBD_QWERTY)?KBD0[x][y]:KBD1[x][y];
 
-  KeyboadUpdateFlag=0;
+    KeyboadUpdateFlag=0;
 }
 
 void KBD_Init(void) {
-  KeyboadUpdateFlag=1;
+    KeyboadUpdateFlag=1;
 //  KeyboardLayout=KBD_AUTO;
-  KBD_Select();
+    KBD_Select();
 }
 
 int ChkMattrixLine(int N)
 {
-  int Value=0;
-  Value|=KeyAlias[KBD[0][N]]?0x01:0;
-  Value|=KeyAlias[KBD[1][N]]?0x02:0;
-  Value|=KeyAlias[KBD[2][N]]?0x04:0;
-  Value|=KeyAlias[KBD[3][N]]?0x08:0;
-  Value|=KeyAlias[KBD[4][N]]?0x10:0;
-  Value|=KeyAlias[KBD[5][N]]?0x20:0;
-  Value|=KeyAlias[KBD[6][N]]?0x40:0;
-  Value|=KeyAlias[KBD[7][N]]?0x80:0;
-  return Value;
+    int Value=0;
+    Value|=KeyAlias[KBD[0][N]]?0x01:0;
+    Value|=KeyAlias[KBD[1][N]]?0x02:0;
+    Value|=KeyAlias[KBD[2][N]]?0x04:0;
+    Value|=KeyAlias[KBD[3][N]]?0x08:0;
+    Value|=KeyAlias[KBD[4][N]]?0x10:0;
+    Value|=KeyAlias[KBD[5][N]]?0x20:0;
+    Value|=KeyAlias[KBD[6][N]]?0x40:0;
+    Value|=KeyAlias[KBD[7][N]]?0x80:0;
+    return Value;
 }
 
 void KBD_update(int key, bool pressed)
@@ -143,63 +143,63 @@ void KBD_update(int key, bool pressed)
 }
 
 int KEYBOARD_Read(int Addr,int InternalMode) {
-  int Value=0;
-  int Line=0;
-  int i;
+    int Value=0;
+    int Line=0;
+    int i;
 
-  if (!InternalMode) {
-    // printf("KBD: %04X\n",Addr);
-    UpdateKBD_OSD(Addr);
-  }
+    if (!InternalMode) {
+        // printf("KBD: %04X\n",Addr);
+        UpdateKBD_OSD(Addr);
+    }
 
-  if (KeyboadUpdateFlag) {KBD_Select();}
+    if (KeyboadUpdateFlag) {KBD_Select();}
 
-  /* See the address layout above */
-  if (Addr & 0x100)
-      Line=8;
+    /* See the address layout above */
+    if (Addr & 0x100)
+        Line=8;
 
-  for (i = 0; i <= 7; i++, Line++) {
-      if (Addr & BIT(i))
-          Value |= ChkMattrixLine(Line);
-  }
+    for (i = 0; i <= 7; i++, Line++) {
+        if (Addr & BIT(i))
+            Value |= ChkMattrixLine(Line);
+    }
 
-  return Value;
+    return Value;
 }
 
 char *PrintKBD(int Addr,int y) {
 
- static char BUFFER[512];
- int Mask=0x80;
- int i=14;
- char *ptr=BUFFER+6;
- int Value=KEYBOARD_Read(Addr,1);
+    static char BUFFER[512];
+    int Mask=0x80;
+    int i=14;
+    char *ptr=BUFFER+6;
+    int Value=KEYBOARD_Read(Addr,1);
 
- char KBD_TXT[13][32]={
-                       "Ю@АaБbЦcДdЕeФfГg",
-                       "ХhИiЙjКkЛlМmНnОo",
-                       "ПpЯqРrСsТtУuЖvВw",
-                       "ЬxЫyЗzШ{Э|Щ}Ч`ъ_",
-                       " 0 1 2 3 4 5 6 7",
-                       " 8 9 *:+;<,=->./",
-                       " C S D I B T S  ",
-                       " L A G E S C L R",
-                       " 0 1 2 3 4 5 6 7",
-                       " 8 9         .  ",
-                       " 1 2 3 4 5 6 7 8",
-                       " 8 9            ",
-                       "11111111111111111",
-     };
+    char KBD_TXT[13][32]={
+        "Ю@АaБbЦcДdЕeФfГg",
+        "ХhИiЙjКkЛlМmНnОo",
+        "ПpЯqРrСsТtУuЖvВw",
+        "ЬxЫyЗzШ{Э|Щ}Ч`ъ_",
+        " 0 1 2 3 4 5 6 7",
+        " 8 9 *:+;<,=->./",
+        " C S D I B T S  ",
+        " L A G E S C L R",
+        " 0 1 2 3 4 5 6 7",
+        " 8 9         .  ",
+        " 1 2 3 4 5 6 7 8",
+        " 8 9            ",
+        "11111111111111111",
+    };
 
 
- sprintf(BUFFER,"%04x: ",Addr);
+    sprintf(BUFFER,"%04x: ",Addr);
 
- while (Mask) {
-   if ((Value & Mask) == 0) {*ptr++=KBD_TXT[y][i+1];}
-   else *ptr++='_';
-   Mask>>=1;
-   i-=2;
- }
+    while (Mask) {
+        if ((Value & Mask) == 0) {*ptr++=KBD_TXT[y][i+1];}
+        else *ptr++='_';
+        Mask>>=1;
+        i-=2;
+    }
 
- *ptr='\0';
- return BUFFER;
+    *ptr='\0';
+    return BUFFER;
 }
