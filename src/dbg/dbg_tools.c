@@ -48,47 +48,47 @@ byte FieldCHR[20][255]={
 
 int DBG_Walker(int Key,struct ZONE *Z,int y) {
 
-  int x;
-  int RetKey = Key;
-  char *CC;
+    int x;
+    int RetKey = Key;
+    char *CC;
 
-  while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor--;
+    while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor--;
 
-  switch (Key>>8) {
-     case KEY_LEFT : {
-                        if (Z->Cursor != 0) Z->Cursor--;
-                        if (Z->Field[Z->Cursor].Type == zBRK) Z->Cursor++;
-                        while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor--;
-                        RetKey=0;
-                        break;
-                     }
-     case KEY_RIGHT: {
-                        if (Z->Cursor != Z->MaxField) Z->Cursor++;
-                        if (Z->Field[Z->Cursor].Type == zBRK) Z->Cursor--;
-                        while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor++;
-                        RetKey=0;
-                        break;
-                     }
-     default:        {
-                        if ((CC=strchr((char *)FieldCHR[Z->Field[Z->Cursor].Type],Key>>8 )) != NULL) {
-                           RetKey=(zEDIT<<8) | Z->Field[Z->Cursor].Type ;
-                        }
-                        break;
-                     }
-  }
+    switch (Key>>8) {
+    case KEY_LEFT : {
+        if (Z->Cursor != 0) Z->Cursor--;
+        if (Z->Field[Z->Cursor].Type == zBRK) Z->Cursor++;
+        while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor--;
+        RetKey=0;
+        break;
+    }
+    case KEY_RIGHT: {
+        if (Z->Cursor != Z->MaxField) Z->Cursor++;
+        if (Z->Field[Z->Cursor].Type == zBRK) Z->Cursor--;
+        while (Z->Field[Z->Cursor].Type == zSKIP) Z->Cursor++;
+        RetKey=0;
+        break;
+    }
+    default:        {
+        if ((CC=strchr((char *)FieldCHR[Z->Field[Z->Cursor].Type],Key>>8 )) != NULL) {
+            RetKey=(zEDIT<<8) | Z->Field[Z->Cursor].Type ;
+        }
+        break;
+    }
+    }
 
-  x=Z->Cursor;
-  tSetNewAttr(C_Cursor,Z->Field[x].Len,Z->Field[x].X,y);
+    x=Z->Cursor;
+    tSetNewAttr(C_Cursor,Z->Field[x].Len,Z->Field[x].X,y);
 
 //  sprintf(BUF,"%04x",RetKey);
 //  tScreenPutString(BUF,C_Default,6,33);
 
-  return RetKey;
+    return RetKey;
 }
 
 byte GetVisibleChar(byte Chr) {
-  if (Chr<0x20) return '.';
-  return Chr;
+    if (Chr<0x20) return '.';
+    return Chr;
 }
 
 int GetBreakColor(word Addr,int Type) {
@@ -96,17 +96,17 @@ int GetBreakColor(word Addr,int Type) {
     int Color=C_Default;
 
     switch (Type) {
-      case mDUMP: {
+    case mDUMP: {
 //                  if (Flags & (bpCPU)   ) Color=C_BPCPU;
-                  if (Flags & (bpRDMEM) ) Color=C_BPRD;
-                  if (Flags & (bpWRMEM) ) Color=C_BPWR;
-                  if ((Flags & (bpRDMEM | bpWRMEM)) == (bpRDMEM | bpWRMEM) ) Color=C_BPRW;
-                  break;
-                 };
-      case mDASM: {
-                  if (Flags & (bpCPU)   ) Color=C_BPCPU;
-                  break;
-                 };
+        if (Flags & (bpRDMEM) ) Color=C_BPRD;
+        if (Flags & (bpWRMEM) ) Color=C_BPWR;
+        if ((Flags & (bpRDMEM | bpWRMEM)) == (bpRDMEM | bpWRMEM) ) Color=C_BPRW;
+        break;
+    };
+    case mDASM: {
+        if (Flags & (bpCPU)   ) Color=C_BPCPU;
+        break;
+    };
     };
     return Color;
 }
@@ -115,106 +115,106 @@ int HEXEDIT(int Value,int Len,int x,int y) {
 // if ESC pressed return -Value else new value
 // if Left on first digit or Right on last return OK
 
-  int pos=0;
-  char buf[8];
-  int work;
-  int flEdit=1;
-  int Key,Key1;
-  int mask;
-  int Ok=1;
+    int pos=0;
+    char buf[8];
+    int work;
+    int flEdit=1;
+    int Key,Key1;
+    int mask;
+    int Ok=1;
 
 
-  work=(4 == Len)?Value&0xffff:Value&0xff;
+    work=(4 == Len)?Value&0xffff:Value&0xff;
 
-  while (flEdit) {
-     sprintf(buf,(4 == Len)?"%04X":"%02X",work);
-     tScreenPutString(buf,C_Edit,x,y);
-     tSetNewAttr(C_EditCursor,1,x+pos,y);
+    while (flEdit) {
+        sprintf(buf,(4 == Len)?"%04X":"%02X",work);
+        tScreenPutString(buf,C_Edit,x,y);
+        tSetNewAttr(C_EditCursor,1,x+pos,y);
 
-     Key=readkey();
-     Key1=Key>>8;
+        Key=readkey();
+        Key1=Key>>8;
 //     if ((Key1>=KEY_0 && Key1<=KEY_9)) { mask=(0xF000>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_0+0x00)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
 //     if ((Key1>=KEY_A && Key1<=KEY_F)) { mask=(0xF000>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_A+0x0A)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
-     if ((Key1>=KEY_0 && Key1<=KEY_9)) { mask=(((4 == Len)?0xF000:0xF0)>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_0+0x00)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
-     if ((Key1>=KEY_A && Key1<=KEY_F)) { mask=(((4 == Len)?0xF000:0xF0)>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_A+0x0A)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
+        if ((Key1>=KEY_0 && Key1<=KEY_9)) { mask=(((4 == Len)?0xF000:0xF0)>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_0+0x00)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
+        if ((Key1>=KEY_A && Key1<=KEY_F)) { mask=(((4 == Len)?0xF000:0xF0)>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_A+0x0A)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
 
-     switch (Key>>8) {
+        switch (Key>>8) {
         case KEY_LEFT : {if (pos)       pos--;else {flEdit=0;Ok=0;};break;}
         case KEY_RIGHT: {if (pos<Len-1) pos++;else flEdit=0;break;}
         case KEY_ENTER: {flEdit=0;break;}
         case KEY_ESC  : {flEdit=0;Ok=0;break;}
-     }
-  }
-  if (Ok) return work;
-  return -32000;
+        }
+    }
+    if (Ok) return work;
+    return -32000;
 }
 
 int LineEdit(char *src,int maxlen,int x,int y) {
-  int  pos=0;
-  int  Len;
-  char buf[128];
-  char tmps[128];
-  int  flEdit=1;
-  int  Key;
-  char Key1;
-  int  Ok=1;
-  int  i;
+    int  pos=0;
+    int  Len;
+    char buf[128];
+    char tmps[128];
+    int  flEdit=1;
+    int  Key;
+    char Key1;
+    int  Ok=1;
+    int  i;
 
-  strcpy(buf,src);
+    strcpy(buf,src);
 
-  Len=strlen(src);
+    Len=strlen(src);
 
-  while (flEdit) {
+    while (flEdit) {
 
-     strcpy(tmps,buf);
-     strcat(tmps,"_______________________________");
-     tmps[maxlen]='\0';
-     tScreenPutString(tmps,C_Edit,x,y);
-     tSetNewAttr(C_EditCursor,1,x+pos,y);
+        strcpy(tmps,buf);
+        strcat(tmps,"_______________________________");
+        tmps[maxlen]='\0';
+        tScreenPutString(tmps,C_Edit,x,y);
+        tSetNewAttr(C_EditCursor,1,x+pos,y);
 
-     Key=readkey();
-     Key1=(char)(Key&0xff);
+        Key=readkey();
+        Key1=(char)(Key&0xff);
 
 
-     if (isprint(Key1)) {
-        if (Len < maxlen) {
-          for (i=maxlen;i>pos;i--) {buf[i]=buf[i-1];}
-          buf[pos]=Key1;
-          Key=KEY_RIGHT<<8;
-          Len++;
+        if (isprint(Key1)) {
+            if (Len < maxlen) {
+                for (i=maxlen;i>pos;i--) {buf[i]=buf[i-1];}
+                buf[pos]=Key1;
+                Key=KEY_RIGHT<<8;
+                Len++;
+            }
         }
-     }
 
-     switch (Key>>8) {
+        switch (Key>>8) {
         case KEY_BACKSPACE  :
         case KEY_DEL  : {
-                         if (Len) {
-                           if ( KEY_BACKSPACE == (Key>>8) ) {
-                             if (pos) pos--;
-                             else break;
-                           };
+            if (Len) {
+                if ( KEY_BACKSPACE == (Key>>8) ) {
+                    if (pos) pos--;
+                    else break;
+                };
 
-                           for (i=pos;i<maxlen;i++) buf[i]=buf[i+1];
-                           buf[maxlen+1]=0;
-                           buf[maxlen]=' ';
-                           Len--;
-                           break;
-                         }
-                        }
+                for (i=pos;i<maxlen;i++) buf[i]=buf[i+1];
+                buf[maxlen+1]=0;
+                buf[maxlen]=' ';
+                Len--;
+                break;
+            }
+        }
         case KEY_LEFT : {if (pos)       pos--;break;}
         case KEY_RIGHT: {if (pos<Len)   pos++;break;}
         case KEY_ENTER: {flEdit=0;break;}
         case KEY_ESC  : {flEdit=0;Ok=0;break;}
-     }
+        }
 
 
 
-  }
-  if (Ok) {
+    }
+    if (Ok) {
 //    tmp=buf+strlen(buf);
 //    while (*tmp == ' ') *tmp='\0';
-    strcpy(src,buf);
-    return 1;
-  }
-  return 0;
+        strcpy(src,buf);
+        return 1;
+    }
+    return 0;
 }
