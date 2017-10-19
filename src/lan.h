@@ -30,7 +30,7 @@ extern char 		LAN_logfile[1000];  // Имя файла для лога
 
 void LAN_Write(int Addr,byte Value);
 byte LAN_Read(int Addr);
-void Lan_Init(void);      // открытие и настройка последовательного порта
+void LAN_Init(void);      // открытие и настройка последовательного порта
 void LAN_poll(void);      // формирование прерывание при наличии байта
-
+void LAN_destroy(void);
 

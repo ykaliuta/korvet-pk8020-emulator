@@ -213,10 +213,6 @@ void dbg_tick(void);
 static inline void dbg_tick(void) {};
 #endif
 
-void LAN_Init(void);
-void LAN_Write(int Addr,byte Value);
-byte LAN_Read(int Addr);
-
 void GUI(void);
 void AddPC(word pc);
 void ChkMouse(void);

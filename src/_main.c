@@ -452,9 +452,7 @@ static void main_loop(void)
 
         Takt+=CPU_Exec1step();
 
-    #ifdef LAN_SUPPORT
         LAN_poll();
-    #endif
 
         if (Takt>=ALL_TAKT) {
             Timer50HzTick();
@@ -544,9 +542,7 @@ int main(int argc,char **argv) {
     InitPrinter();
     Init_Joystick();
 
-    #ifdef LAN_SUPPORT
     LAN_Init();
-    #endif
 
     InitTimer();
 
@@ -585,11 +581,7 @@ int main(int argc,char **argv) {
     host_shutdown();
     allegro_exit();
 
-    #ifdef LAN_SUPPORT
-    if (LAN_Addr == 0x0f) { // remove ptx file only when RMU
-        unlink(LAN_PTX_FILE);
-    }
-    #endif
+    LAN_destroy();
 
     return 0;
 }

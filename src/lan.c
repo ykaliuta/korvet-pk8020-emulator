@@ -57,6 +57,7 @@ byte LAN_Read(int Addr) {
 }
 void LAN_Init(void) {};
 void LAN_poll(void) {};
+void LAN_destroy(void) {};
 #else
 
 char        LAN_ttdev[1000];     // последовательный порт сети
@@ -389,6 +390,13 @@ void LAN_Init(void) {
     printf("\nАдрес эмулятора в сети - %1x\n",(~LAN_Addr)&0xf);
     fflush(stdout);
 
+}
+
+void LAN_destroy(void)
+{
+    if (LAN_Addr == 0x0f) { // remove ptx file only when RMU
+        unlink(LAN_PTX_FILE);
+    }
 }
 
 #endif

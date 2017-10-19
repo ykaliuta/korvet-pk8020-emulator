@@ -21,6 +21,7 @@
  */
 
 #include "korvet.h"
+#include "lan.h"
 
 #ifdef DBG
  #include "dbg/dbg.h"
