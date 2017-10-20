@@ -137,13 +137,15 @@ char **_help_idx[MAXDBG+1]={
 };
 
 
-int _HELP(int dbgMODE) {
+void _HELP_on(int dbgMODE)
+{
     showHELP(dbgMODE);
-    readkey();
+}
+
+void _HELP_off(void)
+{
     help_CLS(C_Default);
     tDoUpdate();
-
-    return -1;
 }
 
 void showHELP(int dbgMODE) {

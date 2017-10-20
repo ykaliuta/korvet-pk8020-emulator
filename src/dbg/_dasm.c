@@ -21,6 +21,7 @@
  */
 
 #include "dbg.h"
+#include "host.h"
 #include "korvet.h"
 #include <allegro.h>
 
@@ -150,8 +151,8 @@ void NormPC(void) {
  if (!FlagOnScreen) {
     DASM_ZONE.BaseAddr=dbg_REG.PC;
     DASM_ZONE.Y=0;
-//    simulate_keypress(KEY_UP<<8);
-//    simulate_keypress(KEY_DOWN<<8);
+//    host_event_kbd_simulate(KEY_UP<<8);
+//    host_event_kbd_simulate(KEY_DOWN<<8);
  }
 }
 
@@ -185,11 +186,11 @@ int _DASM(int Key) {
                        break;
                       }
        case KEY_PGUP: {
-                       for(i=0;i<zone->YLine-1;i++) simulate_keypress(KEY_UP<<8);
+                       for(i=0;i<zone->YLine-1;i++) host_event_kbd_simulate(KEY_UP<<8);
                        break;
                       }
        case KEY_PGDN: {
-                       for(i=0;i<zone->YLine-1;i++) simulate_keypress(KEY_DOWN<<8);
+                       for(i=0;i<zone->YLine-1;i++) host_event_kbd_simulate(KEY_DOWN<<8);
                        break;
                       }
        case KEY_F2:   {
@@ -249,8 +250,8 @@ int _DASM(int Key) {
                                   zone->BaseAddr=L->Addr;
                                   tmp=zone->Y;
                                   zone->Y=0;
-                                  for(i=0;i<tmp;i++) simulate_keypress(KEY_UP<<8);
-                                  for(i=0;i<tmp;i++) simulate_keypress(KEY_DOWN<<8);
+                                  for(i=0;i<tmp;i++) host_event_kbd_simulate(KEY_UP<<8);
+                                  for(i=0;i<tmp;i++) host_event_kbd_simulate(KEY_DOWN<<8);
                                 }
                               } else {          // edit old label
                                 DeleteLabel(Addr);
@@ -261,25 +262,25 @@ int _DASM(int Key) {
           }
           case zADDR  : {
                            int tmp;
-                           if (KEY_ENTER != Key>>8) simulate_keypress(Key);
+                           if (KEY_ENTER != Key>>8) host_event_kbd_simulate(Key);
                            tmp = HEXEDIT(Addr,4,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
                            if (tmp >= 0) {
                               zone->BaseAddr=tmp;
                               tmp=zone->Y;
                               zone->Y=0;
-                              for(i=0;i<tmp;i++) simulate_keypress(KEY_UP<<8);
-                              for(i=0;i<tmp;i++) simulate_keypress(KEY_DOWN<<8);
+                              for(i=0;i<tmp;i++) host_event_kbd_simulate(KEY_UP<<8);
+                              for(i=0;i<tmp;i++) host_event_kbd_simulate(KEY_DOWN<<8);
                            }
                            break;
           }
           case zHEX   : {
                            int tmp;
-                           if (KEY_ENTER != Key>>8) simulate_keypress(Key);
+                           if (KEY_ENTER != Key>>8) host_event_kbd_simulate(Key);
                            Addr+=zone->Cursor-2;
                            tmp = HEXEDIT(Emulator_Read(Addr),2,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
                            if (tmp >= 0) {
                               Emulator_Write(Addr,tmp);
-                              simulate_keypress(KEY_RIGHT<<8);
+                              host_event_kbd_simulate(KEY_RIGHT<<8);
                            }
                            break;
           }
@@ -287,9 +288,9 @@ int _DASM(int Key) {
                            Emulator_Write(Addr,Key&0xff);
                            if (zone->Field[zone->Cursor+1].Type == zBRK) {
                              zone->Field[zone->Cursor+1].X-=16;
-                             simulate_keypress(KEY_DOWN<<8);
+                             host_event_kbd_simulate(KEY_DOWN<<8);
                            } else {
-                             simulate_keypress(KEY_RIGHT<<8);
+                             host_event_kbd_simulate(KEY_RIGHT<<8);
                            }
                            break;
           }

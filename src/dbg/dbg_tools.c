@@ -21,6 +21,7 @@
  */
 
 #include "dbg.h"
+#include "host.h"
 #include "korvet.h"
 
 // на вход кнопка, указатель зоны и Y
@@ -127,11 +128,18 @@ int HEXEDIT(int Value,int Len,int x,int y) {
     work=(4 == Len)?Value&0xffff:Value&0xff;
 
     while (flEdit) {
+        struct host_event ev;
+
         sprintf(buf,(4 == Len)?"%04X":"%02X",work);
         tScreenPutString(buf,C_Edit,x,y);
         tSetNewAttr(C_EditCursor,1,x+pos,y);
 
-        Key=readkey();
+        do {
+            host_event_wait(&ev);
+        } while (ev.type != HOST_KEY_DOWN);
+
+        Key = ev.key.code << 8;
+        /* well, just because of mix of the two styles during adaptation*/
         Key1=Key>>8;
 //     if ((Key1>=KEY_0 && Key1<=KEY_9)) { mask=(0xF000>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_0+0x00)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
 //     if ((Key1>=KEY_A && Key1<=KEY_F)) { mask=(0xF000>>4*pos)^0xffff; work=(work & mask) | (Key1-KEY_A+0x0A)<<4*(Len-1-pos);Key=KEY_RIGHT<<8;}
@@ -165,6 +173,7 @@ int LineEdit(char *src,int maxlen,int x,int y) {
     Len=strlen(src);
 
     while (flEdit) {
+        struct host_event ev;
 
         strcpy(tmps,buf);
         strcat(tmps,"_______________________________");
@@ -172,9 +181,12 @@ int LineEdit(char *src,int maxlen,int x,int y) {
         tScreenPutString(tmps,C_Edit,x,y);
         tSetNewAttr(C_EditCursor,1,x+pos,y);
 
-        Key=readkey();
-        Key1=(char)(Key&0xff);
+        do {
+            host_event_wait(&ev);
+        } while (ev.type != HOST_KEY_DOWN);
 
+        Key = ev.key.code << 8;
+        Key1 = host_event_kbd_to_ascii(&ev);
 
         if (isprint(Key1)) {
             if (Len < maxlen) {

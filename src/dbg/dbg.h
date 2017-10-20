@@ -144,7 +144,8 @@ struct CPUREG {
 int _REGS(int Key);
 int _DASM(int Key);
 int _DUMP(int Key);
-int _HELP(int dbgMODE);
+void _HELP_on(int dbgMODE);
+void _HELP_off(void);
 
 #define MAXLABEL 1024
 #define LABELLEN 16

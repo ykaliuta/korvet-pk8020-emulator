@@ -180,6 +180,7 @@ void doDBG(void) {
     int Key;
     int Exit=0;
     int i;
+    bool help_visible = false;
 
     dbg_TRACE=0;
     dbg_HERE =0xffff;
@@ -193,7 +194,6 @@ void doDBG(void) {
     SCREEN_SetGraphics(SCR_DBG);
     DBG_Pallete_Active();
     dbg_GetREG();
-    while (keypressed()) readkey();
 
     AddKorvetLabel();
     NormPC();
@@ -205,23 +205,39 @@ void doDBG(void) {
         MUTE_BUF();
     }
 
-
     AllScreenUpdateFlag=1;
     SCREEN_ShowScreen();
     SetDBGLut(Flag_DBG_LUT);
 
     while (!Exit) {
-
+        struct host_event ev;
         // AddKorvetLabel();
 
         tDoUpdate();
-        Key=readkey();
 
-        Key&=0xff00;
+        do {
+            host_event_wait(&ev);
+        } while (ev.type != HOST_KEY_DOWN);
 
-        if (key_shifts & KB_ALT_FLAG) {Key+=KK_Alt;}
-        if (key_shifts & KB_CTRL_FLAG) {Key+=KK_Ctrl;}
-        if (key_shifts & KB_SHIFT_FLAG) {Key+=KK_Shift;}
+        if (help_visible) {
+            pr_debug("Event is: %s\n", host_event_to_str(&ev));
+            _HELP_off();
+            AllScreenUpdateFlag = 1;
+            Update_Screen();
+            help_visible = false;
+            continue;
+        }
+
+        Key = ev.key.code << 8;
+
+        if (BIT_TEST(ev.key.mods, HOST_MOD_ALT))
+            Key += KK_Alt;
+
+        if (BIT_TEST(ev.key.mods, HOST_MOD_CTRL))
+            Key += KK_Ctrl;
+
+        if (BIT_TEST(ev.key.mods, HOST_MOD_SHIFT))
+            Key += KK_Shift;
 
         switch (Key) {
         case KEY_8_PAD<<8: {Key = KEY_UP    <<8;break;}
@@ -234,7 +250,7 @@ void doDBG(void) {
 
         switch (Key) {
 
-        case (KEY_F1  <<8)         : {_HELP(dbgMODE);AllScreenUpdateFlag=1;Update_Screen();break;}
+        case (KEY_F1  <<8)         : {help_visible = true; _HELP_on(dbgMODE); continue; break;}
 
         case (KEY_UP  <<8)+KK_Ctrl : {if (dbgMODE != 0 )       dbgMODE--;Key=-1;break;}
         case (KEY_DOWN<<8)+KK_Ctrl : {if (dbgMODE != MAXDBG-1) dbgMODE++;Key=-1;break;}
@@ -288,15 +304,6 @@ void doDBG(void) {
         }
     }
 
-    while (keypressed()) readkey();
-
-    while(key[KEY_F4]);
-    while(key[KEY_F7]);
-    while(key[KEY_F8]);
-    while(key[KEY_F9]);
-
-    // while(key[Key]);
-
     scr_Page_Show=Saved_scr_Page_Show;
     AllScreenUpdateFlag=1;
 
@@ -333,9 +340,9 @@ void dbg_tick(void)
         dbg_schedule_run();
 
     if (dbg_run_scheduled()) {
-        host_events_pause();
+        host_events_flush();
         doDBG();
-        host_events_resume();
+        host_events_flush();
     }
 
     AddPC(__PC);

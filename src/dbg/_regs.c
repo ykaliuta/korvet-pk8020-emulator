@@ -21,6 +21,7 @@
  */
 
 #include "dbg.h"
+#include "host.h"
 #include "korvet.h"
 /*
    int           Y;       // Y координата курсора в окне (0..YLine) относительно окна
@@ -174,8 +175,6 @@ int _REGS(int Key){
 //  Update_Screen();
 //  DBG_Walker(0,zone,zone->BaseY+zone->Y);
 
-//    Key=readkey();
-
     switch (Key>>8) {
        case KEY_UP  : {
                        if (YY != 0            ) YY--;
@@ -227,7 +226,7 @@ int _REGS(int Key){
                             case zRSP: ptr=&dbg_REG.SP;break;
                             case zRPC: ptr=&dbg_REG.PC;break;
                            }
-                           if (KEY_ENTER != Key>>8) simulate_keypress(Key);
+                           if (KEY_ENTER != Key>>8) host_event_kbd_simulate(Key);
                            tmp = HEXEDIT(*ptr,4,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
                            if (tmp >= 0) { *ptr=tmp;}
                            break;

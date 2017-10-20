@@ -21,6 +21,7 @@
  */
 
 #include "dbg.h"
+#include "host.h"
 #include "korvet.h"
 
 /*
@@ -139,11 +140,11 @@ int _DUMP(int Key){
        case KEY_RIGHT: { if ( (Key&0xff) == KK_Ctrl ) {zone->BaseAddr+=1;Key=-1;}break;}
 
        case KEY_PGUP: {
-                       for(i=0;i<zone->YLine-1;i++) simulate_keypress(KEY_UP<<8);
+                       for(i=0;i<zone->YLine-1;i++) host_event_kbd_simulate(KEY_UP<<8);
                        break;
                       }
        case KEY_PGDN: {
-                       for(i=0;i<zone->YLine-1;i++) simulate_keypress(KEY_DOWN<<8);
+                       for(i=0;i<zone->YLine-1;i++) host_event_kbd_simulate(KEY_DOWN<<8);
                        break;
                       }
        case KEY_TAB:  {
@@ -212,7 +213,7 @@ int _DUMP(int Key){
           }
           case zADDR  : {
                            int tmp;
-                           if (KEY_ENTER != Key>>8) simulate_keypress(Key);
+                           if (KEY_ENTER != Key>>8) host_event_kbd_simulate(Key);
                            tmp = HEXEDIT(Addr,4,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
                            if (tmp >= 0) {
                               zone->BaseAddr=tmp-(zone->Y)*0x10;
@@ -221,15 +222,15 @@ int _DUMP(int Key){
           }
           case zHEX   : {
                            int tmp;
-                           if (KEY_ENTER != Key>>8) simulate_keypress(Key);
+                           if (KEY_ENTER != Key>>8) host_event_kbd_simulate(Key);
                            tmp = HEXEDIT(Emulator_Read(Addr),2,zone->Field[zone->Cursor].X,zone->BaseY+zone->Y);
                            if (tmp >= 0) {
                               Emulator_Write(Addr,tmp);
                               if (zone->Field[zone->Cursor+1].Type == zBRK) {
-                                for(i=0;i<15;i++) simulate_keypress(KEY_LEFT<<8);
-                                simulate_keypress(KEY_DOWN<<8);
+                                for(i=0;i<15;i++) host_event_kbd_simulate(KEY_LEFT<<8);
+                                host_event_kbd_simulate(KEY_DOWN<<8);
                               } else {
-                                simulate_keypress(KEY_RIGHT<<8);
+                                host_event_kbd_simulate(KEY_RIGHT<<8);
                               }
                            }
                            break;
@@ -238,9 +239,9 @@ int _DUMP(int Key){
                            Emulator_Write(Addr,Key&0xff);
                            if (zone->Field[zone->Cursor+1].Type == zBRK) {
                              zone->Cursor-=15;
-                             simulate_keypress(KEY_DOWN<<8);
+                             host_event_kbd_simulate(KEY_DOWN<<8);
                            } else {
-                             simulate_keypress(KEY_RIGHT<<8);
+                             host_event_kbd_simulate(KEY_RIGHT<<8);
                            }
                            break;
           }

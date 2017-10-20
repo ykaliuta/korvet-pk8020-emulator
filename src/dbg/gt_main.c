@@ -21,6 +21,8 @@
  */
 // Game TOOLS
 #include "dbg.h"
+#include "host.h"
+#include <stdbool.h>
 
 extern byte    RAM[];           // RAM эмулятора
 
@@ -113,6 +115,7 @@ void GameTools(void) {
     int i,j,tmp;
     int cmp;
     char BUF[64];
+    bool help_visible = false;
 
     if (GT_Used == 0) {
         GT_Mode=GT_ZERO;
@@ -125,13 +128,28 @@ void GameTools(void) {
         tScreenPutString("  B) new BYTE mode, W) new WORD mode, ESC - exit, F1 - help                ",C_Edit,0,GT_Y+1);
         GT_Mode=GT_ZERO;
         while (!Exit) {
-            Key=readkey();
-            switch (Key>>8) {
-            case KEY_F1  : {
-                _HELP(MAXDBG);
+            struct host_event ev;
+
+            do {
+                host_event_wait(&ev);
+            } while (ev.type != HOST_KEY_DOWN);
+
+            Key = ev.key.code << 8;
+
+            if (help_visible) {
+                _HELP_off();
                 Update_Screen();
                 UpdateGameTool();
                 tScreenPutString("  B) new BYTE mode, W) new WORD mode, ESC - exit, F1 - help                ",C_Edit,0,GT_Y+1);
+                help_visible = false;
+                continue;
+            }
+
+            switch (Key>>8) {
+            case KEY_F1  : {
+                _HELP_on(MAXDBG);
+                help_visible = true;
+                continue;
                 break;
             }
             case KEY_B   : {Exit=1;GT_Mode=GT_BYTE;GT_Pass=0;break;}
@@ -143,7 +161,13 @@ void GameTools(void) {
     } else {
         tScreenPutString("1) < 2) > 3) = 4) != 9) !=0 0) ==0 C+(0-9)==(0..9), B/W) new Byte/Word, C) Clr ESC) Exit",C_Edit,0,GT_Y+1);
         while (!Exit) {
-            Key=readkey();
+            struct host_event ev;
+
+            do {
+                host_event_wait(&ev);
+            } while (ev.type != HOST_KEY_DOWN);
+
+            Key = ev.key.code << 8;
 
             switch (Key>>8) {
             case KEY_C   : {Exit=1;GT_Mode=GT_ZERO;GT_Pass=0;GT_Used=0;break;}
