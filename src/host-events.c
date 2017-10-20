@@ -38,7 +38,7 @@
 #include <string.h>
 
 #define MAX_EVENTS 512
-#define MAX_TIMERS 
+#define MAX_TIMERS 3
 
 struct host_timer {
     bool busy;
@@ -282,7 +282,15 @@ int host_events_init(void)
 
 void host_events_shutdown(void)
 {
+    int i;
+
     keyboard_lowlevel_callback = NULL;
+
+    for (i = 0; i < ARRAY_SIZE(timers); i++) {
+        if (timers[i].busy)
+            host_timer_stop(&timers[i]);
+    }
+
     queue_destroy(event_queue);
     event_queue = NULL;
 }

@@ -41,7 +41,8 @@ struct main_ctx {
     int frame_counter;
     /* periodically calculated frames per second */
     int fps;
-    int counter50hz;
+    struct host_timer *timer_1hz;
+    struct host_timer *timer_50hz;
 };
 
 int verbose;
@@ -74,25 +75,20 @@ extern const char AboutMSG[];
 static void main_50hz_tick(struct main_ctx *ctx);
 static bool in_turbomode(struct main_ctx *ctx);
 
-static void Timer_1S(void *c)
+static void Timer_1S(struct main_ctx *ctx)
 {
-    struct main_ctx *ctx = c;
-
     ctx->fps = ctx->frame_counter;
     ctx->frame_counter = 0;
 }
 END_OF_FUNCTION(Timer_1S);
 
-static void Timer_50hz(void *c)
+static void Timer_50hz(struct main_ctx *ctx)
 {
-    struct main_ctx *ctx = c;
-
-    if (in_turbomode(c))
+    if (in_turbomode(ctx))
         /* The ticks are done in the main loop */
         return;
 
-    /* again, not atomic */
-    ctx->counter50hz++;
+    main_50hz_tick(ctx);
 }
 
 void Reset(void) {
@@ -382,14 +378,21 @@ static key_handler *key_handlers[HOST_KEY_MAX][HOST_MOD_MAX] = {
     [HOST_KEY_UP][HOST_MOD_NONE] = keys_up_nomods,
 };
 
-static void process_kbd(struct main_ctx *ctx)
+typedef void (*timer_func)(struct main_ctx *ctx);
+
+static void process_events(struct main_ctx *ctx)
 {
     struct host_event ev;
     key_handler *handlers = NULL;
     key_handler handler = NULL;
+    timer_func f;
 
-    if (!host_event_pop(&ev))
-        return;
+    if (in_turbomode(ctx)) {
+        if (!host_event_pop(&ev))
+            return;
+    } else {
+        host_event_wait(&ev);
+    }
 
     switch (ev.type) {
     case HOST_KEY_DOWN:
@@ -408,6 +411,12 @@ static void process_kbd(struct main_ctx *ctx)
             KBD_update(ev.key.code, ev.type == HOST_KEY_DOWN);
 
         break;
+
+    case HOST_TIMER:
+        f = ev.timer.context;
+        f(ctx);
+        break;
+
     default:
         pr_error("Unhandled event\n");
     }
@@ -420,7 +429,7 @@ static bool main_quitting(struct main_ctx *ctx)
 
 static void main_50hz_tick(struct main_ctx *ctx)
 {
-    ctx->counter50hz = 0;
+    Timer50HzTick();
 
     PIC_IntRequest(4);
 
@@ -452,7 +461,10 @@ static void main_loop(struct main_ctx *ctx)
     main_ctx_prepare(ctx);
 
     for (;;) {
-        process_kbd(ctx);
+        while (Takt < ALL_TAKT)
+            Takt += CPU_Exec1step();
+
+        process_events(ctx);
 
         /* Exit here */
         if (main_quitting(ctx))
@@ -462,21 +474,11 @@ static void main_loop(struct main_ctx *ctx)
         /* can start debugger if hits breakpoint */
         dbg_tick();
 
-        Takt+=CPU_Exec1step();
-
         LAN_poll();
 
-        if (Takt>=ALL_TAKT) {
-            Timer50HzTick();
-
-            turbo_update(ctx);
-            if (!in_turbomode(ctx)) {
-                while (!ctx->counter50hz)
-                    rest(0);
-            }
-
+        turbo_update(ctx);
+        if (in_turbomode(ctx))
             main_50hz_tick(ctx);
-        }
     }
 }
 
@@ -524,8 +526,8 @@ static int do_hw_inits(struct main_ctx *ctx) {
     }
     #endif
 
-    install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
-    install_param_int_ex(Timer_50hz, ctx, BPS_TO_TIMER(50));
+    ctx->timer_1hz = host_timer_start_bps(1, (void *)Timer_1S);
+    ctx->timer_50hz = host_timer_start_bps(50, (void *)Timer_50hz);
 
     return 0;
 }
