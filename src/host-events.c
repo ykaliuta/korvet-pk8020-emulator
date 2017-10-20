@@ -38,11 +38,18 @@
 #include <string.h>
 
 #define MAX_EVENTS 512
+#define MAX_TIMERS 
+
+struct host_timer {
+    bool busy;
+    void *ctx;
+};
 
 /* Globals */
 static struct queue *event_queue;
 static bitmap_t current_mods;
 static bool paused;
+static struct host_timer timers[MAX_TIMERS] = { };
 
 void host_event_wait(struct host_event *ev)
 {
@@ -92,6 +99,10 @@ char *host_event_to_str(struct host_event *ev)
         keyname = scancode_to_name(ev->key.code);
         asprintf(&str, "%d, mods 0x%08x, key %s",
                  ev->type, ev->key.mods, keyname);
+        break;
+    case HOST_TIMER:
+        asprintf(&str, "%d, ctx %p",
+                 ev->type, ev->timer.context);
         break;
     default:
         asprintf(&str, "%d", ev->type);
@@ -188,6 +199,55 @@ void host_event_kbd_simulate(int code)
     host_event_push(&ev);
     host_event_kbd_init(&ev, HOST_KEY_UP, 0, scancode);
     host_event_push(&ev);
+}
+
+static void host_event_timer_init(struct host_event *ev, void *ctx)
+{
+    host_event_init_common(ev, HOST_TIMER);
+
+    ev->timer.context = ctx;
+}
+
+static void timer_callback(void *c)
+{
+    struct host_timer *timer = c;
+    void *ctx = timer->ctx;
+    struct host_event ev;
+
+    host_event_timer_init(&ev, ctx);
+    host_event_push(&ev);
+}
+
+static struct host_timer *host_timer_find_free(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(timers); i++)
+        if (!timers[i].busy)
+            return &timers[i];
+    return NULL;
+}
+
+struct host_timer *host_timer_start_bps(int bps, void *ctx)
+{
+    struct host_timer *timer;
+
+    timer = host_timer_find_free();
+    if (timer == NULL)
+        return NULL;
+
+    timer->busy = true;
+    timer->ctx = ctx;
+
+    install_param_int_ex(timer_callback, timer, BPS_TO_TIMER(bps));
+
+    return timer;
+}
+
+void host_timer_stop(struct host_timer *timer)
+{
+    remove_param_int(timer_callback, timer);
+    timer->busy = false;
 }
 
 void host_events_pause(void)

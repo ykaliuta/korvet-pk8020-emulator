@@ -22,10 +22,13 @@
 #include "host.h"
 #include <stdbool.h>
 
+struct host_timer;
+
 enum event_type {
     HOST_NOTHING = 0,
     HOST_KEY_DOWN = 1,
     HOST_KEY_UP,
+    HOST_TIMER,
 };
 
 #define HOST_KEY_MAX (HOST_KEY_UP + 1)
@@ -46,6 +49,9 @@ struct host_event {
             bitmap_t mods;
             int code;
         } key;
+        struct timer_event {
+            void *context;
+        } timer;
     };
 };
 
@@ -60,5 +66,7 @@ void host_events_resume(void);
 void host_events_flush(void);
 int host_event_kbd_to_ascii(struct host_event *ev);
 void host_event_kbd_simulate(int code);
+struct host_timer *host_timer_start_bps(int bps, void *ctx);
+void host_timer_stop(struct host_timer *timer);
 
 #endif
