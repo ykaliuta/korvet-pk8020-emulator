@@ -37,6 +37,10 @@ struct main_ctx {
     bool turbo;
     /* boost turbo in frames, (50*10) - 10 virtual second */
     unsigned turbo_boot_cnt;
+    /* counts frame refreshes */
+    int frame_counter;
+    /* periodically calculated frames per second */
+    int fps;
 };
 
 int verbose;
@@ -48,9 +52,6 @@ int Takt;
 int BW_Flag=0;
 
 int main_loop_run_flag=1;
-int FPS=0;
-int FPS_Scr=0;
-int FPS_LED=0;
 int Counter50hz=0;		// 50 hz synchronization counter
 
 int turboBOOT; /* gets cmdline value here */
@@ -70,11 +71,12 @@ AUDIOSTREAM *stream;
 
 extern const char AboutMSG[];
 
-// timer routine for measuring
-void Timer_1S()
+static void Timer_1S(void *c)
 {
-    FPS_Scr=FPS;
-    FPS=0;
+    struct main_ctx *ctx = c;
+
+    ctx->fps = ctx->frame_counter;
+    ctx->frame_counter = 0;
 }
 END_OF_FUNCTION(Timer_1S);
 
@@ -271,12 +273,8 @@ static inline void sound_update(bool in_turbo, bool changed) {};
 static void sound_mute_set(bool enable) {};
 #endif
 
-static void main_ctx_init(struct main_ctx *ctx)
+static void main_ctx_prepare(struct main_ctx *ctx)
 {
-    /* hopefully will be moved to some local context */
-    Takt=0;
-
-    memset(ctx, 0, sizeof(*ctx));
     ctx->turbo_boot_cnt = turboBOOT;
 
     if (in_turboboot(ctx)) {
@@ -317,7 +315,7 @@ static void handle_scale(struct main_ctx *ctx, int key)
 {
     FlagScreenScale ^= 1;
     SCREEN_SetGraphics(SCR_EMULATOR);
-    update_osd();
+    update_osd(ctx->fps);
 }
 
 static void handle_debug_lut_start(struct main_ctx *ctx, int key)
@@ -425,21 +423,25 @@ static void main_50hz_tick(struct main_ctx *ctx)
     if (LutUpdateFlag) LUT_Update(BW_Flag);
     SCREEN_ShowScreen();
 
-    FPS++;
+    /*
+     * This is not atomic and can conflict with the timer,
+     * will be fixed with the synchronious event handling
+     */
+    ctx->frame_counter++;
 
     Takt-=ALL_TAKT;
 
-    update_osd();
+    update_osd(ctx->fps);
 
     // update_rus_lat();
 }
 
-static void main_loop(void)
+static void main_loop(struct main_ctx *ctx)
 {
-    struct main_ctx _ctx;
-    struct main_ctx *ctx = &_ctx;
+    /* hopefully will be moved to some local context */
+    Takt=0;
 
-    main_ctx_init(ctx);
+    main_ctx_prepare(ctx);
 
     for (;;) {
         process_kbd(ctx);
@@ -469,7 +471,7 @@ static void main_loop(void)
     }
 }
 
-static int do_hw_inits(void) {
+static int do_hw_inits(struct main_ctx *ctx) {
     #ifdef DBG
     dbg_INIT();
     #endif
@@ -490,8 +492,6 @@ static int do_hw_inits(void) {
 
     LOCK_FUNCTION(Timer_1S);
     LOCK_VARIABLE(FPS);
-    LOCK_VARIABLE(FPS_Scr);
-
     LOCK_VARIABLE(ShowedLines_Scr);
     LOCK_VARIABLE(ShowedLines);
     LOCK_VARIABLE(ShowedLinesTotal);
@@ -515,7 +515,7 @@ static int do_hw_inits(void) {
     }
     #endif
 
-    install_int_ex(Timer_1S, SECS_TO_TIMER(1));
+    install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
     install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
 
     return 0;
@@ -524,6 +524,7 @@ static int do_hw_inits(void) {
 int main(int argc,char **argv) {
 
     int i;
+    struct main_ctx ctx = {};
 
     //LUT_BASE_COLOR = 0x80
     assert(LUT_BASE_COLOR == 0x80); //very important for SCREEN_ShowScreen
@@ -552,7 +553,7 @@ int main(int argc,char **argv) {
     OpenWAV("korvet.wav");
     #endif
 
-    i=do_hw_inits();
+    i=do_hw_inits(&ctx);
     if (i != 0) return i;
 
     host_init();
@@ -569,7 +570,7 @@ int main(int argc,char **argv) {
 
     SCREEN_ShowScreen();
 
-    main_loop();
+    main_loop(&ctx);
 
     #ifdef WAV
     CloseWAV();
