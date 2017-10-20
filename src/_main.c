@@ -41,6 +41,7 @@ struct main_ctx {
     int frame_counter;
     /* periodically calculated frames per second */
     int fps;
+    int counter50hz;
 };
 
 int verbose;
@@ -52,7 +53,6 @@ int Takt;
 int BW_Flag=0;
 
 int main_loop_run_flag=1;
-int Counter50hz=0;		// 50 hz synchronization counter
 
 int turboBOOT; /* gets cmdline value here */
 
@@ -71,6 +71,9 @@ AUDIOSTREAM *stream;
 
 extern const char AboutMSG[];
 
+static void main_50hz_tick(struct main_ctx *ctx);
+static bool in_turbomode(struct main_ctx *ctx);
+
 static void Timer_1S(void *c)
 {
     struct main_ctx *ctx = c;
@@ -80,12 +83,17 @@ static void Timer_1S(void *c)
 }
 END_OF_FUNCTION(Timer_1S);
 
-// timer routine for measuring
-void Timer_50hz()
+static void Timer_50hz(void *c)
 {
-    Counter50hz++;
+    struct main_ctx *ctx = c;
+
+    if (in_turbomode(c))
+        /* The ticks are done in the main loop */
+        return;
+
+    /* again, not atomic */
+    ctx->counter50hz++;
 }
-END_OF_FUNCTION(Timer_1S);
 
 void Reset(void) {
     printf("Reset\n");
@@ -412,7 +420,7 @@ static bool main_quitting(struct main_ctx *ctx)
 
 static void main_50hz_tick(struct main_ctx *ctx)
 {
-    Counter50hz=0;
+    ctx->counter50hz = 0;
 
     PIC_IntRequest(4);
 
@@ -461,8 +469,9 @@ static void main_loop(struct main_ctx *ctx)
         if (Takt>=ALL_TAKT) {
             Timer50HzTick();
 
-            if (!turbo_update(ctx)) {
-                while (!Counter50hz)
+            turbo_update(ctx);
+            if (!in_turbomode(ctx)) {
+                while (!ctx->counter50hz)
                     rest(0);
             }
 
@@ -516,7 +525,7 @@ static int do_hw_inits(struct main_ctx *ctx) {
     #endif
 
     install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
-    install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
+    install_param_int_ex(Timer_50hz, ctx, BPS_TO_TIMER(50));
 
     return 0;
 }
