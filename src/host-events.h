@@ -57,5 +57,8 @@ void host_event_push(struct host_event *ev);
 char *host_event_to_str(struct host_event *ev);
 void host_events_pause(void);
 void host_events_resume(void);
+void host_events_flush(void);
+int host_event_kbd_to_ascii(struct host_event *ev);
+void host_event_kbd_simulate(int code);
 
 #endif

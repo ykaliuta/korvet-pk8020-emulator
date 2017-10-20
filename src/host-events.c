@@ -155,6 +155,41 @@ static void key_callback(int event)
     host_event_push(&ev);
 }
 
+int host_event_kbd_to_ascii(struct host_event *ev)
+{
+    int a = 0;
+    /*
+     * For some reason does work mostly for the letters,
+     * so use own table for the symbols, needed in the debugger
+     */
+    int table[KEY_MAX] = {
+        [KEY_COMMA] = ',',
+        [KEY_STOP] = '.',
+        [KEY_COLON] = ';',
+    };
+
+    a = scancode_to_ascii(ev->key.code);
+    if (a != 0)
+        return a;
+
+    return table[ev->key.code];
+}
+
+/*
+ * It takes the allregro4 readkey() type scancode,
+ * so we will shift it to get the real scancode
+ */
+void host_event_kbd_simulate(int code)
+{
+    struct host_event ev;
+    int scancode = (code >> 8) & 0xFF;
+
+    host_event_kbd_init(&ev, HOST_KEY_DOWN, 0, scancode);
+    host_event_push(&ev);
+    host_event_kbd_init(&ev, HOST_KEY_UP, 0, scancode);
+    host_event_push(&ev);
+}
+
 void host_events_pause(void)
 {
     paused = true;
@@ -163,6 +198,14 @@ void host_events_pause(void)
 void host_events_resume(void)
 {
     paused = false;
+}
+
+void host_events_flush(void)
+{
+    struct host_event ev;
+
+    while (host_event_pop(&ev))
+        ;
 }
 
 int host_events_init(void)
