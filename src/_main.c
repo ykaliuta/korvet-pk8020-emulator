@@ -37,6 +37,17 @@ struct main_ctx {
     bool turbo;
     /* boost turbo in frames, (50*10) - 10 virtual second */
     unsigned turbo_boot_cnt;
+    /* counts frame refreshes */
+    int frame_counter;
+    /*
+     * the locks needed since the counters updated from timer thread
+     * and the main thread. The increment operation is not atomic
+     */
+    host_mutex_t frame_counter_lock;
+    /* periodically calculated frames per second */
+    int fps;
+    int counter50hz;
+    host_mutex_t counter50hz_lock;
 };
 
 int verbose;
@@ -48,10 +59,6 @@ int Takt;
 int BW_Flag=0;
 
 int main_loop_run_flag=1;
-int FPS=0;
-int FPS_Scr=0;
-int FPS_LED=0;
-int Counter50hz=0;		// 50 hz synchronization counter
 
 int turboBOOT; /* gets cmdline value here */
 
@@ -70,20 +77,28 @@ AUDIOSTREAM *stream;
 
 extern const char AboutMSG[];
 
-// timer routine for measuring
-void Timer_1S()
+static void main_50hz_tick(struct main_ctx *ctx);
+static bool in_turbomode(struct main_ctx *ctx);
+
+static void Timer_1S(void *c)
 {
-    FPS_Scr=FPS;
-    FPS=0;
+    struct main_ctx *ctx = c;
+
+    ctx->fps = ctx->frame_counter;
+    host_mutex_lock(&ctx->frame_counter_lock);
+    ctx->frame_counter = 0;
+    host_mutex_unlock(&ctx->frame_counter_lock);
 }
 END_OF_FUNCTION(Timer_1S);
 
-// timer routine for measuring
-void Timer_50hz()
+static void Timer_50hz(void *c)
 {
-    Counter50hz++;
+    struct main_ctx *ctx = c;
+
+    host_mutex_lock(&ctx->counter50hz_lock);
+    ctx->counter50hz++;
+    host_mutex_unlock(&ctx->counter50hz_lock);
 }
-END_OF_FUNCTION(Timer_1S);
 
 void Reset(void) {
     printf("Reset\n");
@@ -271,12 +286,8 @@ static inline void sound_update(bool in_turbo, bool changed) {};
 static void sound_mute_set(bool enable) {};
 #endif
 
-static void main_ctx_init(struct main_ctx *ctx)
+static void main_ctx_prepare(struct main_ctx *ctx)
 {
-    /* hopefully will be moved to some local context */
-    Takt=0;
-
-    memset(ctx, 0, sizeof(*ctx));
     ctx->turbo_boot_cnt = turboBOOT;
 
     if (in_turboboot(ctx)) {
@@ -317,7 +328,7 @@ static void handle_scale(struct main_ctx *ctx, int key)
 {
     FlagScreenScale ^= 1;
     SCREEN_SetGraphics(SCR_EMULATOR);
-    update_osd();
+    update_osd(ctx->fps);
 }
 
 static void handle_debug_lut_start(struct main_ctx *ctx, int key)
@@ -414,7 +425,9 @@ static bool main_quitting(struct main_ctx *ctx)
 
 static void main_50hz_tick(struct main_ctx *ctx)
 {
-    Counter50hz=0;
+    host_mutex_lock(&ctx->counter50hz_lock);
+    ctx->counter50hz = 0;
+    host_mutex_unlock(&ctx->counter50hz_lock);
 
     PIC_IntRequest(4);
 
@@ -425,21 +438,23 @@ static void main_50hz_tick(struct main_ctx *ctx)
     if (LutUpdateFlag) LUT_Update(BW_Flag);
     SCREEN_ShowScreen();
 
-    FPS++;
+    host_mutex_lock(&ctx->frame_counter_lock);
+    ctx->frame_counter++;
+    host_mutex_unlock(&ctx->frame_counter_lock);
 
     Takt-=ALL_TAKT;
 
-    update_osd();
+    update_osd(ctx->fps);
 
     // update_rus_lat();
 }
 
-static void main_loop(void)
+static void main_loop(struct main_ctx *ctx)
 {
-    struct main_ctx _ctx;
-    struct main_ctx *ctx = &_ctx;
+    /* hopefully will be moved to some local context */
+    Takt=0;
 
-    main_ctx_init(ctx);
+    main_ctx_prepare(ctx);
 
     for (;;) {
         process_kbd(ctx);
@@ -459,8 +474,9 @@ static void main_loop(void)
         if (Takt>=ALL_TAKT) {
             Timer50HzTick();
 
-            if (!turbo_update(ctx)) {
-                while (!Counter50hz)
+            turbo_update(ctx);
+            if (!in_turbomode(ctx)) {
+                while (!ctx->counter50hz)
                     rest(0);
             }
 
@@ -469,7 +485,7 @@ static void main_loop(void)
     }
 }
 
-static int do_hw_inits(void) {
+static int do_hw_inits(struct main_ctx *ctx) {
     #ifdef DBG
     dbg_INIT();
     #endif
@@ -490,8 +506,6 @@ static int do_hw_inits(void) {
 
     LOCK_FUNCTION(Timer_1S);
     LOCK_VARIABLE(FPS);
-    LOCK_VARIABLE(FPS_Scr);
-
     LOCK_VARIABLE(ShowedLines_Scr);
     LOCK_VARIABLE(ShowedLines);
     LOCK_VARIABLE(ShowedLinesTotal);
@@ -515,18 +529,34 @@ static int do_hw_inits(void) {
     }
     #endif
 
-    install_int_ex(Timer_1S, SECS_TO_TIMER(1));
-    install_int_ex(Timer_50hz,BPS_TO_TIMER(50));
+    install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
+    install_param_int_ex(Timer_50hz, ctx, BPS_TO_TIMER(50));
 
     return 0;
+}
+
+static void main_ctx_init(struct main_ctx *ctx)
+{
+    memset(ctx, 0, sizeof(*ctx));
+    host_mutex_init(&ctx->frame_counter_lock);
+    host_mutex_init(&ctx->counter50hz_lock);
+};
+
+static void main_ctx_destroy(struct main_ctx *ctx)
+{
+    host_mutex_destroy(&ctx->frame_counter_lock);
+    host_mutex_destroy(&ctx->counter50hz_lock);
 }
 
 int main(int argc,char **argv) {
 
     int i;
+    struct main_ctx ctx;
 
     //LUT_BASE_COLOR = 0x80
     assert(LUT_BASE_COLOR == 0x80); //very important for SCREEN_ShowScreen
+
+    main_ctx_init(&ctx);
 
     printf("%s\n",AboutMSG);
 
@@ -552,7 +582,7 @@ int main(int argc,char **argv) {
     OpenWAV("korvet.wav");
     #endif
 
-    i=do_hw_inits();
+    i=do_hw_inits(&ctx);
     if (i != 0) return i;
 
     host_init();
@@ -569,7 +599,7 @@ int main(int argc,char **argv) {
 
     SCREEN_ShowScreen();
 
-    main_loop();
+    main_loop(&ctx);
 
     #ifdef WAV
     CloseWAV();
@@ -584,6 +614,8 @@ int main(int argc,char **argv) {
     allegro_exit();
 
     LAN_destroy();
+
+    main_ctx_destroy(&ctx);
 
     return 0;
 }

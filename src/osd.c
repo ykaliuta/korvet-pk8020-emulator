@@ -49,8 +49,7 @@ extern int SCREEN_OSDY;
 
 extern int InUseFDD[4];
 
-extern int FPS_Scr;
-extern int FPS_LED;
+static int FPS_LED;
 
 int InUseKBD=0;                 // in use flag
 int InUseKBD_rows[16];          // Frames to show OSD KBD
@@ -99,8 +98,6 @@ static void write_tdnumber (BITMAP *bmp,int x, int y, int num)
       }
     }
 }
-
-void update_osd(void);
 
 void InitOSD(void) {
    int i;
@@ -286,7 +283,7 @@ void ResetOSD(void) {
   InUseFDD[2]=0;
   InUseFDD[3]=0;
   //
-  update_osd();
+  update_osd(0);
 
   InUseKBD=0;
   for (i=0;i<16;i++) {
@@ -305,7 +302,7 @@ void ResetOSD(void) {
 
 }
 
-void update_osd(void) {
+void update_osd(int FPS_Scr) {
     // выводим OnScreen LED
     // ТОЛЬКО если есть необходимость обновить индикаторы,
     // иначе будут мигать, да и FPS падает ;-)

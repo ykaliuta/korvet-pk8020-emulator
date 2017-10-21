@@ -180,7 +180,7 @@ int TimerTrace(const char *fmt, ...);
 void InitOSD(void);
 void DestroyOSD(void);
 void ResetOSD(void);
-void update_osd(void);
+void update_osd(int fps);
 void UpdateKBD_OSD(int Addr);
 
 int InitPrinter(void);

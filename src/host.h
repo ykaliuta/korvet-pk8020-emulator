@@ -27,6 +27,7 @@ typedef unsigned int bitmap_t;
 
 #include "host-config.h"
 #include "host-events.h"
+#include "host-threads.h"
 
 #define BIT(nr) (1UL << (nr))
 #define BIT_TEST(val, nr) (((val) & BIT(nr)) != 0)
