@@ -28,6 +28,8 @@
 
 #include <pthread.h>
 
+struct host_thread;
+
 typedef pthread_mutex_t host_mutex_t;
 typedef pthread_cond_t host_cond_t;
 
@@ -87,5 +89,9 @@ static inline int host_cond_timedwait(host_cond_t *c,
 {
     return pthread_cond_timedwait(c, m, abstime);
 }
+
+struct host_thread *host_thread_create(void *(*f)(void *), void *a);
+void host_threads_shutdown(void);
+void host_thread_cancel(struct host_thread *t);
 
 #endif
