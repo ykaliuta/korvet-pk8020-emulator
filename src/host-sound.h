@@ -16,27 +16,30 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-/*
- * This file contatin definitions for the host abstraction layer
- */
+#ifndef _HOST_SOUND_H_
+#define _HOST_SOUND_H_
 
-#ifndef _HOST_HOST_H_
-#define _HOST_HOST_H_
+#include <stdint.h>
 
-typedef unsigned int bitmap_t;
+/* SDL-style audio callback, but len is in samples! */
+typedef void (*host_sound_cb_t)(uint8_t *buf, unsigned len, void *ctx);
 
-#include "host-config.h"
-#include "host-events.h"
-#include "host-threads.h"
-#include "host-sound.h"
+#ifdef SOUND
+int host_sound_init(void);
+void host_sound_shutdown(void);
+int host_sound_start(unsigned _n_samples, unsigned _freq,
+                     host_sound_cb_t _cb, void *ctx);
+void host_sound_stop(void);
+#else
+static inline int host_sound_init(void) { return 0; };
+static inline void host_sound_shutdown(void) {};
+static inline int host_sound_start(unsigned _n_samples, unsigned _freq,
+                                   host_sound_cb_t _cb, void *ctx)
+{
+    return 0;
+};
+static inline void host_sound_stop(void) {};
+#endif
 
-#define BIT(nr) (1UL << (nr))
-#define BIT_TEST(val, nr) (((val) & BIT(nr)) != 0)
-#define BIT_CLEAR(val, nr) ((val) &= ~(BIT(nr)))
-#define BIT_SET(val, nr) ((val) |= BIT(nr))
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
-
-int host_init(void);
-void host_shutdown(void);
 
 #endif

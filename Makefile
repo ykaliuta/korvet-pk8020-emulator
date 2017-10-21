@@ -1,5 +1,6 @@
 
 LDLIBS = $(shell pkg-config allegro --libs)
+LDLIBS += -lpthread
 CFLAGS = -g -O0 -Isrc
 CFLAGS += -Wall -Wno-deprecated-declarations
 
@@ -29,7 +30,11 @@ sources += dbg/dbg.c dbg/_dasm.c dbg/dasm80.c \
 endif
 
 sources += host-config.c libconfini/confini.c
-sources += host.c host-events.c queue.c
+sources += host.c host-events.c queue.c host-threads.c
+
+ifneq ($(SOUND),no)
+sources += host-sound.c
+endif
 
 objs1	= $(patsubst %.c,%.o,$(sources))
 objs	= $(addprefix objs/,$(objs1))
