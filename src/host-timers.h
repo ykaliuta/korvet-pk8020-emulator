@@ -16,28 +16,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
-/*
- * This file contatin definitions for the host abstraction layer
- */
 
-#ifndef _HOST_HOST_H_
-#define _HOST_HOST_H_
+#ifndef _HOST_TIMERS_H_
+#define _HOST_TIMERS_H_
 
-typedef unsigned int bitmap_t;
+struct host_timer;
 
-#include "host-config.h"
-#include "host-events.h"
-#include "host-threads.h"
-#include "host-sound.h"
-#include "host-timers.h"
-
-#define BIT(nr) (1UL << (nr))
-#define BIT_TEST(val, nr) (((val) & BIT(nr)) != 0)
-#define BIT_CLEAR(val, nr) ((val) &= ~(BIT(nr)))
-#define BIT_SET(val, nr) ((val) |= BIT(nr))
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
-
-int host_init(void);
-void host_shutdown(void);
+struct host_timer *host_timer_start_bps(int bps,
+                                        void (*cb)(void *),
+                                        void *ctx);
+void host_timer_stop(struct host_timer *timer);
 
 #endif

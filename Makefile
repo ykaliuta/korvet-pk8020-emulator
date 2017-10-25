@@ -30,7 +30,7 @@ sources += dbg/dbg.c dbg/_dasm.c dbg/dasm80.c \
 endif
 
 sources += host-config.c libconfini/confini.c
-sources += host.c host-events.c queue.c host-threads.c
+sources += host.c host-events.c queue.c host-threads.c host-timers.c
 
 ifneq ($(SOUND),no)
 sources += host-sound.c

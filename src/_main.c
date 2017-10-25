@@ -508,8 +508,8 @@ static int do_hw_inits(struct main_ctx *ctx) {
     if (host_sound_start(AUDIO_BUFFER_SIZE, SOUNDFREQ, sound_callback, ctx) < 0)
         pr_error("Could not start sound\n");
 
-    install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
-    install_param_int_ex(Timer_50hz, ctx, BPS_TO_TIMER(50));
+    host_timer_start_bps(1, Timer_1S, ctx);
+    host_timer_start_bps(50, Timer_50hz, ctx);
 
     return 0;
 }
