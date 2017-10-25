@@ -33,11 +33,7 @@ void host_sound_stop(void);
 #else
 static inline int host_sound_init(void) { return 0; };
 static inline void host_sound_shutdown(void) {};
-static inline int host_sound_start(unsigned _n_samples, unsigned _freq,
-                                   host_sound_cb_t _cb, void *ctx)
-{
-    return 0;
-};
+#define host_sound_start(...) 0
 static inline void host_sound_stop(void) {};
 #endif
 

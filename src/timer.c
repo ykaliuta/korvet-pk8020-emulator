@@ -19,6 +19,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "host.h"
 #include "korvet.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -399,6 +400,12 @@ void Timer_Write(int Addr, byte Value)
   }
 }
 
+static void adjust_timer_buffer(uint8_t *buf, size_t len,
+                                size_t val, int *ptr)
+{
+    memmove(buf, buf + val, len - val);
+    *ptr -= val;
+}
 
 void MakeSound(void) {
 
@@ -420,7 +427,8 @@ void MakeSound(void) {
       TempValue=0;
     }
   }
-  BytePtr=0;
+  adjust_timer_buffer(TIMERBUF, ARRAY_SIZE(TIMERBUF),
+                      outptr - 1, &BytePtr);
 }
 
 void Timer50HzTick(void)

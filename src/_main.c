@@ -48,6 +48,7 @@ struct main_ctx {
     int fps;
     int counter50hz;
     host_mutex_t counter50hz_lock;
+    volatile bool sound_ready;
 };
 
 int verbose;
@@ -248,41 +249,30 @@ static void sound_mute_set(bool enable)
     MuteFlag = enable;
 }
 
-static bool sound_muted(void)
+static void sound_callback(uint8_t *p, unsigned len, void *a)
 {
-    return MuteFlag;
-}
+    struct main_ctx *ctx = a;
 
-static void sound_update(bool in_turbo, bool changed)
-{
-    unsigned char *p;
-
-    sound_mute_set(in_turbo);
-
-    if (in_turbo && changed) {
-            MUTE_BUF();
-            MUTE_BUF();
-            MUTE_BUF();
-            MUTE_BUF();
-            MUTE_BUF();
-            MUTE_BUF();
-    }
-
-    /* It updates counter's buffer even on mute */
-    MakeSound();
-
-    if (sound_muted())
-        return;
-
-    while (!(p = get_audio_stream_buffer(stream)))  rest(0);
+    while (!ctx->sound_ready)
+        ;
     memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
 #ifdef WAV
     AddWAV(p,AUDIO_BUFFER_SIZE);
 #endif
-    free_audio_stream_buffer(stream);
+    ctx->sound_ready = false;
 }
+
+static void sound_update(bool in_turbo, struct main_ctx *ctx)
+{
+    /* It updates counter's buffer even on mute */
+    MakeSound();
+    ctx->sound_ready = true;
+
+    sound_mute_set(in_turbo);
+}
+
 #else
-static inline void sound_update(bool in_turbo, bool changed) {};
+static inline void sound_update(bool in_turbo, struct main_ctx *ctx) {};
 static void sound_mute_set(bool enable) {};
 #endif
 
@@ -307,7 +297,7 @@ static bool turbo_update(struct main_ctx *ctx)
     if (turbo_enabling(ctx, turbo_changed))
         AllScreenUpdateFlag=1;
 
-    sound_update(in_turbomode(ctx), turbo_changed);
+    sound_update(in_turbomode(ctx), ctx);
 
     return in_turbomode(ctx);
 }
@@ -512,22 +502,11 @@ static int do_hw_inits(struct main_ctx *ctx) {
     LOCK_VARIABLE(ShowedLinesCnt);
 
 
-    #ifdef SOUND
-    // install a digital sound driver
-    if (install_sound(DIGI_AUTODETECT, MIDI_NONE, NULL) != 0) {
-        allegro_message("Error initialising sound system\n%s\n", allegro_error);
-        return 1;
-    }
-    printf("Audio driver: %s\n", digi_driver->name);
+    if (host_sound_init() < 0)
+        pr_error("Could not init sound\n");
 
-    // create an audio stream
-    stream = play_audio_stream(AUDIO_BUFFER_SIZE, 8, FALSE, SOUNDFREQ, 255, 128);
-    if (!stream) {
-        set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
-        allegro_message("Error creating audio stream!\n");
-        return 1;
-    }
-    #endif
+    if (host_sound_start(AUDIO_BUFFER_SIZE, SOUNDFREQ, sound_callback, ctx) < 0)
+        pr_error("Could not start sound\n");
 
     install_param_int_ex(Timer_1S, ctx, SECS_TO_TIMER(1));
     install_param_int_ex(Timer_50hz, ctx, BPS_TO_TIMER(50));

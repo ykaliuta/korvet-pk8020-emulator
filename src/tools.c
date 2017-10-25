@@ -323,15 +323,10 @@ void ReadConfig(void) {
 
 void MUTE_BUF(void) {
     int i;
-    unsigned char *p;
 
     for(i=0; i<AUDIO_BUFFER_SIZE; i++) {
         SOUNDBUF[i]=0;
     }
-
-    while (!(p = get_audio_stream_buffer(stream))) rest(0);
-    memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
-    free_audio_stream_buffer(stream);
 }
 
 void help(void) {
