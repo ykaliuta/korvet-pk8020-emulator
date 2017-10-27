@@ -377,7 +377,7 @@ static key_handler *key_handlers[HOST_KEY_MAX][HOST_MOD_MAX] = {
     [HOST_KEY_UP][HOST_MOD_NONE] = keys_up_nomods,
 };
 
-static void process_kbd(struct main_ctx *ctx)
+static void process_events(struct main_ctx *ctx)
 {
     struct host_event ev;
     key_handler *handlers = NULL;
@@ -403,6 +403,11 @@ static void process_kbd(struct main_ctx *ctx)
             KBD_update(ev.key.code, ev.type == HOST_KEY_DOWN);
 
         break;
+
+    case HOST_MOUSE:
+        MouseUpdate(ev.mouse.buttons, ev.mouse.dx, ev.mouse.dy);
+        break;
+
     default:
         pr_error("Unhandled event\n");
     }
@@ -420,8 +425,6 @@ static void main_50hz_tick(struct main_ctx *ctx)
     host_mutex_unlock(&ctx->counter50hz_lock);
 
     PIC_IntRequest(4);
-
-    ChkMouse();
 
     TimerTrace("V: %08d\n",Takt);
 
@@ -447,7 +450,7 @@ static void main_loop(struct main_ctx *ctx)
     main_ctx_prepare(ctx);
 
     for (;;) {
-        process_kbd(ctx);
+        process_events(ctx);
 
         /* Exit here */
         if (main_quitting(ctx))

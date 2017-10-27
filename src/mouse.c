@@ -19,18 +19,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "host.h"
 #include "korvet.h"
 #include <allegro.h>
 
 int MouseType = 1; //0 - disabled, 1 - MSMouse, 2-MouseSystem
-
-static int mickeyx = 0;
-static int mickeyy = 0;
-static int btn=0;
-
-static int mickeyx2 = 0;
-static int mickeyy2 = 0;
-static int btn2=0;
 
 /* static int k_mousex = 0; */
 /* static int k_mousey = 0; */
@@ -52,25 +45,30 @@ static int btn2=0;
 Right Button ────┘            X increment      Y increment
 */
 
-static void ChkMouse_Microsoft(void)
+enum ms_buttons {
+    MS_LEFT = 5,
+    MS_RIGHT = 4,
+};
+
+static void ChkMouse_Microsoft(bitmap_t buttons, int dx, int dy)
 {
-    static unsigned char b1,b2,b3;
+    uint8_t b1 = 0x40; /* see above, bit 6 always set */
+    uint8_t b2;
+    uint8_t b3;
 
-    get_mouse_mickeys(&mickeyx, &mickeyy);
-    btn  =(mouse_b & 2)?0x20:0;
-    btn |=(mouse_b & 1)?0x10:0;
+    if (BIT_TEST(buttons, HOST_MOUSE_LEFT))
+        BIT_SET(b1, MS_LEFT);
 
-    if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
-        b2=mickeyx;
-        b3=mickeyy;
+    if (BIT_TEST(buttons, HOST_MOUSE_RIGHT))
+        BIT_SET(b1, MS_RIGHT);
 
-        b1=0x40 | btn | ((b3&0xc0)>>4) | ((b2&0xc0)>>6);
-        b2 &= 0x3f;
-        b3 &= 0x3f;
+    b1 |= ((dy & 0xc0) >> 4) | ((dx & 0xc0) >> 6);
+    b2 = dx & 0x3f;
+    b3 = dy & 0x3f;
 
-        AddSerialQueue(b1);
-        AddSerialQueue(b2);
-        AddSerialQueue(b3);
+    AddSerialQueue(b1);
+    AddSerialQueue(b2);
+    AddSerialQueue(b3);
 /*
 // Korvet mouse? (Paralel)
 if (mickeyx) {k_mousex+=(mickeyx>0)?1:-1;}
@@ -80,11 +78,6 @@ btn  =(mouse_b & 2)?0x10:0;
 btn |=(mouse_b & 1)?0x20:0;
 k_mouseb = (k_mouseb != btn)?btn:k_mouseb;
 */
-    }
-
-    mickeyx2=mickeyx;
-    mickeyy2=mickeyy;
-    btn2    =btn;
 }
 
 // specila verson for Kwasi
@@ -127,31 +120,35 @@ have been sent.
 
 */
 
-static void ChkMouse_MouseSystem(void)
+enum mss_buttons {
+    MSS_LEFT = 2,
+    MSS_RIGHT = 0,
+    MSS_MIDDLE = 1,
+};
+
+static void ChkMouse_MouseSystem(bitmap_t buttons, int dx, int dy)
 {
-    static unsigned char b2,b3;
+    uint8_t b1 = 0x87; /* bit 7 always set, first three 1 if not pressed */
+    uint8_t b2;
+    uint8_t b3;
 
-    get_mouse_mickeys(&mickeyx, &mickeyy);
+    if (BIT_TEST(buttons, HOST_MOUSE_LEFT))
+        BIT_CLEAR(b1, MSS_LEFT);
 
-    btn  = 0x80;
-    btn |=(mouse_b & 2)?0:0x1;
-    btn |=(mouse_b & 1)?0:0x4;
-    btn |=(mouse_b & 4)?0:0x2;
+    if (BIT_TEST(buttons, HOST_MOUSE_RIGHT))
+        BIT_CLEAR(b1, MSS_RIGHT);
 
-    if ( (mickeyx != mickeyx2) || (mickeyy != mickeyy2) || (btn != btn2) ) {
-        b2=mickeyx;
-        b3=(256-mickeyy)&0xff;
+    if (BIT_TEST(buttons, HOST_MOUSE_MIDDLE))
+        BIT_CLEAR(b1, MSS_MIDDLE);
 
-        AddSerialQueue(btn);
-        AddSerialQueue(b2);
-        AddSerialQueue(b3);
-        AddSerialQueue(0);
-        AddSerialQueue(0);
-    }
+    b2 = dx;
+    b3 = (256 - dy) & 0xff;
 
-    mickeyx2=mickeyx;
-    mickeyy2=mickeyy;
-    btn2    =btn;
+    AddSerialQueue(b1);
+    AddSerialQueue(b2);
+    AddSerialQueue(b3);
+    AddSerialQueue(0);
+    AddSerialQueue(0);
 }
 
 /*
@@ -166,8 +163,8 @@ TODO: додбавить автодетект мыши
   *(char *) 0xfb11 = 0x35;
 */
 
-void ChkMouse(void)
+void MouseUpdate(bitmap_t buttons, int dx, int dy)
 {
-    if (MouseType == 1) ChkMouse_Microsoft();
-    if (MouseType == 2) ChkMouse_MouseSystem();
+    if (MouseType == 1) ChkMouse_Microsoft(buttons, dx, dy);
+    if (MouseType == 2) ChkMouse_MouseSystem(buttons, dx, dy);
 }

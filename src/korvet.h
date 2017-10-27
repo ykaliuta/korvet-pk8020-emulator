@@ -20,6 +20,7 @@
  *
  */
 
+#include "host.h"
 #include "verbose.h"
 
 #include <allegro.h>
@@ -215,7 +216,7 @@ static inline void dbg_tick(void) {};
 
 void GUI(void);
 void AddPC(word pc);
-void ChkMouse(void);
+void MouseUpdate(bitmap_t buttons, int dx, int dy);
 int GetFileAttr(char *t);
 int ChDir(char *t);
 byte FDC_Read_DRVREG(void);
