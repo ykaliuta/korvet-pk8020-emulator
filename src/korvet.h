@@ -206,6 +206,10 @@ void CheckROM(void);
 void CheckCCP(void);
 void CheckComEXEC(void);
 
+void AddWAV(unsigned char *BUF,int Len);
+int OpenWAV(char *FileName);
+void CloseWAV(void);
+
 void dbg_INIT(void);
 void doDBG(void);
 #ifdef DBG
