@@ -93,6 +93,10 @@ char *host_event_to_str(struct host_event *ev)
         asprintf(&str, "%d, mods 0x%08x, key %s",
                  ev->type, ev->key.mods, keyname);
         break;
+    case HOST_MOUSE:
+        asprintf(&str, "Mouse: %x, %d, %d\n",
+                 ev->mouse.buttons, ev->mouse.dx, ev->mouse.dy);
+        break;
     default:
         asprintf(&str, "%d", ev->type);
     }
@@ -190,6 +194,47 @@ void host_event_kbd_simulate(int code)
     host_event_push(&ev);
 }
 
+static void host_event_mouse_init(struct host_event *ev,
+                                  enum event_type type,
+                                  bitmap_t buttons,
+                                  int dx, int dy)
+{
+    host_event_init_common(ev, type);
+
+    ev->mouse.buttons = buttons;
+    ev->mouse.dx = dx;
+    ev->mouse.dy = dy;
+}
+
+enum allegro_buttons {
+    A_LEFT = 0,
+    A_RIGHT = 1,
+    A_MIDDLE = 2,
+};
+
+static void m_callback(int flags)
+{
+    struct host_event ev;
+    bitmap_t buttons = 0;
+    int dx;
+    int dy;
+    int b_state = mouse_b;
+
+    get_mouse_mickeys(&dx, &dy);
+
+    if (b_state & BIT(A_LEFT))
+        BIT_SET(buttons, HOST_MOUSE_LEFT);
+
+    if (b_state & BIT(A_RIGHT))
+        BIT_SET(buttons, HOST_MOUSE_RIGHT);
+
+    if (b_state & BIT(A_MIDDLE))
+        BIT_SET(buttons, HOST_MOUSE_MIDDLE);
+
+    host_event_mouse_init(&ev, HOST_MOUSE, buttons, dx, dy);
+    host_event_push(&ev);
+}
+
 void host_events_pause(void)
 {
     paused = true;
@@ -216,12 +261,14 @@ int host_events_init(void)
         return -1;
 
     keyboard_lowlevel_callback = key_callback;
+    mouse_callback = m_callback;
 
     return 0;
 }
 
 void host_events_shutdown(void)
 {
+    mouse_callback = NULL;
     keyboard_lowlevel_callback = NULL;
     queue_destroy(event_queue);
     event_queue = NULL;

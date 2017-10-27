@@ -26,6 +26,7 @@ enum event_type {
     HOST_NOTHING = 0,
     HOST_KEY_DOWN = 1,
     HOST_KEY_UP,
+    HOST_MOUSE,
 };
 
 #define HOST_KEY_MAX (HOST_KEY_UP + 1)
@@ -39,6 +40,12 @@ enum key_mods {
     HOST_MOD_MAX,
 };
 
+enum mouse_buttons {
+    HOST_MOUSE_LEFT = 0,
+    HOST_MOUSE_RIGHT,
+    HOST_MOUSE_MIDDLE,
+};
+
 struct host_event {
     enum event_type type;
     union {
@@ -46,6 +53,11 @@ struct host_event {
             bitmap_t mods;
             int code;
         } key;
+        struct mouse_event {
+            bitmap_t buttons;
+            int dx;
+            int dy;
+        } mouse;
     };
 };
 
