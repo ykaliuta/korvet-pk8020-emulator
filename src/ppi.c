@@ -385,7 +385,7 @@ byte PPI3_Read(int Addr) {
         */
         // deflector Joystick
         if (ext_rom_mode) Value=PPI3_B; // загрузка из ROM - читаем что записали, это адрес
-        else Value=Read_Joystick();
+        else Value=Joystick_Read();
         break;
         //Value=PPI3_B;break;
     }

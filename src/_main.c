@@ -408,6 +408,10 @@ static void process_events(struct main_ctx *ctx)
         MouseUpdate(ev.mouse.buttons, ev.mouse.dx, ev.mouse.dy);
         break;
 
+    case HOST_JOYSTICK:
+        Joystick_Update(ev.joystick.buttons, ev.joystick.axis);
+        break;
+
     default:
         pr_error("Unhandled event\n");
     }
@@ -554,7 +558,6 @@ int main(int argc,char **argv) {
 
     InitOSD();
     InitPrinter();
-    Init_Joystick();
 
     LAN_Init();
 
@@ -568,6 +571,12 @@ int main(int argc,char **argv) {
     if (i != 0) return i;
 
     host_init();
+
+    /* Joystick must come after host, because of the event queue */
+    if (JoystickEnabled) {
+        if (host_joystick_init(JoystickNumber) < 0)
+            exit(1);
+    }
 
     fflush(stdout);
     SCREEN_SetGraphics(SCR_EMULATOR);
@@ -592,6 +601,7 @@ int main(int argc,char **argv) {
     SCREEN_SetText();
     DestroyTimer();
 
+    host_joystick_shutdown();
     host_shutdown();
     allegro_exit();
 

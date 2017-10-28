@@ -78,6 +78,9 @@
 
 #define LUT_BASE_COLOR 0x80
 
+extern int JoystickNumber;
+extern int JoystickEnabled;
+
 #ifndef _TYPEDEF_
 typedef unsigned char  byte;
 typedef unsigned short word;
@@ -189,8 +192,8 @@ void DestroyPrinter(void);
 int GetPrinterStatus(void);
 void SetPrinterStrobe(int Value);
 
-void Init_Joystick(void);
-int Read_Joystick(void);
+void Joystick_Update(bitmap_t b, bitmap_t a);
+int Joystick_Read(void);
 
 void update_rus_lat(void);
 void Debug_LUT_start(void);
