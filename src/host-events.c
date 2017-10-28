@@ -43,6 +43,7 @@
 static struct queue *event_queue;
 static bitmap_t current_mods;
 static bool paused;
+static struct host_thread *joy_thread;
 
 void host_event_wait(struct host_event *ev)
 {
@@ -251,6 +252,159 @@ void host_events_flush(void)
 
     while (host_event_pop(&ev))
         ;
+}
+
+static void host_event_joystick_init(struct host_event *ev,
+                                     bitmap_t buttons,
+                                     bitmap_t axis)
+{
+    host_event_init_common(ev, HOST_JOYSTICK);
+
+    ev->joystick.buttons = buttons;
+    ev->joystick.axis = axis;
+}
+
+static void *host_joystick_thread(void *arg)
+{
+    useconds_t time_to_sleep_us = 20 * 1000; /* 20 ms, 50Hz */
+    struct host_event ev;
+    bitmap_t old_buttons = 0;
+    bitmap_t old_axis = 0;
+    bitmap_t buttons;
+    bitmap_t axis;
+    int num_buttons;
+    intptr_t n = (intptr_t)arg;
+    int i;
+
+    num_buttons = joy[n].num_buttons;
+    if (num_buttons > (sizeof(buttons) * 8))
+        num_buttons = sizeof(buttons) * 8;
+
+
+    for (;;) {
+        buttons = 0;
+        axis = 0;
+
+        poll_joystick();
+
+        for (i = 0; i < num_buttons; i++)
+            if (joy[n].button[i].b)
+                BIT_SET(buttons, i);
+
+        if (joy[n].stick[0].axis[1].d1)
+            BIT_SET(axis, HOST_JOYSTICK_UP);
+
+        if (joy[n].stick[0].axis[1].d2)
+            BIT_SET(axis, HOST_JOYSTICK_DOWN);
+
+        if (joy[n].stick[0].axis[0].d1)
+            BIT_SET(axis, HOST_JOYSTICK_LEFT);
+
+        if (joy[n].stick[0].axis[0].d2)
+            BIT_SET(axis, HOST_JOYSTICK_RIGHT);
+
+        if (buttons != old_buttons || axis != old_axis) {
+            host_event_joystick_init(&ev, buttons, axis);
+            host_event_push(&ev);
+
+            old_buttons = buttons;
+            old_axis = axis;
+        }
+
+        usleep(time_to_sleep_us);
+    }
+    return NULL;
+}
+
+/* take flags and show info almost as is */
+static char *flags(int flags)
+{
+    static char f[1024]="";
+    sprintf(f,"(%04x :: %s %s %s %s %s %s %s)",
+            flags,
+            flags & JOYFLAG_DIGITAL ? "DIGITAL" : "x",
+            flags & JOYFLAG_ANALOGUE ? "ANALOGUE" : "x",
+            flags & JOYFLAG_CALIB_DIGITAL ? "CALIB_DIGITAL" : "x",
+            flags & JOYFLAG_CALIB_ANALOGUE ? "CALIB_ANALOGUE" : "x",
+            flags & JOYFLAG_DIGITAL ? "DIGITAL" : "x",
+            flags & JOYFLAG_SIGNED ? "SIGNED" : "x",
+            flags & JOYFLAG_UNSIGNED ? "UNSIGNED" : "x"
+        );
+    return f;
+}
+
+static void host_joystick_show_info(void)
+{
+    int i,j,k;
+    pr_info("num_joysticks: %d\n", num_joysticks);
+
+    for (i=0;i<num_joysticks;i++) {
+        pr_info("\tjoystick: %2d\n", i);
+        pr_info("\t\tflags: %s\n", flags(joy[i].flags) );
+        pr_info("\t\tnum_buttons: %2d\n", joy[i].num_buttons);
+        for(j=0;j<joy[i].num_buttons;j++){
+            pr_info("\t\t\tbutton %2d: bool: %2d : name %s\n", j,joy[i].button[j].b,joy[i].button[j].name);
+        }
+
+        pr_info("\t\tnum_sticks: %d\n", joy[i].num_sticks);
+        for(j=0;j<joy[i].num_sticks;j++){
+            pr_info("\t\t\tstick %2d: flags: %s : num_axis %2d : name: %2s\n", j,flags(joy[i].stick[j].flags),joy[i].stick[j].num_axis,joy[i].stick[j].name);
+            for(k=0;k<joy[i].stick[j].num_axis;k++){
+                pr_info("\t\t\t\t axis: %2d : analog pos %5d: d1: %4d : d2 %4d : name: %s\n",
+                       j,
+                       joy[i].stick[j].axis[k].pos,
+                       joy[i].stick[j].axis[k].d1,
+                       joy[i].stick[j].axis[k].d2,
+                       joy[i].stick[j].axis[k].name
+                    );
+            }
+        }
+    }
+
+}
+
+int host_joystick_init(int n)
+{
+    struct host_thread *t;
+
+    if (install_joystick(JOY_TYPE_AUTODETECT) != 0) {
+        pr_error("Could not init joystick: %s\n", allegro_error);
+        goto err;
+    }
+
+    if (n >= num_joysticks) {
+        pr_error("Cannot use joystick %d, max: %d\n", (int)n, num_joysticks);
+        goto err;
+    }
+
+    if (joy[n].num_buttons < 1) {
+        pr_error("Selected joystick has no buttons\n");
+        goto err;
+    }
+
+    if (joy[n].flags & JOYFLAG_CALIBRATE) {
+        if (calibrate_joystick(n) == 0) {
+            pr_error("Could not calibrate joystick: %s\n", allegro_error);
+            goto err;
+        }
+    }
+
+    t = host_thread_create(host_joystick_thread, (void *)(intptr_t)n);
+    if (t == NULL)
+        return -1;
+
+    joy_thread = t;
+    return 0;
+
+err:
+    host_joystick_show_info();
+    return -1;
+}
+
+void host_joystick_shutdown(void)
+{
+    host_thread_cancel(joy_thread);
+    joy_thread = NULL;
 }
 
 int host_events_init(void)

@@ -27,6 +27,7 @@ enum event_type {
     HOST_KEY_DOWN = 1,
     HOST_KEY_UP,
     HOST_MOUSE,
+    HOST_JOYSTICK,
 };
 
 #define HOST_KEY_MAX (HOST_KEY_UP + 1)
@@ -46,6 +47,13 @@ enum mouse_buttons {
     HOST_MOUSE_MIDDLE,
 };
 
+enum joystick_axis {
+    HOST_JOYSTICK_UP = 0,
+    HOST_JOYSTICK_DOWN,
+    HOST_JOYSTICK_LEFT,
+    HOST_JOYSTICK_RIGHT,
+};
+
 struct host_event {
     enum event_type type;
     union {
@@ -58,6 +66,11 @@ struct host_event {
             int dx;
             int dy;
         } mouse;
+        struct joystick_event {
+            bitmap_t buttons;
+            /* we care only about "digital" input */
+            bitmap_t axis;
+        } joystick;
     };
 };
 
@@ -72,5 +85,7 @@ void host_events_resume(void);
 void host_events_flush(void);
 int host_event_kbd_to_ascii(struct host_event *ev);
 void host_event_kbd_simulate(int code);
+int host_joystick_init(int n);
+void host_joystick_shutdown(void);
 
 #endif
