@@ -48,6 +48,7 @@ struct main_ctx {
     int fps;
     int counter50hz;
     host_mutex_t counter50hz_lock;
+    host_cond_t counter50hz_cond;
     volatile bool sound_ready;
 };
 
@@ -99,6 +100,7 @@ static void Timer_50hz(void *c)
     host_mutex_lock(&ctx->counter50hz_lock);
     ctx->counter50hz++;
     host_mutex_unlock(&ctx->counter50hz_lock);
+    host_cond_broadcast(&ctx->counter50hz_cond);
 }
 
 void Reset(void) {
@@ -446,6 +448,19 @@ static void main_50hz_tick(struct main_ctx *ctx)
     // update_rus_lat();
 }
 
+static void main_wait_50hz_tick(struct main_ctx *ctx)
+{
+    while (!ctx->counter50hz) {
+        /*
+         * We do not really need the lock here,
+         * reading aboveis atomic, so use is for cond_wait only.
+         */
+        host_mutex_lock(&ctx->counter50hz_lock);
+        host_cond_wait(&ctx->counter50hz_cond, &ctx->counter50hz_lock);
+        host_mutex_unlock(&ctx->counter50hz_lock);
+    }
+}
+
 static void main_loop(struct main_ctx *ctx)
 {
     /* hopefully will be moved to some local context */
@@ -472,10 +487,8 @@ static void main_loop(struct main_ctx *ctx)
             Timer50HzTick();
 
             turbo_update(ctx);
-            if (!in_turbomode(ctx)) {
-                while (!ctx->counter50hz)
-                    rest(0);
-            }
+            if (!in_turbomode(ctx))
+                main_wait_50hz_tick(ctx);
 
             main_50hz_tick(ctx);
         }
@@ -526,10 +539,12 @@ static void main_ctx_init(struct main_ctx *ctx)
     memset(ctx, 0, sizeof(*ctx));
     host_mutex_init(&ctx->frame_counter_lock);
     host_mutex_init(&ctx->counter50hz_lock);
+    host_cond_init(&ctx->counter50hz_cond);
 };
 
 static void main_ctx_destroy(struct main_ctx *ctx)
 {
+    host_cond_destroy(&ctx->counter50hz_cond);
     host_mutex_destroy(&ctx->frame_counter_lock);
     host_mutex_destroy(&ctx->counter50hz_lock);
 }
