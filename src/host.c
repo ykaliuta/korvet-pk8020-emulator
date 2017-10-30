@@ -39,5 +39,6 @@ err:
 void host_shutdown(void)
 {
     host_events_shutdown();
+    host_threads_shutdown();
 }
 
