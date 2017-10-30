@@ -33,8 +33,8 @@ struct host_thread;
 typedef pthread_mutex_t host_mutex_t;
 typedef pthread_cond_t host_cond_t;
 
-#define HOST_MUTEX_INITIALIZER PHREAD_MUTEX_INITIALIZER
-#define HOST_COND_INITIALIZER PHREAD_COND_INITIALIZER
+#define HOST_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+#define HOST_COND_INITIALIZER PTHREAD_COND_INITIALIZER
 
 static inline int host_mutex_lock(host_mutex_t *m)
 {
