@@ -612,15 +612,11 @@ int main(int argc,char **argv) {
 
     fflush(stdout);
     SCREEN_SetGraphics(SCR_EMULATOR);
-    clear_to_color(screen, 254);
-    PrintDecor();
 
     LUT_Init();
     LUT_Update(BW_Flag);
 
     Reset();
-
-    SCREEN_ShowScreen();
 
     main_loop(&ctx);
 
@@ -630,7 +626,6 @@ int main(int argc,char **argv) {
 
     DestroyOSD();
     DestroyPrinter();
-    SCREEN_SetText();
     DestroyTimer();
 
     host_joystick_shutdown();

@@ -395,7 +395,6 @@ void SCREEN_SetGraphics(int ScrMode) {
     if (oldWindowed != FlagScreenScale) Current_Scr_Mode=-1;
     if (ScrMode != Current_Scr_Mode) {
 
-        set_gfx_mode(GFX_TEXT,0,0,0,0);
         set_color_depth(8);
 
         if (ScrMode == SCR_DBG) {
@@ -439,10 +438,6 @@ void SCREEN_SetGraphics(int ScrMode) {
     oldWindowed = FlagScreenScale;
 }
 
-int SCREEN_SetText(void) {
-    return set_gfx_mode(GFX_TEXT,0,0,0,0);
-}
-
 // ------------------------------------------------------------------ MAIN
 // Продцедура вывода экрана Корвета на реальный экран ПК
 //void ShowSCREEN(void) {
@@ -476,8 +471,6 @@ void SCREEN_ShowScreen(void) {
     }
 
     GZU_Ptr   =GZU[scr_Page_Show];
-
-    acquire_screen();
 
     for (y=0; y<256; y++) {
         //  Ввыводим на экран только строки которые нужно обновить
@@ -548,7 +541,6 @@ void SCREEN_ShowScreen(void) {
     }
 
     AllScreenUpdateFlag=0;
-    release_screen();
 }
 
 void SCREEN_Init(void) {

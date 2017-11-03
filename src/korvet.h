@@ -132,7 +132,6 @@ byte ACZU_Read(int Addr);
 
 void SCREEN_Init(void);
 void SCREEN_SetGraphics(int ScrMode);
-int SCREEN_SetText(void);
 void SCREEN_ShowScreen(void);
 
 void LUT_Init(void);
