@@ -89,6 +89,8 @@ typedef signed char    offset;
 #define _TYPEDEF_
 #endif
 
+void main_set_initial_scale(int s);
+
 void CPU_Init(void);
 int CPU_Exec1step (void);
 word CPU_GetPC(void);
@@ -130,9 +132,11 @@ int ACZU_Init(void);
 void ACZU_Write(int Addr,byte Value);
 byte ACZU_Read(int Addr);
 
-void SCREEN_Init(void);
+void SCREEN_Init(int initial_scale);
 void SCREEN_SetGraphics(int ScrMode);
 void SCREEN_ShowScreen(void);
+void SCREEN_IncScale(void);
+int SCREEN_Scale(void);
 
 void LUT_Init(void);
 void LUT_Write(byte Value);

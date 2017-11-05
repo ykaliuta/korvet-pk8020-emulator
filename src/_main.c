@@ -72,13 +72,14 @@ extern byte RAM[65535];
 extern int KeyboadUpdateFlag;   // =1 if need rebuld keyboard layout
 extern int KeyboardLayout;
 extern int LutUpdateFlag;
-extern int FlagScreenScale;
 extern int MuteFlag;
 extern int AllScreenUpdateFlag;  // Флаг необходимости обновть весь экран
 
 AUDIOSTREAM *stream;
 
 extern const char AboutMSG[];
+
+static int initial_scale;
 
 static void main_50hz_tick(struct main_ctx *ctx);
 static bool in_turbomode(struct main_ctx *ctx);
@@ -333,8 +334,7 @@ static void handle_dump(struct main_ctx *ctx, int key)
 
 static void handle_scale(struct main_ctx *ctx, int key)
 {
-    FlagScreenScale ^= 1;
-    SCREEN_SetGraphics(SCR_EMULATOR);
+    SCREEN_IncScale(); /* will update the screen */
     update_osd(ctx->fps);
 }
 
@@ -510,12 +510,15 @@ static void main_loop(struct main_ctx *ctx)
     }
 }
 
+void main_set_initial_scale(int s)
+{
+    initial_scale = s;
+}
+
 static int do_hw_inits(struct main_ctx *ctx) {
     #ifdef DBG
     dbg_INIT();
     #endif
-
-    SCREEN_Init();
 
     set_uformat(U_ASCII);
 
@@ -598,6 +601,8 @@ int main(int argc,char **argv) {
     #ifdef WAV
     OpenWAV("korvet.wav");
     #endif
+
+    SCREEN_Init(initial_scale);
 
     i=do_hw_inits(&ctx);
     if (i != 0) return i;

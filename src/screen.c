@@ -55,6 +55,12 @@ void (*ShowScreen)(void);
 #define RSEL1   0x20    // 00100000
 #define RSEL2   0x40    // 01000000
 
+#define MAX_SCALE 2
+
+#define VM_MAX_X 512
+#define VM_MAX_Y 256
+#define DBG_X 1024
+#define DBG_Y 768
 
 // EXTERNAL !!!!!!!!!!!!!!! --------------------------------------- EXT VAR
 unsigned int NCREG=0;
@@ -108,9 +114,12 @@ int SCREEN_YMAX=0;
 int SCREEN_OSDY=0;
 
 int Current_Scr_Mode=0;
-int FlagScreenScale=0;
+static int scale_factor_m_one;
 
 int BWMode=1;
+
+static BITMAP  *BITMAP_KORVET;
+static BITMAP  *BITMAP_KORVET2x;
 
 // ================================================================== Variables
 
@@ -386,56 +395,66 @@ void LUT_Init(void) {
 
 // ================================================================== LUT
 // ---------------------------------------------------------------------- SCREEN
-void SCREEN_SetGraphics(int ScrMode) {
-    static int oldWindowed=0;
+
+void SCREEN_IncScale(void)
+{
+    scale_factor_m_one++;
+    scale_factor_m_one %= MAX_SCALE;
+    SCREEN_SetGraphics(SCR_EMULATOR);
+}
+
+static void SCREEN_ResetScale(void)
+{
+    scale_factor_m_one = 0;
+}
+
+int SCREEN_Scale(void)
+{
+    return scale_factor_m_one + 1;
+}
+
+void SCREEN_SetGraphics(int ScrMode)
+{
     int WindowSizeX=0;
     int WindowSizeY=0;
+    int scale;
 
+    if (ScrMode == SCR_DBG && Current_Scr_Mode == SCR_DBG)
+        return;
 
-    if (oldWindowed != FlagScreenScale) Current_Scr_Mode=-1;
-    if (ScrMode != Current_Scr_Mode) {
+    if (ScrMode == SCR_DBG)
+        SCREEN_ResetScale();
 
-        set_color_depth(8);
+    scale = SCREEN_Scale();
 
-        if (ScrMode == SCR_DBG) {
+    if (ScrMode == SCR_DBG) {
 
-            SCREEN_OFFX=(1024-512-4);
-            SCREEN_OFFY=(2+5);
+        SCREEN_OFFX=(DBG_X - VM_MAX_X - 4);
+        SCREEN_OFFY=(2+5);
 
-            SCREEN_XMAX=512;
-            SCREEN_YMAX=256;
+        WindowSizeX = DBG_X;
+        WindowSizeY = DBG_Y;
 
-            set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
-            FlagScreenScale=0;
+    } else {
 
-        } else {
+        SCREEN_OFFX=2;//((WindowSizeX-512)/2);
+        SCREEN_OFFY=2;//((WindowSizeY-256-70)/2); // 70 - fullscreen shift for bottom text
 
-            if (FlagScreenScale) {
-                WindowSizeX=1024+4;
-                WindowSizeY=512+4+70;
-                SCREEN_XMAX=512*2;
-                SCREEN_YMAX=256*2;
-            } else {
-                WindowSizeX=512+4;
-                WindowSizeY=256+4+70;
-                SCREEN_XMAX=512;
-                SCREEN_YMAX=256;
-            }
-
-            set_gfx_mode(GFX_AUTODETECT_WINDOWED, WindowSizeX, WindowSizeY, 0, 0);
-
-            SCREEN_OFFX=2;//((WindowSizeX-512)/2);
-            SCREEN_OFFY=2;//((WindowSizeY-256-70)/2); // 70 - fullscreen shift for bottom text
-
-        }
-
-        SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
-
-        AllScreenUpdateFlag=1;
-        LutUpdateFlag=1;
+        WindowSizeX = scale * VM_MAX_X + 4;
+        WindowSizeY = scale * VM_MAX_Y + 4 + 70;
     }
+
+    SCREEN_XMAX = scale * VM_MAX_X;
+    SCREEN_YMAX = scale * VM_MAX_Y;
+
+    set_gfx_mode(GFX_AUTODETECT_WINDOWED,
+                 WindowSizeX, WindowSizeY, 0, 0);
+
+    SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
+
+    AllScreenUpdateFlag=1;
+    LutUpdateFlag=1;
     Current_Scr_Mode=ScrMode;
-    oldWindowed = FlagScreenScale;
 }
 
 // ------------------------------------------------------------------ MAIN
@@ -454,16 +473,9 @@ void SCREEN_ShowScreen(void) {
     int y_max=0;
     int y_lines_to_scr=0;
 
-    int blit2x_flag=(Current_Scr_Mode != SCR_DBG) && FlagScreenScale;
+    int blit2x_flag = SCREEN_Scale() == 2; /* temporary hack */
 
-    static BITMAP  *BITMAP_KORVET = NULL;
-    static BITMAP  *BITMAP_KORVET2x = NULL;
-    static unsigned int *BITMAP_PTR;
-
-    if (!BITMAP_KORVET) {
-        BITMAP_KORVET=create_bitmap_ex(8,512,256);
-        BITMAP_KORVET2x=create_bitmap_ex(8,512*2,256*2);
-    }
+    unsigned int *BITMAP_PTR;
 
     if (ACZU_Update_Flag || AllScreenUpdateFlag) {
         ACZU_MakeFrameBuffer();
@@ -543,12 +555,17 @@ void SCREEN_ShowScreen(void) {
     AllScreenUpdateFlag=0;
 }
 
-void SCREEN_Init(void) {
+void SCREEN_Init(int initial_scale)
+{
     // SetGraphics=SCREEN_SetGraphics;
     // SetText=SCREEN_SetText;
     // ShowScreen=SCREEN_ShowScreen;
+    scale_factor_m_one = initial_scale;
+
+    BITMAP_KORVET=create_bitmap_ex(8,512,256);
+    BITMAP_KORVET2x=create_bitmap_ex(8,512*2,256*2);
+
+    set_color_depth(8);
 }
 
 // ====================================================================== SCREEN
-
-

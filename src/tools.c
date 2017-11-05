@@ -40,7 +40,6 @@ extern int scr_Wide_Mode;
 extern int scr_Second_Font;
 extern int scr_Page_Show;
 
-extern int FlagScreenScale;
 extern int Current_Scr_Mode;
 
 extern byte RAM[65535];
@@ -94,9 +93,8 @@ void Debug_LUT_end(void)
 }
 
 void Write_BMP(char * FileName,int page) {
-    int kx=1;
+    int kx = SCREEN_Scale();
     int saved_page=scr_Page_Show;
-    if (FlagScreenScale) kx=2;
     BITMAP *bmp=create_bitmap(512*kx,256*kx);
     clear_bitmap(bmp);
 
@@ -178,6 +176,7 @@ void Write_Dump(void) {
 
 void ReadConfig(void) {
     char section[]="korvet";
+    int scale;
     struct config_entry arr[] = {
 	{
             .type = CONFIG_TYPE_STRING,
@@ -279,7 +278,7 @@ void ReadConfig(void) {
             .type = CONFIG_TYPE_INT,
             .name = "SCALE_WINDOW",
             .section = section,
-            .storage = &FlagScreenScale,
+            .storage = &scale,
             .max_size = sizeof(int),
             .i_default = 0,
 	},
@@ -314,6 +313,7 @@ void ReadConfig(void) {
     host_config_parse("./korvet.cfg", arr, ARRAY_SIZE(arr));
 
     scr_GZU_Size_Mask = (scr_GZU_Size_Mask == 1) ? 0 : 0x0f;
+    main_set_initial_scale(scale);
 
     #ifdef LAN_SUPPORT
     LAN_Addr = (~LAN_Addr) & 0xf;
