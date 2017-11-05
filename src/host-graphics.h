@@ -19,7 +19,18 @@
 #ifndef _HOST_GRAPHICS_H_
 #define _HOST_GRAPHICS_H_
 
+#include <allegro.h>
+
+typedef PALLETE host_g_palette;
 struct host_g_image;
+
+static inline void host_g_palette_init(host_g_palette *p) {};
+static inline void host_g_palette_set_from(host_g_palette from,
+                                           int first_color,
+                                           int n_colors)
+{
+    set_palette_range(from, first_color, first_color + n_colors, 1);
+}
 
 void host_g_init(void);
 struct host_g_image *host_g_image_new(int x, int y);

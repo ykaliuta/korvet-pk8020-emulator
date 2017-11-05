@@ -102,7 +102,7 @@ byte GZU[4][PLANESIZE*(3+1)]; // 3 слоя ГЗУ (4 страницы) + сло
 // Таблица LUT
 byte LUT[16]= {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
 int  LutUpdateFlag;
-PALLETE pallete;
+host_g_palette pallete;
 extern int OSD_LUT_Flag;
 
 int LineUpdateFlag[256];// Таблица флагов необходимости обновления строки
@@ -375,7 +375,7 @@ void LUT_Update(int BWFlag) {
             pallete[LUT_BASE_COLOR+i].b=c;
         }
     }
-    set_palette_range(pallete,LUT_BASE_COLOR,LUT_BASE_COLOR+16,0); //last paramerer - vblakn sync flag
+    host_g_palette_set_from(pallete,LUT_BASE_COLOR,16);
     LutUpdateFlag=0;
 }
 
@@ -632,6 +632,7 @@ void SCREEN_ShowScreen(void)
 void SCREEN_Init(int initial_scale)
 {
     host_g_init();
+    host_g_palette_init(&pallete);
 
     BITMAP_KORVET = SCREEN_vm_new(initial_scale);
     if (BITMAP_KORVET == NULL)

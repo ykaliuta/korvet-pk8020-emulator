@@ -20,6 +20,7 @@
  *
  */
 #include "dbg.h"
+#include "host-graphics.h"
 
 extern DATAFILE data[];
 
@@ -173,11 +174,14 @@ void  tSetNewAttr(int attr,int len, int col, int row) {
 }
 
 
-void DBG_Pallete_Active(void) {
-   PALLETE pallete;
+void DBG_Pallete_Active(void)
+{
+   host_g_palette pallete;
    int i;
    int bright;
    int StartColor=0x20;
+
+   host_g_palette_init(&pallete);
 
    for (i=0;i<16;i++) {
       bright=(i&0x8)?21:0;
@@ -186,14 +190,17 @@ void DBG_Pallete_Active(void) {
       pallete[StartColor+i].b=((i&0x1)?42:0)+bright;
 
    }
-   set_palette_range(pallete,StartColor,StartColor+16,1);
+   host_g_palette_set_from(pallete,StartColor,16);
 }
 
-void DBG_Pallete_Pasive(void) {
-   PALLETE pallete;
+void DBG_Pallete_Pasive(void)
+{
+   host_g_palette pallete;
    int i;
    int bright;
    int StartColor=0x20;
+
+   host_g_palette_init(&pallete);
 
    for (i=0;i<16;i++) {
       bright=(i&0x8)?21:0;
@@ -202,7 +209,7 @@ void DBG_Pallete_Pasive(void) {
       pallete[StartColor+i].b=(((i&0x1)?42:0)+bright)/3;
 
    }
-   set_palette_range(pallete,StartColor,StartColor+16,1);
+   host_g_palette_set_from(pallete,StartColor,16);
 }
 
 
