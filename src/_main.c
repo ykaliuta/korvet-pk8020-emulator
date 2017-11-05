@@ -632,6 +632,7 @@ int main(int argc,char **argv) {
     DestroyOSD();
     DestroyPrinter();
     DestroyTimer();
+    SCREEN_destroy();
 
     host_joystick_shutdown();
     host_shutdown();

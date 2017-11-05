@@ -133,6 +133,7 @@ void ACZU_Write(int Addr,byte Value);
 byte ACZU_Read(int Addr);
 
 void SCREEN_Init(int initial_scale);
+void SCREEN_destroy(void);
 void SCREEN_SetGraphics(int ScrMode);
 void SCREEN_ShowScreen(void);
 void SCREEN_IncScale(void);

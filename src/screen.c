@@ -25,17 +25,13 @@
 
 
 #include "korvet.h"
+#include "host-graphics.h"
 
 #include "PlaneMask.h"      // Arrays for Plane MASK optimization
 
 #define noSLOWBITMAPCONVERT
 
 #define LUT_BASE_COLOR 0x80
-
-
-int (*SetGraphics)(void);
-int (*SetText)(void);
-void (*ShowScreen)(void);
 
 #define noDEBUG_SCREEN
 
@@ -61,6 +57,12 @@ void (*ShowScreen)(void);
 #define VM_MAX_Y 256
 #define DBG_X 1024
 #define DBG_Y 768
+
+struct vm_image {
+    struct host_g_image *img[MAX_SCALE];
+    struct host_g_image *cur_img;
+    int scale_m_one;
+};
 
 // EXTERNAL !!!!!!!!!!!!!!! --------------------------------------- EXT VAR
 unsigned int NCREG=0;
@@ -114,12 +116,10 @@ int SCREEN_YMAX=0;
 int SCREEN_OSDY=0;
 
 int Current_Scr_Mode=0;
-static int scale_factor_m_one;
 
 int BWMode=1;
 
-static BITMAP  *BITMAP_KORVET;
-static BITMAP  *BITMAP_KORVET2x;
+static struct vm_image *BITMAP_KORVET;
 
 // ================================================================== Variables
 
@@ -396,21 +396,131 @@ void LUT_Init(void) {
 // ================================================================== LUT
 // ---------------------------------------------------------------------- SCREEN
 
+struct vm_image *SCREEN_vm_new(int initial_scale)
+{
+    struct vm_image *vm_img;
+    struct host_g_image *img;
+    int i;
+
+    vm_img = malloc(sizeof(*vm_img));
+    if (vm_img == NULL)
+        return NULL;
+
+    for (i = 0; i < MAX_SCALE; i++) {
+        int s = i + 1;
+
+        img = host_g_image_new(VM_MAX_X * s, VM_MAX_Y * s);
+        if (img == NULL)
+            goto err;
+
+        vm_img->img[i] = img;
+    }
+    vm_img->scale_m_one = initial_scale;
+    vm_img->cur_img = vm_img->img[initial_scale];
+
+    return vm_img;
+
+err:
+    while (i--)
+        host_g_image_destroy(vm_img->img[i]);
+    free(vm_img);
+
+    return NULL;
+}
+
+static void SCREEN_vm_destroy(struct vm_image *vm_img)
+{
+    int i;
+
+    for (i = 0; i < MAX_SCALE; i++)
+        host_g_image_destroy(vm_img->img[i]);
+    free(vm_img);
+}
+
+static void SCREEN_vm_set_scale(struct vm_image *img, int s)
+{
+    img->scale_m_one = s;
+    img->cur_img = img->img[s];
+}
+
+static void SCREEN_vm_inc_scale(struct vm_image *img)
+{
+    int s = img->scale_m_one;
+
+    s++;
+    s %= MAX_SCALE;
+    SCREEN_vm_set_scale(img, s);
+}
+
+static void SCREEN_vm_update_line(struct vm_image *img,
+                                        int n,
+                                        uint8_t line[VM_MAX_X])
+{
+    int scale = img->scale_m_one + 1;
+    size_t line_size = scale * VM_MAX_X;
+    int i;
+    int j;
+    uint8_t *buf;
+    uint8_t *buf_sav;
+
+    buf = buf_sav = host_g_image_get_line_ptr(img->cur_img,
+                                              scale * n);
+
+    /* scale first line */
+    for (i = 0; i < VM_MAX_X; i++) {
+        for (j = 0; j < scale; j++) {
+            *buf++ = line[i];
+        }
+    }
+
+    /* replicate it for scaling */
+    for (i = 1; i < scale; i++) {
+        buf = host_g_image_get_line_ptr(img->cur_img, scale * n + i);
+        memcpy(buf, buf_sav, line_size);
+    }
+    host_g_image_finish(img->cur_img);
+}
+
+static void SCREEN_vm_to_screen(struct vm_image *img,
+                                      int y1, int y2)
+{
+    int scale = img->scale_m_one + 1;
+    int x_src = 0;
+    int y_src = y1 * scale;
+    int x_dst = SCREEN_OFFX;
+    int y_dst = y1 * scale + SCREEN_OFFY;
+    int w = VM_MAX_X * scale;
+    int h = (y2 - y1 + 1) * scale;
+
+    host_g_image_to_screen(img->cur_img,
+                           x_src, y_src,
+                           x_dst, y_dst,
+                           w, h);
+}
+
 void SCREEN_IncScale(void)
 {
-    scale_factor_m_one++;
-    scale_factor_m_one %= MAX_SCALE;
+    struct vm_image *img = BITMAP_KORVET;
+
+    SCREEN_vm_inc_scale(img);
     SCREEN_SetGraphics(SCR_EMULATOR);
 }
 
 static void SCREEN_ResetScale(void)
 {
-    scale_factor_m_one = 0;
+    struct vm_image *img = BITMAP_KORVET;
+
+    SCREEN_vm_set_scale(img, 0);
+
+    AllScreenUpdateFlag=1;
+    LutUpdateFlag=1;
 }
 
 int SCREEN_Scale(void)
 {
-    return scale_factor_m_one + 1;
+    struct vm_image *img = BITMAP_KORVET;
+
+    return img->scale_m_one + 1;
 }
 
 void SCREEN_SetGraphics(int ScrMode)
@@ -447,8 +557,7 @@ void SCREEN_SetGraphics(int ScrMode)
     SCREEN_XMAX = scale * VM_MAX_X;
     SCREEN_YMAX = scale * VM_MAX_Y;
 
-    set_gfx_mode(GFX_AUTODETECT_WINDOWED,
-                 WindowSizeX, WindowSizeY, 0, 0);
+    host_g_set_mode(WindowSizeX, WindowSizeY);
 
     SCREEN_OSDY=SCREEN_OFFY+SCREEN_YMAX+2;
 
@@ -457,32 +566,48 @@ void SCREEN_SetGraphics(int ScrMode)
     Current_Scr_Mode=ScrMode;
 }
 
+static void SCREEN_update_one_line(struct vm_image *img, int n)
+{
+    uint8_t *GZU_Ptr;
+    uint8_t buf[VM_MAX_X];
+    unsigned int *d_VGA_Ptr = (unsigned int *)buf;
+    byte 		     c1,c2,c3,c4;
+    int x;
+
+    GZU_Ptr = &GZU[scr_Page_Show][n * 4 * 64];
+
+    for (x=0; x<64; x++) {
+        c1=*GZU_Ptr++;
+        c2=*GZU_Ptr++;
+        c3=*GZU_Ptr++;
+        c4=*GZU_Ptr++;
+
+        //LUT_BASE_COLOR = 0x80
+        *d_VGA_Ptr++=PlaneMask01[c1][0]|PlaneMask02[c2][0]|
+            PlaneMask04[c3][0]|PlaneMask08[c4][0]|0x80808080;
+        *d_VGA_Ptr++=PlaneMask01[c1][1]|PlaneMask02[c2][1]|
+            PlaneMask04[c3][1]|PlaneMask08[c4][1]|0x80808080;
+    } // for (in line loop)
+
+    SCREEN_vm_update_line(img, n, buf);
+}
+
 // ------------------------------------------------------------------ MAIN
 // Продцедура вывода экрана Корвета на реальный экран ПК
 //void ShowSCREEN(void) {
 
-void SCREEN_ShowScreen(void) {
-    int 		x,y;
+void SCREEN_ShowScreen(void)
+{
+    struct vm_image *img = BITMAP_KORVET;
+    int y;
     int lines_updated=0;
-
-    byte 		     c1,c2,c3,c4;
-    byte            *GZU_Ptr;            // Указатель на область ГЗУ
-    unsigned int  	*d_VGA_Ptr;          // Указатель на область буфера виртуального экрана
-
     int y_min=500;
     int y_max=0;
-    int y_lines_to_scr=0;
-
-    int blit2x_flag = SCREEN_Scale() == 2; /* temporary hack */
-
-    unsigned int *BITMAP_PTR;
 
     if (ACZU_Update_Flag || AllScreenUpdateFlag) {
         ACZU_MakeFrameBuffer();
         ACZU_Update_Flag=0;
     }
-
-    GZU_Ptr   =GZU[scr_Page_Show];
 
     for (y=0; y<256; y++) {
         //  Ввыводим на экран только строки которые нужно обновить
@@ -493,79 +618,30 @@ void SCREEN_ShowScreen(void) {
             if (y<y_min) y_min=y;
             if (y>y_max) y_max=y;
 
-            BITMAP_PTR=(unsigned int*) bmp_write_line(BITMAP_KORVET,y);
+            SCREEN_update_one_line(img, y);
 
-            d_VGA_Ptr = BITMAP_PTR;
-            for (x=0; x<64; x++) {
-                c1=*GZU_Ptr++;
-                c2=*GZU_Ptr++;
-                c3=*GZU_Ptr++;
-                c4=*GZU_Ptr++;
-
-                //LUT_BASE_COLOR = 0x80
-                *d_VGA_Ptr++=PlaneMask01[c1][0]|PlaneMask02[c2][0]|
-                             PlaneMask04[c3][0]|PlaneMask08[c4][0]|0x80808080;
-                *d_VGA_Ptr++=PlaneMask01[c1][1]|PlaneMask02[c2][1]|
-                             PlaneMask04[c3][1]|PlaneMask08[c4][1]|0x80808080;
-            } // for (in line loop)
-
-            bmp_unwrite_line(BITMAP_KORVET);
-
-            //update 2x bitmat if required
-            if (blit2x_flag) {
-                // scele line to 2x
-                byte c;
-                byte *src =(unsigned char*) BITMAP_PTR;
-                byte *dst =(unsigned char*) bmp_write_line(BITMAP_KORVET2x,y*2);
-                byte *dst2=(unsigned char*) bmp_write_line(BITMAP_KORVET2x,y*2+1);
-
-                for (x=0;x<512;x++) {
-                    c=*src++;
-                    *dst++=c;
-                    *dst++=c;
-                    *dst2++=c;
-                    *dst2++=c;
-                }
-            }
         }   // if Update
-        else
-        {   // Skip Line
-            GZU_Ptr	    +=4*64;
-            d_VGA_Ptr	+=2*64;
-        };
     } // scr update loop
 
-    if (lines_updated>0) {
-      y_lines_to_scr=y_max-y_min+1;
-
-      // void blit(BITMAP *source, BITMAP *dest, int source_x, int source_y, int dest_x, int dest_y, int width, int height);
-      if (blit2x_flag) {
-          blit(BITMAP_KORVET2x, screen,
-                0,y_min*2,
-                SCREEN_OFFX, (y_min*2)+SCREEN_OFFY,
-                512*2,y_lines_to_scr*2);
-      } else {
-          blit(BITMAP_KORVET, screen,
-                0,y_min,
-                SCREEN_OFFX, y_min+SCREEN_OFFY,
-                512,y_lines_to_scr);
-      }
-    }
+    if (lines_updated>0)
+        SCREEN_vm_to_screen(img, y_min, y_max);
 
     AllScreenUpdateFlag=0;
 }
 
 void SCREEN_Init(int initial_scale)
 {
-    // SetGraphics=SCREEN_SetGraphics;
-    // SetText=SCREEN_SetText;
-    // ShowScreen=SCREEN_ShowScreen;
-    scale_factor_m_one = initial_scale;
+    host_g_init();
 
-    BITMAP_KORVET=create_bitmap_ex(8,512,256);
-    BITMAP_KORVET2x=create_bitmap_ex(8,512*2,256*2);
+    BITMAP_KORVET = SCREEN_vm_new(initial_scale);
+    if (BITMAP_KORVET == NULL)
+        pr_error("Could not create virtual screen image\n");
+}
 
-    set_color_depth(8);
+void SCREEN_destroy(void)
+{
+    SCREEN_vm_destroy(BITMAP_KORVET);
+    BITMAP_KORVET = NULL;
 }
 
 // ====================================================================== SCREEN
