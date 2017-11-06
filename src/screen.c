@@ -631,17 +631,13 @@ void SCREEN_ShowScreen(void)
 
 void SCREEN_Dump(char *fn, int page)
 {
-    int kx = SCREEN_Scale();
     int saved_page=scr_Page_Show;
-    BITMAP *bmp=create_bitmap(512*kx,256*kx);
-    clear_bitmap(bmp);
 
     scr_Page_Show=page;
     AllScreenUpdateFlag=1;
     SCREEN_ShowScreen();
 
-    blit(screen,bmp,SCREEN_OFFX,SCREEN_OFFY,0,0,512*kx,256*kx);
-    save_bmp(fn,bmp,pallete);
+    host_g_image_dump(BITMAP_KORVET->cur_img, fn);
 
     scr_Page_Show=saved_page;
     AllScreenUpdateFlag=1;

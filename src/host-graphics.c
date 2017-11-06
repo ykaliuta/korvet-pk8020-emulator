@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
 
+#include "host-graphics.h"
 #include <allegro.h>
 
 struct host_g_image {
@@ -68,6 +69,14 @@ void host_g_image_to_screen(struct host_g_image *img,
                                    int w, int h)
 {
     blit(img->bmp, screen, x_src, y_src, x_dst, y_dst, w, h);
+}
+
+void host_g_image_dump(struct host_g_image *img, char *fn)
+{
+    PALETTE p;
+
+    get_palette(p);
+    save_bmp(fn, img->bmp, p);
 }
 
 void host_g_set_mode(int x, int y)

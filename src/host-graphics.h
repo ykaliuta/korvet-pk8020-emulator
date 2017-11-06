@@ -42,5 +42,6 @@ void host_g_image_to_screen(struct host_g_image *img,
                             int x_dst, int y_dst,
                             int w, int h);
 void host_g_set_mode(int x, int y);
+void host_g_image_dump(struct host_g_image *img, char *fn);
 
 #endif
