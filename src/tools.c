@@ -92,25 +92,6 @@ void Debug_LUT_end(void)
     LUT_Update(BW_Flag);
 }
 
-void Write_BMP(char * FileName,int page) {
-    int kx = SCREEN_Scale();
-    int saved_page=scr_Page_Show;
-    BITMAP *bmp=create_bitmap(512*kx,256*kx);
-    clear_bitmap(bmp);
-
-    scr_Page_Show=page;
-    AllScreenUpdateFlag=1;
-    SCREEN_ShowScreen();
-
-    blit(screen,bmp,SCREEN_OFFX,SCREEN_OFFY,0,0,512*kx,256*kx);
-    save_bmp(FileName,bmp,pallete);
-
-    scr_Page_Show=saved_page;
-    AllScreenUpdateFlag=1;
-    SCREEN_ShowScreen();
-}
-
-
 void dump_gzu(int page) {
     char fname[512];
     int i;
@@ -169,7 +150,7 @@ void Write_Dump(void) {
     fclose(F_DMP);
 
     sprintf(BUF,"DMPSC%03d_0.bmp",BMP_NUM);
-    Write_BMP(BUF,0);
+    SCREEN_Dump(BUF,0);
     BMP_NUM++;
 
 }

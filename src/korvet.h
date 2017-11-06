@@ -138,6 +138,7 @@ void SCREEN_SetGraphics(int ScrMode);
 void SCREEN_ShowScreen(void);
 void SCREEN_IncScale(void);
 int SCREEN_Scale(void);
+void SCREEN_Dump(char *fn, int page);
 
 void LUT_Init(void);
 void LUT_Write(byte Value);

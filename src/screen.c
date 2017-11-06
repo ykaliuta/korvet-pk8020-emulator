@@ -102,7 +102,7 @@ byte GZU[4][PLANESIZE*(3+1)]; // 3 слоя ГЗУ (4 страницы) + сло
 // Таблица LUT
 byte LUT[16]= {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
 int  LutUpdateFlag;
-host_g_palette pallete;
+static host_g_palette pallete;
 extern int OSD_LUT_Flag;
 
 int LineUpdateFlag[256];// Таблица флагов необходимости обновления строки
@@ -627,6 +627,25 @@ void SCREEN_ShowScreen(void)
         SCREEN_vm_to_screen(img, y_min, y_max);
 
     AllScreenUpdateFlag=0;
+}
+
+void SCREEN_Dump(char *fn, int page)
+{
+    int kx = SCREEN_Scale();
+    int saved_page=scr_Page_Show;
+    BITMAP *bmp=create_bitmap(512*kx,256*kx);
+    clear_bitmap(bmp);
+
+    scr_Page_Show=page;
+    AllScreenUpdateFlag=1;
+    SCREEN_ShowScreen();
+
+    blit(screen,bmp,SCREEN_OFFX,SCREEN_OFFY,0,0,512*kx,256*kx);
+    save_bmp(fn,bmp,pallete);
+
+    scr_Page_Show=saved_page;
+    AllScreenUpdateFlag=1;
+    SCREEN_ShowScreen();
 }
 
 void SCREEN_Init(int initial_scale)
