@@ -10,6 +10,9 @@ test: $(TESTS)
 
 queue: $(OBJS)/queue.o
 
+$(OBJS)/%.o:
+	$(MAKE) -C ../ $(subst ../,,$@)
+
 $(TESTS): %: %-test.c main.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS) 
 
