@@ -45,8 +45,8 @@ struct queue {
 
 /*
  * @size is a maximum number of elements each of size @elem_size
- * in the queue. In fact, only @size-1 will be available.
- * It is recommended to use size as a power of 2,
+ * in the queue.
+ * It is recommended to use (@size + 1) as a power of 2,
  * because the compiler will optimize modulo operator.
  */
 struct queue *queue_new(int size, int elem_size);

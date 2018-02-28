@@ -37,7 +37,7 @@
 #include <allegro.h>
 #include <string.h>
 
-#define MAX_EVENTS 512
+#define MAX_EVENTS (512 - 1)
 
 /* Globals */
 static struct queue *event_queue;

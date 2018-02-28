@@ -24,10 +24,15 @@
 #include "queue.h"
 #include <string.h>
 
-struct queue *queue_new(int size, int elem_size)
+struct queue *queue_new(int _size, int elem_size)
 {
     struct queue *q;
     uint8_t *p;
+    /*
+     * cannot fill the last element, since then head and tail
+     * pointers will be the same again like in the empty case
+     */
+    int size = _size + 1; /* one dummy element for the full case */
 
     q = malloc(sizeof(*q));
     if (q == NULL)
