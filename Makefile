@@ -54,6 +54,7 @@ check:
 clean: 
 	rm -rf objs
 	rm -f kdbg
+	$(MAKE) -C tests clean
 
 objs objs/dbg objs/libconfini:
 	mkdir -p $@
@@ -72,3 +73,6 @@ kdbg:	$(objs)
 
 -include $(wildcard objs/*.d)
 -include $(wildcard objs/dbg/*.d)
+
+test:
+	$(MAKE) -C tests test
