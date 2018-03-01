@@ -52,7 +52,7 @@ struct queue *queue_new(unsigned _size, unsigned elem_size)
 
     host_mutex_init(&q->lock);
     host_cond_init(&q->cond);
-	
+
     return q;
 }
 
@@ -71,7 +71,7 @@ void *queue_push(struct queue *q, void *elm)
     queue_lock(q);
     if (queue_is_full_locked(q))
         goto out;
-	
+
     memcpy(q->buf + q->tail * q->elem_size,
            elm,
            q->elem_size);
@@ -82,7 +82,7 @@ out:
     queue_unlock(q);
     return ret;
 }
-	    
+
 void *queue_pop(struct queue *q, void *elm)
 {
     void *ret = NULL;
