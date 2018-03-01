@@ -107,6 +107,117 @@ Ensure(three_elements_are_the_same_after_read)
 	queue_destroy(q);
 }
 
+Ensure(counts_three_non_overlapped)
+{
+	struct queue *q;
+	int el = 0;
+	unsigned count;
+
+	q = queue_new(5, sizeof(el));
+	assert_that(q, is_not_null);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+
+	count = queue_count(q);
+	assert_that(count, is_equal_to(3));
+
+	queue_destroy(q);
+}
+
+Ensure(size_three_counts_three_non_overlapped)
+{
+	struct queue *q;
+	int el = 0;
+	unsigned count;
+
+	q = queue_new(3, sizeof(el));
+	assert_that(q, is_not_null);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+
+	count = queue_count(q);
+	assert_that(count, is_equal_to(3));
+
+	queue_destroy(q);
+}
+
+Ensure(size_three_counts_three_one_overlapped)
+{
+	struct queue *q;
+	int el = 0;
+	unsigned count;
+
+	q = queue_new(3, sizeof(el));
+	assert_that(q, is_not_null);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_pop(q, &el);
+	queue_push(q, &el);
+
+	count = queue_count(q);
+	assert_that(count, is_equal_to(3));
+
+	queue_destroy(q);
+}
+
+Ensure(size_three_counts_three_two_overlapped)
+{
+	struct queue *q;
+	int el = 0;
+	unsigned count;
+
+	q = queue_new(3, sizeof(el));
+	assert_that(q, is_not_null);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_pop(q, &el);
+	queue_pop(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+
+	count = queue_count(q);
+	assert_that(count, is_equal_to(3));
+
+	queue_destroy(q);
+}
+
+Ensure(size_five_counts_three_four_overlapped)
+{
+	struct queue *q;
+	int el = 0;
+	unsigned count;
+
+	q = queue_new(5, sizeof(el));
+	assert_that(q, is_not_null);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+
+	queue_pop(q, &el);
+	queue_pop(q, &el);
+	queue_pop(q, &el);
+	queue_pop(q, &el);
+
+	queue_push(q, &el);
+	queue_push(q, &el);
+	queue_push(q, &el);
+
+	count = queue_count(q);
+	assert_that(count, is_equal_to(3));
+
+	queue_destroy(q);
+}
+
 TestSuite *my_create_test_suite(void)
 {
 	TestSuite *suite = create_named_test_suite(NAME);
@@ -118,6 +229,11 @@ TestSuite *my_create_test_suite(void)
 	add_test(suite, one_element_size_accepts_one_element);
 	add_test(suite, one_element_size_full_after_one_element);
 	add_test(suite, three_elements_are_the_same_after_read);
+	add_test(suite, counts_three_non_overlapped);
+	add_test(suite, size_three_counts_three_non_overlapped);
+	add_test(suite, size_three_counts_three_one_overlapped);
+	add_test(suite, size_three_counts_three_two_overlapped);
+	add_test(suite, size_five_counts_three_four_overlapped);
 
 	set_teardown(suite, teardown);
 
