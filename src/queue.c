@@ -66,20 +66,16 @@ void queue_destroy(struct queue *q)
 
 void *queue_push(struct queue *q, void *elm)
 {
-    unsigned next;
     void *ret = NULL;
 
     queue_lock(q);
     if (queue_is_full_locked(q))
         goto out;
 	
-    next = q->tail + 1;
-    if (next >= q->size)
-        next %= q->size;
     memcpy(q->buf + q->tail * q->elem_size,
            elm,
            q->elem_size);
-    q->tail = next;
+    q->tail = _queue_inc_ptr(q, q->tail);
     ret = elm;
     host_cond_broadcast(&q->cond);
 out:
@@ -89,20 +85,16 @@ out:
 	    
 void *queue_pop(struct queue *q, void *elm)
 {
-    unsigned next;
     void *ret = NULL;
     void *p;
 
     queue_lock(q);
     if (queue_is_empty_locked(q))
         goto out;
-	
-    next = q->head + 1;
-    if (next >= q->size)
-        next %= q->size;
+
     p = q->buf + q->head * q->elem_size;
     memcpy(elm, p, q->elem_size);
-    q->head = next;
+    q->head = _queue_inc_ptr(q, q->head);
     ret = elm;
 out:
     queue_unlock(q);

@@ -43,6 +43,16 @@ struct queue {
     host_cond_t cond;
 };
 
+static inline unsigned _queue_inc_ptr(struct queue *q, unsigned ptr)
+{
+    unsigned next;
+
+    next = ptr + 1;
+    if (next >= q->size)
+        next %= q->size;
+    return next;
+}
+
 /*
  * @size is a maximum number of elements each of size @elem_size
  * in the queue.
@@ -90,12 +100,7 @@ static inline bool queue_is_empty(struct queue *q)
 
 static inline bool queue_is_full_locked(struct queue *q)
 {
-    unsigned next;
-
-    next = q->tail + 1;
-    if (next >= q->size)
-        next %= q->size;
-    return next == q->head;
+    return _queue_inc_ptr(q, q->tail) == q->head;
 }
 
 static inline bool queue_is_full(struct queue *q)
