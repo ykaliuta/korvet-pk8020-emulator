@@ -371,7 +371,7 @@ static void handle_reset(struct main_ctx *ctx, int key)
     Reset();
 }
 
-static key_handler keys_nomods[] = {
+static key_handler keys_nomods[KEY_MAX] = {
     [KEY_F7] = handle_debug_lut_start,
     [KEY_F8] = handle_scale,
     [KEY_F9] = handle_dbg,
@@ -380,10 +380,10 @@ static key_handler keys_nomods[] = {
     [KEY_F12] = handle_quit,
 };
 
-static key_handler keys_up_nomods[] = {
+static key_handler keys_up_nomods[KEY_MAX] = {
     [KEY_F7] = handle_debug_lut_end,
 };
-static key_handler keys_alt[] = {
+static key_handler keys_alt[KEY_MAX] = {
     [KEY_F8] = handle_dump,
     [KEY_F9] = handle_gui,
 };
