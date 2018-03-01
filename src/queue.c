@@ -24,7 +24,7 @@
 #include "queue.h"
 #include <string.h>
 
-struct queue *queue_new(int _size, int elem_size)
+struct queue *queue_new(unsigned _size, unsigned elem_size)
 {
     struct queue *q;
     uint8_t *p;
@@ -32,7 +32,7 @@ struct queue *queue_new(int _size, int elem_size)
      * cannot fill the last element, since then head and tail
      * pointers will be the same again like in the empty case
      */
-    int size = _size + 1; /* one dummy element for the full case */
+    unsigned size = _size + 1; /* one dummy element for the full case */
 
     q = malloc(sizeof(*q));
     if (q == NULL)
@@ -66,7 +66,7 @@ void queue_destroy(struct queue *q)
 
 void *queue_push(struct queue *q, void *elm)
 {
-    int next;
+    unsigned next;
     void *ret = NULL;
 
     queue_lock(q);
@@ -89,7 +89,7 @@ out:
 	    
 void *queue_pop(struct queue *q, void *elm)
 {
-    int next;
+    unsigned next;
     void *ret = NULL;
     void *p;
 

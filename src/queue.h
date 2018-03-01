@@ -34,10 +34,10 @@
 #include <stdlib.h>
 
 struct queue {
-    int elem_size;
-    int size;
-    int head;
-    int tail;
+    unsigned elem_size;
+    unsigned size;
+    unsigned head;
+    unsigned tail;
     uint8_t *buf;
     host_mutex_t lock;
     host_cond_t cond;
@@ -49,7 +49,7 @@ struct queue {
  * It is recommended to use (@size + 1) as a power of 2,
  * because the compiler will optimize modulo operator.
  */
-struct queue *queue_new(int size, int elem_size);
+struct queue *queue_new(unsigned size, unsigned elem_size);
 void queue_destroy(struct queue *q);
 void *queue_push(struct queue *q, void *elm);
 void *queue_pop(struct queue *q, void *elm);
@@ -90,7 +90,7 @@ static inline bool queue_is_empty(struct queue *q)
 
 static inline bool queue_is_full_locked(struct queue *q)
 {
-    int next;
+    unsigned next;
 
     next = q->tail + 1;
     if (next >= q->size)
