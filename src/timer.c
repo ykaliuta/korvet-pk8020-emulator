@@ -21,6 +21,8 @@
  */
 #include "host.h"
 #include "korvet.h"
+#include "queue.h"
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -38,9 +40,11 @@ int PrevTakt;
 int MuteFlag=0;
 
 // -------------------------------------------------------------------------
-byte TIMERBUF[MAXBUF*2];
-int  BytePtr=0;
+// ring buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
+// consider it private, use _OUT functions for access
+static struct queue *tout; /* timer output */
 
+// buffer for Allegro play_audio_stream
 byte SOUNDBUF[MAXBUF*2];
 
 // -------------------------------------------------------------------------
@@ -63,15 +67,56 @@ struct _TIMER {
 };
 
 struct _TIMER i8253[4];
-//
 
-// OUT_ routines
+/*
+ * Subroutines to access timer output buffer.  ADD_OUT in theory
+ * can be used with any channel, it is used by the timer chip
+ * emulator, so it takes the channel as its argument.
+ * Others are used in sound related code only, so no point to
+ * carry the channel there.
+ */
 
-static inline void ADD_OUT(int CH,int Value) {
-  if (!MuteFlag) {
-    TIMERBUF[BytePtr]=Value&SoundEnable;
-  }
-  if (BytePtr < MAXBUF) BytePtr++;
+static void ADD_OUT(int CH, int Value)
+{
+    uint8_t v;
+    void *rc;
+
+    /* Only channel 0 supported, used for sound generation */
+    assert(CH == 0);
+
+    if (MuteFlag)
+        return;
+
+    v = (uint8_t)(Value & SoundEnable);
+    rc = queue_push(tout, &v);
+    if (rc == NULL) {
+        pr_error("Timer buffer is full!\n");
+        abort();
+    }
+}
+
+static bool SHIFT_OUT(int *Value)
+{
+    uint8_t v;
+    void *rc;
+
+    rc = queue_pop(tout, &v);
+    if (rc == NULL) {
+        pr_debug("Run out of timer buffer");
+        return false;
+    }
+    *Value = v;
+    return true;
+}
+
+static inline void DRAIN_OUT(void)
+{
+    queue_reset(tout);
+}
+
+static unsigned LENGTH_OUT(void)
+{
+    return queue_count(tout);
 }
 
 // MODE 0: INTERRUPT ON TERMINAL COUNT ----------------------------------------
@@ -365,8 +410,10 @@ void InitTMR(void)                      // Инициализация при с�
   Init_TimerCntr(0);
   Init_TimerCntr(1);
   Init_TimerCntr(2);
-  BytePtr=0;
   PrevTakt=0;
+
+  queue_reset(tout);
+  memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
 
 int DoTimer(void){
@@ -400,35 +447,44 @@ void Timer_Write(int Addr, byte Value)
   }
 }
 
-static void adjust_timer_buffer(uint8_t *buf, size_t len,
-                                size_t val, int *ptr)
+
+#define MAX_ERROR_SAMPLES   8
+#define DAMPING_LEVEL       3
+
+void MakeSound()
 {
-    memmove(buf, buf + val, len - val);
-    *ptr -= val;
-}
+    int nticks, tickval, sample, tick, error;
+    int SampleIntegralAmplitude, TicksPerSample, SampleMaxAmplitude;
+    int TickWindowBegin, TickWindowEnd;
 
-void MakeSound(void) {
-
-  int  TempValue=0;
-  int  i,j;
-  int  ByteInByte=40000/AUDIO_BUFFER_SIZE;
-  int  outptr=0;
-  int  d7=0;
-
-  if (MuteFlag) {
-    for (i=0;i<AUDIO_BUFFER_SIZE;i++) SOUNDBUF[i]=0;
-  } else {
-    for (i=0;i<AUDIO_BUFFER_SIZE;i++) {
-      for (j=0;j<ByteInByte;j++) if (TIMERBUF[outptr++]) TempValue++;
-
-      d7+=7028;if (d7 >=10000) {if (TIMERBUF[outptr++]) TempValue++;d7-=10000;}
-
-      SOUNDBUF[i]=(TempValue>ByteInByte/2)?255:0;
-      TempValue=0;
+    nticks = LENGTH_OUT();
+    if (MuteFlag || nticks == 0) {
+        memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
+        return;
     }
-  }
-  adjust_timer_buffer(TIMERBUF, ARRAY_SIZE(TIMERBUF),
-                      outptr - 1, &BytePtr);
+    TicksPerSample = nticks / AUDIO_BUFFER_SIZE;
+    SampleMaxAmplitude = TicksPerSample;
+    error = (40000 - nticks) / (40000 / AUDIO_BUFFER_SIZE);
+    if (error > MAX_ERROR_SAMPLES)
+        pr_error("%d audio samples over/underrun, distortion possible. Please report.\n",
+                 error);
+    for (sample = 0; sample < AUDIO_BUFFER_SIZE; sample++) {
+        SampleIntegralAmplitude = 0;
+        TickWindowBegin = sample * nticks / AUDIO_BUFFER_SIZE;
+        TickWindowEnd = (sample+1) * nticks / AUDIO_BUFFER_SIZE;
+        for (tick = TickWindowBegin; tick < TickWindowEnd; tick++) {
+            if (SHIFT_OUT(&tickval) && tickval)
+                SampleIntegralAmplitude++;
+        }
+        /* try to make smooth wave instead of original 0/1 trigger implementation */
+        SOUNDBUF[sample] = SampleIntegralAmplitude * 128 / SampleMaxAmplitude;
+        /* avoid uneven sampling artifacts */
+        if (SOUNDBUF[sample] >= (128 - DAMPING_LEVEL))
+            SOUNDBUF[sample] = 128;
+        else if (SOUNDBUF[sample] <= DAMPING_LEVEL)
+            SOUNDBUF[sample] = 0;
+    }
+    DRAIN_OUT();
 }
 
 void Timer50HzTick(void)
@@ -443,10 +499,14 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
+    tout = queue_new(MAXBUF * 2 - 1, sizeof(uint8_t));
+    if (tout == NULL)
+        abort();
 }
 
 void DestroyTimer(void)
 {
+    queue_destroy(tout);
 #ifdef TRACETIMER
     fclose(F_TIMER);
 #endif
