@@ -1,5 +1,5 @@
 
-TESTS := queue
+TESTS := queue darray
 
 LDLIBS := -lcgreen
 OBJS := ../objs
@@ -9,6 +9,7 @@ test: $(TESTS)
 	@for t in $(TESTS); do ./$$t; done
 
 queue: $(OBJS)/queue.o
+darray: $(OBJS)/darray.o
 
 $(OBJS)/%.o:
 	$(MAKE) -C ../ $(subst ../,,$@)
