@@ -48,21 +48,21 @@ byte SOUNDBUF[MAXBUF*2];
 
 // -------------------------------------------------------------------------
 struct _TIMER {
-	word	CountingElement;
-	word	CountRegister;
-	word	OutputLatch;
-	int 	Mode;
-	int	BCDFlag;
-	int	RWMode;
+    word	CountingElement;
+    word	CountRegister;
+    word	OutputLatch;
+    int 	Mode;
+    int	BCDFlag;
+    int	RWMode;
 
-	int	LatchCounter; 	// Определяет какой байт сейчас читается если
-				// залочено.
-	int	WriteCounter;	// Определяет какой байт сейчас пишется
-	int	ReadCounter;	// Определяет какой байт сейчас читается
+    int	LatchCounter; 	// Определяет какой байт сейчас читается если
+    // залочено.
+    int	WriteCounter;	// Определяет какой байт сейчас пишется
+    int	ReadCounter;	// Определяет какой байт сейчас читается
 
-	int 	OUT;
-	int	StartFlag;	// 1 если счетчик считает
-        int	NextTickLoad;	// 1 если на след. такте надо загрузить счетчик
+    int 	OUT;
+    int	StartFlag;	// 1 если счетчик считает
+    int	NextTickLoad;	// 1 если на след. такте надо загрузить счетчик
 };
 
 struct _TIMER i8253[4];
@@ -122,306 +122,306 @@ static unsigned LENGTH_OUT(void)
 // MODE 0: INTERRUPT ON TERMINAL COUNT ----------------------------------------
 
 void mode0_setmode(int Counter) {
-  i8253[Counter].OUT=0;
-  i8253[Counter].NextTickLoad=1;
-  i8253[Counter].StartFlag=1;
+    i8253[Counter].OUT=0;
+    i8253[Counter].NextTickLoad=1;
+    i8253[Counter].StartFlag=1;
 };
 
 void mode0_WriteNewValue(int Counter,int RWMode) {
-  if (RWMode == 3) { // 2 byte load
-    i8253[Counter].OUT=0;
-  } else {
-    i8253[Counter].NextTickLoad=1;
-    i8253[Counter].StartFlag   =1;
-  }
-  // ПОКА НЕ РЕАЛИЗОВАНО !!!!!!!!!!!!!!!!!!!!!
-  // когда сечетчик считает, загрузка нового LSB перед тем как счетчик
-  // дойдет до 0 и пеерскочит на FFFF, останавливает счетчик.
-  // однако, если LSB загружен ПОСЛЕ того как счетчик перескоил в FFFF
-  // так что MSB теперь присутсвует в счетчике, тогда счетчик не останавливается.
+    if (RWMode == 3) { // 2 byte load
+        i8253[Counter].OUT=0;
+    } else {
+        i8253[Counter].NextTickLoad=1;
+        i8253[Counter].StartFlag   =1;
+    }
+    // ПОКА НЕ РЕАЛИЗОВАНО !!!!!!!!!!!!!!!!!!!!!
+    // когда сечетчик считает, загрузка нового LSB перед тем как счетчик
+    // дойдет до 0 и пеерскочит на FFFF, останавливает счетчик.
+    // однако, если LSB загружен ПОСЛЕ того как счетчик перескоил в FFFF
+    // так что MSB теперь присутсвует в счетчике, тогда счетчик не останавливается.
 }
 
 void mode0_do(int Counter,int Takt) {
 
-   if (i8253[Counter].NextTickLoad) {
-      i8253[Counter].CountingElement=i8253[Counter].CountRegister;
-      i8253[Counter].NextTickLoad=0;
-      Takt--;
-   }
+    if (i8253[Counter].NextTickLoad) {
+        i8253[Counter].CountingElement=i8253[Counter].CountRegister;
+        i8253[Counter].NextTickLoad=0;
+        Takt--;
+    }
 
-   while (Takt--) {
-     if (i8253[Counter].StartFlag) {
-        if ( i8253[Counter].CountingElement-- ) {
-            ADD_OUT(Counter,i8253[Counter].OUT);
-            i8253[Counter].OUT=0;
+    while (Takt--) {
+        if (i8253[Counter].StartFlag) {
+            if ( i8253[Counter].CountingElement-- ) {
+                ADD_OUT(Counter,i8253[Counter].OUT);
+                i8253[Counter].OUT=0;
+            } else {
+                i8253[Counter].StartFlag=0;
+                i8253[Counter].OUT=1;
+            };
         } else {
-            i8253[Counter].StartFlag=0;
-            i8253[Counter].OUT=1;
-        };
-     } else {
             ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
-     }
-   }
+        }
+    }
 }
 
 // MODE 1: HARDWARE RETRIGGRTABLE ONE-SHOT ------------------------------------
 void mode1_setmode(int Counter) {
-  i8253[Counter].OUT=1;
-  i8253[Counter].StartFlag=0;
+    i8253[Counter].OUT=1;
+    i8253[Counter].StartFlag=0;
 };
 void mode1_WriteNewValue(int Counter,int RWMode) {}
 void mode1_do(int Counter,int Takt) {
-   while (Takt--) {
-     ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
-   }
+    while (Takt--) {
+        ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
+    }
 }
 
 // MODE 2: RATE GENERATOR -----------------------------------------------------
 void mode2_setmode(int Counter) {
-  i8253[Counter].OUT=1;
-  i8253[Counter].NextTickLoad=1;
-  i8253[Counter].StartFlag=0;
+    i8253[Counter].OUT=1;
+    i8253[Counter].NextTickLoad=1;
+    i8253[Counter].StartFlag=0;
 };
 void mode2_WriteNewValue(int Counter,int RWMode) {
-  if (RWMode == 3) { // 2 byte load
-  } else {
-    i8253[Counter].NextTickLoad=1;
-    i8253[Counter].StartFlag=1;
-  }
+    if (RWMode == 3) { // 2 byte load
+    } else {
+        i8253[Counter].NextTickLoad=1;
+        i8253[Counter].StartFlag=1;
+    }
 }
 
 void mode2_do(int Counter,int Takt) {
 
-   if (i8253[Counter].NextTickLoad) {
-      i8253[Counter].CountingElement=i8253[Counter].CountRegister;
-      i8253[Counter].NextTickLoad=0;
-   }
+    if (i8253[Counter].NextTickLoad) {
+        i8253[Counter].CountingElement=i8253[Counter].CountRegister;
+        i8253[Counter].NextTickLoad=0;
+    }
 
-   while (Takt--) {
-     if (i8253[Counter].StartFlag) {
-       if (1 == i8253[Counter].CountingElement-- ) {
-         ADD_OUT(Counter,0);
-         i8253[Counter].CountingElement=i8253[Counter].CountRegister;
-       }
-     } else {
-       ADD_OUT(Counter,1);
-     }
-   }
+    while (Takt--) {
+        if (i8253[Counter].StartFlag) {
+            if (1 == i8253[Counter].CountingElement-- ) {
+                ADD_OUT(Counter,0);
+                i8253[Counter].CountingElement=i8253[Counter].CountRegister;
+            }
+        } else {
+            ADD_OUT(Counter,1);
+        }
+    }
 }
 
 // MODE 3: SQUARE WAVE MODE ---------------------------------------------------
 void mode3_setmode(int Counter) {
-  i8253[Counter].OUT=1;
-  i8253[Counter].NextTickLoad=1;
-  i8253[Counter].StartFlag=0;
+    i8253[Counter].OUT=1;
+    i8253[Counter].NextTickLoad=1;
+    i8253[Counter].StartFlag=0;
 };
 void mode3_WriteNewValue(int Counter,int RWMode) {
-  if (RWMode == 3) { // 2 byte load
-  } else {
-    i8253[Counter].NextTickLoad=1;
-    i8253[Counter].StartFlag=1;
-  }
+    if (RWMode == 3) { // 2 byte load
+    } else {
+        i8253[Counter].NextTickLoad=1;
+        i8253[Counter].StartFlag=1;
+    }
 }
 void mode3_do(int Counter,int Takt) {
 
-   if (i8253[Counter].NextTickLoad) {
-      i8253[Counter].CountingElement=i8253[Counter].CountRegister&0xfffe;
-      i8253[Counter].NextTickLoad=0;
-   }
+    if (i8253[Counter].NextTickLoad) {
+        i8253[Counter].CountingElement=i8253[Counter].CountRegister&0xfffe;
+        i8253[Counter].NextTickLoad=0;
+    }
 
-   while (Takt--) {
-     if (i8253[Counter].StartFlag) {
-       if (i8253[Counter].CountRegister & 1) { // ODD count
+    while (Takt--) {
+        if (i8253[Counter].StartFlag) {
+            if (i8253[Counter].CountRegister & 1) { // ODD count
 
 
-         i8253[Counter].CountingElement-=2;
+                i8253[Counter].CountingElement-=2;
 
-         if (1 == i8253[Counter].CountingElement) {
-           i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
-           i8253[Counter].OUT = 0;
-         }
+                if (1 == i8253[Counter].CountingElement) {
+                    i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
+                    i8253[Counter].OUT = 0;
+                }
 
-         if (!i8253[Counter].CountingElement) {
-           if (i8253[Counter].OUT == 1) i8253[Counter].CountingElement=3;
-           else {
-              i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
-              i8253[Counter].OUT = 1;
-           }
-         }
-       } else {                                // EVEN count
-         i8253[Counter].CountingElement-=2;
-         if (!i8253[Counter].CountingElement) {
-           i8253[Counter].CountingElement = i8253[Counter].CountRegister;
-           i8253[Counter].OUT ^= 1;
-         }
-       }
-       ADD_OUT(Counter,i8253[Counter].OUT);
-     } else {
-       ADD_OUT(Counter,1);
-     }
-   }
+                if (!i8253[Counter].CountingElement) {
+                    if (i8253[Counter].OUT == 1) i8253[Counter].CountingElement=3;
+                    else {
+                        i8253[Counter].CountingElement = i8253[Counter].CountRegister&0xfffe;
+                        i8253[Counter].OUT = 1;
+                    }
+                }
+            } else {                                // EVEN count
+                i8253[Counter].CountingElement-=2;
+                if (!i8253[Counter].CountingElement) {
+                    i8253[Counter].CountingElement = i8253[Counter].CountRegister;
+                    i8253[Counter].OUT ^= 1;
+                }
+            }
+            ADD_OUT(Counter,i8253[Counter].OUT);
+        } else {
+            ADD_OUT(Counter,1);
+        }
+    }
 }
 
 // MODE 4: SOFTWARE TRIGGERED STROBE ------------------------------------------
 void mode4_setmode(int Counter) {
-  i8253[Counter].OUT=1;
-  i8253[Counter].NextTickLoad=1;
-  i8253[Counter].StartFlag=0;
+    i8253[Counter].OUT=1;
+    i8253[Counter].NextTickLoad=1;
+    i8253[Counter].StartFlag=0;
 };
 void mode4_WriteNewValue(int Counter,int RWMode) {
-  if (RWMode == 3) { // 2 byte load
-  } else {
-    i8253[Counter].NextTickLoad=1;
-    i8253[Counter].StartFlag=1;
-  }
+    if (RWMode == 3) { // 2 byte load
+    } else {
+        i8253[Counter].NextTickLoad=1;
+        i8253[Counter].StartFlag=1;
+    }
 }
 void mode4_do(int Counter,int Takt) {
 
-   if (i8253[Counter].NextTickLoad) {
-      i8253[Counter].CountingElement=i8253[Counter].CountRegister;
-      i8253[Counter].NextTickLoad=0;
-   }
+    if (i8253[Counter].NextTickLoad) {
+        i8253[Counter].CountingElement=i8253[Counter].CountRegister;
+        i8253[Counter].NextTickLoad=0;
+    }
 
-   while (Takt--) {
-     if (i8253[Counter].StartFlag) {
-       if (0 == i8253[Counter].CountingElement-- ) {
-         ADD_OUT(Counter,0);
-       }
-     } else {
-       ADD_OUT(Counter,1);
-     }
-   }
+    while (Takt--) {
+        if (i8253[Counter].StartFlag) {
+            if (0 == i8253[Counter].CountingElement-- ) {
+                ADD_OUT(Counter,0);
+            }
+        } else {
+            ADD_OUT(Counter,1);
+        }
+    }
 }
 
 // MODE 5: HARDWARE TRIGGERED STROBE (RETRIGGERABLE) --------------------------
 void mode5_setmode(int Counter) {
-  i8253[Counter].OUT=1;
+    i8253[Counter].OUT=1;
 };
 void mode5_WriteNewValue(int Counter,int RWMode) {}
 void mode5_do(int Counter,int Takt) {
-   while (Takt--) {
-     ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
-   }
+    while (Takt--) {
+        ADD_OUT(Counter,i8253[Counter].OUT); //???? may be 1 ???
+    }
 }
 
 void WriteControlWord(int Value) {
 
-  int Counter=(Value&0xc0)>>6;
-  int RWMode =(Value&0x30)>>4;
-  int Mode   =(Value&0x0e)>>1;
-  int BCDFlag=(Value&0x01);
+    int Counter=(Value&0xc0)>>6;
+    int RWMode =(Value&0x30)>>4;
+    int Mode   =(Value&0x0e)>>1;
+    int BCDFlag=(Value&0x01);
 
-  if (0 == RWMode) { // Counter Latch command
-    // ???? counter = 3 ??? 5253?, 8254 - Read Back CMD ....
-    if (0 == i8253[Counter].RWMode) {// latch command ignored if already latched.
-      i8253[Counter].OutputLatch  = i8253[Counter].CountingElement;
-      i8253[Counter].LatchCounter = i8253[Counter].RWMode;
-    };
-  } else { // Set Chanel MODE
+    if (0 == RWMode) { // Counter Latch command
+        // ???? counter = 3 ??? 5253?, 8254 - Read Back CMD ....
+        if (0 == i8253[Counter].RWMode) {// latch command ignored if already latched.
+            i8253[Counter].OutputLatch  = i8253[Counter].CountingElement;
+            i8253[Counter].LatchCounter = i8253[Counter].RWMode;
+        };
+    } else { // Set Chanel MODE
 
-    if (Mode & 0x02) Mode &= 0x03; // mode 6,7 -> mode 2,3
+        if (Mode & 0x02) Mode &= 0x03; // mode 6,7 -> mode 2,3
 
-    i8253[Counter].Mode           = Mode;
-    i8253[Counter].RWMode         = RWMode;
-    i8253[Counter].BCDFlag        = BCDFlag;
+        i8253[Counter].Mode           = Mode;
+        i8253[Counter].RWMode         = RWMode;
+        i8253[Counter].BCDFlag        = BCDFlag;
 //    i8253[Counter].CountRegister  = 0;        //
-    i8253[Counter].WriteCounter   = RWMode;   // Prepare for Write;
+        i8253[Counter].WriteCounter   = RWMode;   // Prepare for Write;
 
-    switch(i8253[Counter].Mode) {
-      case 0: mode0_setmode(Counter);break;
-      case 1: mode1_setmode(Counter);break;
-      case 2: mode2_setmode(Counter);break;
-      case 3: mode3_setmode(Counter);break;
-      case 4: mode4_setmode(Counter);break;
-      case 5: mode5_setmode(Counter);break;
+        switch(i8253[Counter].Mode) {
+        case 0: mode0_setmode(Counter);break;
+        case 1: mode1_setmode(Counter);break;
+        case 2: mode2_setmode(Counter);break;
+        case 3: mode3_setmode(Counter);break;
+        case 4: mode4_setmode(Counter);break;
+        case 5: mode5_setmode(Counter);break;
+        }
+
     }
-
-  }
 }
 
 void WriteCounter(int Counter,int Value) {
 
-   switch(i8253[Counter].Mode) {
-     case 0: mode0_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-     case 1: mode1_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-     case 2: mode2_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-     case 3: mode3_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-     case 4: mode4_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-     case 5: mode5_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
-   }
-   // 0 1 - least significat byte
-   // 1 0 - most  significat byte
-   // 1 1 - least significat byte, most significat byte
+    switch(i8253[Counter].Mode) {
+    case 0: mode0_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    case 1: mode1_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    case 2: mode2_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    case 3: mode3_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    case 4: mode4_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    case 5: mode5_WriteNewValue(Counter,i8253[Counter].WriteCounter);break;
+    }
+    // 0 1 - least significat byte
+    // 1 0 - most  significat byte
+    // 1 1 - least significat byte, most significat byte
 
-   if (i8253[Counter].WriteCounter & 0x01) { // 01, 11 - Least significat
-     i8253[Counter].CountRegister  = (i8253[Counter].CountRegister & 0xff00) | Value;
-     i8253[Counter].WriteCounter  ^= 0x01;
-   } else if (i8253[Counter].WriteCounter & 0x02) { // 10, 11 - Most significat
-     i8253[Counter].CountRegister  = (i8253[Counter].CountRegister & 0x00ff) | (Value<<8);
-     i8253[Counter].WriteCounter  ^= 0x02;
-   }
+    if (i8253[Counter].WriteCounter & 0x01) { // 01, 11 - Least significat
+        i8253[Counter].CountRegister  = (i8253[Counter].CountRegister & 0xff00) | Value;
+        i8253[Counter].WriteCounter  ^= 0x01;
+    } else if (i8253[Counter].WriteCounter & 0x02) { // 10, 11 - Most significat
+        i8253[Counter].CountRegister  = (i8253[Counter].CountRegister & 0x00ff) | (Value<<8);
+        i8253[Counter].WriteCounter  ^= 0x02;
+    }
 
-   if (0 == i8253[Counter].WriteCounter) {
-     i8253[Counter].WriteCounter=i8253[Counter].RWMode;
-   }
+    if (0 == i8253[Counter].WriteCounter) {
+        i8253[Counter].WriteCounter=i8253[Counter].RWMode;
+    }
 
-   // trace timer init, planed to use for autograb mouse when pors are settings for use
-   // if ( (Counter == 1) && (i8253[Counter].CountRegister == 13)) {
-   //   printf("Default port init\n");
-   // } else if ( (Counter == 1) && (i8253[Counter].CountRegister == 0x68)) {
-   //   printf("Mouse init on port\n");
-   // } else {
-   //   printf("WriteCntr: %d : %d\n",Counter, i8253[Counter].CountRegister);
-   // }
+    // trace timer init, planed to use for autograb mouse when pors are settings for use
+    // if ( (Counter == 1) && (i8253[Counter].CountRegister == 13)) {
+    //   printf("Default port init\n");
+    // } else if ( (Counter == 1) && (i8253[Counter].CountRegister == 0x68)) {
+    //   printf("Mouse init on port\n");
+    // } else {
+    //   printf("WriteCntr: %d : %d\n",Counter, i8253[Counter].CountRegister);
+    // }
 }
 
 // ---------------------------------------------------------
 void DoTMR  (int Counter,int N)         // Выполнить N тактов таймера
 {
-   switch (i8253[Counter].Mode) {
+    switch (i8253[Counter].Mode) {
     case 0:mode0_do(Counter,N);break;
     case 1:mode1_do(Counter,N);break;
     case 2:mode2_do(Counter,N);break;
     case 3:mode3_do(Counter,N);break;
     case 4:mode4_do(Counter,N);break;
     case 5:mode5_do(Counter,N);break;
-  }
+    }
 }
 
 
 void Init_TimerCntr(int Counter) {
-  i8253[Counter].CountingElement=0;
-  i8253[Counter].CountRegister=0;
-  i8253[Counter].OutputLatch=0;
-  i8253[Counter].Mode=0;
-  i8253[Counter].BCDFlag=0;
-  i8253[Counter].RWMode=0;
-  i8253[Counter].LatchCounter=0;
-  i8253[Counter].WriteCounter=0;
-  i8253[Counter].ReadCounter=0;
-  i8253[Counter].OUT=0;
-  i8253[Counter].StartFlag=0;
-  i8253[Counter].NextTickLoad=0;
+    i8253[Counter].CountingElement=0;
+    i8253[Counter].CountRegister=0;
+    i8253[Counter].OutputLatch=0;
+    i8253[Counter].Mode=0;
+    i8253[Counter].BCDFlag=0;
+    i8253[Counter].RWMode=0;
+    i8253[Counter].LatchCounter=0;
+    i8253[Counter].WriteCounter=0;
+    i8253[Counter].ReadCounter=0;
+    i8253[Counter].OUT=0;
+    i8253[Counter].StartFlag=0;
+    i8253[Counter].NextTickLoad=0;
 }
 
 
 void InitTMR(void)                      // Инициализация при старте
 {
-  Init_TimerCntr(0);
-  Init_TimerCntr(1);
-  Init_TimerCntr(2);
-  PrevTakt=0;
+    Init_TimerCntr(0);
+    Init_TimerCntr(1);
+    Init_TimerCntr(2);
+    PrevTakt=0;
 
-  darray_reset(tout);
-  memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
+    darray_reset(tout);
+    memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
 
 int DoTimer(void){
- DoTMR(0,(Takt-PrevTakt)*20/25);
+    DoTMR(0,(Takt-PrevTakt)*20/25);
 
 // printf("DoTimer: %06d - %06d\n",Takt,PrevTakt);
- PrevTakt=Takt;
- return 0;
+    PrevTakt=Takt;
+    return 0;
 }
 
 byte Timer_Read(int Addr)
@@ -435,16 +435,16 @@ byte Timer_Read(int Addr)
 
 void Timer_Write(int Addr, byte Value)
 {
-  TimerTrace("W: %08d %04x=%02x\n",Takt,Addr,Value);
+    TimerTrace("W: %08d %04x=%02x\n",Takt,Addr,Value);
 //  if (Addr&3 == 0) DoTimer();
 //  if (Addr&3 == 3) DoTimer();
-  DoTimer();
-  switch (Addr & 3) {
+    DoTimer();
+    switch (Addr & 3) {
     case 0:
     case 1:
     case 2: WriteCounter(Addr&3,Value);break;
     case 3: WriteControlWord(Value);break;
-  }
+    }
 }
 
 
@@ -489,8 +489,8 @@ void MakeSound()
 
 void Timer50HzTick(void)
 {
-  DoTimer();
-  PrevTakt -= ALL_TAKT;
+    DoTimer();
+    PrevTakt -= ALL_TAKT;
 }
 
 void InitTimer(void)
