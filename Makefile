@@ -32,6 +32,7 @@ endif
 sources += host-config.c libconfini/confini.c
 sources += host.c host-events.c queue.c host-threads.c host-timers.c
 sources += host-graphics.c
+sources += darray.c
 
 ifneq ($(SOUND),no)
 sources += host-sound.c
