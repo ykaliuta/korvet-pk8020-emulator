@@ -35,8 +35,10 @@ static FILE *F_TIMER;
 // Переменная из модуля Звука (Флаг разрешения звука)
 extern int SoundEnable;
 extern int Takt;
-int PrevTakt;
 int MuteFlag=0;
+
+static int PrevTakt; /* last processed CPU time */
+static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
 
 // -------------------------------------------------------------------------
 // buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
@@ -415,13 +417,22 @@ void InitTMR(void)                      // Инициализация при с�
     darray_reset(tout);
     memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
+/*
+ * Timer speed is 4/5 of CPU speed (Takt), (2MHz vs 2.5MHz).  Or
+ * for every 5 CPU cycles the timer makes 4 cycles. So the CPU
+ * time is proceeded at 5 cycles boundaries and after handling
+ * it, some (not multiple of 5) is left unprocessed till the next
+ * round.
+ */
+void DoTimer(void)
+{
+    int tick = Takt; /* local copy from other threads */
+    int to_process = tick - PrevTakt + LeftTakts;
 
-int DoTimer(void){
-    DoTMR(0,(Takt-PrevTakt)*20/25);
+    DoTMR(0, to_process / 5 * 4);
 
-// printf("DoTimer: %06d - %06d\n",Takt,PrevTakt);
-    PrevTakt=Takt;
-    return 0;
+    LeftTakts = to_process % 5;
+    PrevTakt = tick;
 }
 
 byte Timer_Read(int Addr)
