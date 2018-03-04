@@ -507,6 +507,8 @@ void MakeSound(uint8_t *p, unsigned len)
 
     LOCK_OUT();
 
+    pr_info("buffer %u\n", LENGTH_OUT());
+
     for (i = 0; i < len; i++) {
         sum = 0;
 
@@ -532,9 +534,6 @@ void MakeSound(uint8_t *p, unsigned len)
     }
     if (ticks != 39872)
         pr_info("%d ticks fetched, buffer %u\n", ticks, LENGTH_OUT());
-
-    DRAIN_OUT();
-}
 
     UNLOCK_OUT();
     return;
