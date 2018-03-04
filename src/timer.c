@@ -103,11 +103,13 @@ static bool SHIFT_OUT(int *Value)
     uint8_t v;
     void *rc;
 
-    rc = queue_pop(tout, &v);
-    if (rc == NULL) {
-        pr_debug("Run out of timer buffer");
-        return false;
-    }
+    while (queue_pop(tout, &v) == NULL)
+        ;
+
+    /* if (rc == NULL) { */
+    /*     pr_debug("Run out of timer buffer"); */
+    /*     return false; */
+    /* } */
     *Value = v;
     return true;
 }
@@ -483,10 +485,10 @@ void MakeSound(uint8_t *p, unsigned len)
         goto out;
     }
 
+    pr_info("buffer %u\n", LENGTH_OUT());
+
     for (i = 0; i < len; i++) {
         sum = 0;
-
-        queue_wait(tout);
 
         for (j = 0; j < ticks_per_sample; j++) {
             SHIFT_OUT(&tickval);
@@ -518,8 +520,8 @@ void MakeSound(uint8_t *p, unsigned len)
         else if (p[i] <= DAMPING_LEVEL)
             p[i] = 0;
     }
-    pr_info("len %d, %d ticks fetched, buffer %u\n",
-            len, ticks, LENGTH_OUT());
+    /* pr_info("len %d, %d ticks fetched, buffer %u\n", */
+    /*         len, ticks, LENGTH_OUT()); */
 
 out:
     host_mutex_unlock(&sound_lock);
