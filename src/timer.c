@@ -35,8 +35,8 @@ static FILE *F_TIMER;
 // Переменная из модуля Звука (Флаг разрешения звука)
 extern int SoundEnable;
 extern int Takt;
-static int MuteFlag;
 
+static int MuteFlag;
 static int PrevTakt; /* last processed CPU time */
 static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
 
@@ -473,6 +473,11 @@ void MakeSound()
     int sum;
     int j;
     int ticks = 0;
+
+    if (MuteFlag) {
+        memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
+        return;
+    }
 
     if (LENGTH_OUT() < 39873)
         return;
