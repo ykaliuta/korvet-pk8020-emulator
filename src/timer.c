@@ -39,6 +39,7 @@ extern int Takt;
 static int MuteFlag;
 static int PrevTakt; /* last processed CPU time */
 static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
+static host_mutex_t sound_lock = HOST_MUTEX_INITIALIZER;
 
 // -------------------------------------------------------------------------
 // ring buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
@@ -461,7 +462,7 @@ void Timer_Write(int Addr, byte Value)
 #define MAX_ERROR_SAMPLES   8
 #define DAMPING_LEVEL       3
 
-void MakeSound()
+void MakeSound(uint8_t *p, unsigned len)
 {
     int i;
     unsigned timer_freq = 2000000;
@@ -473,17 +474,19 @@ void MakeSound()
     int sum;
     int j;
     int ticks = 0;
+    int sample_size = sizeof(uint8_t);
+
+    host_mutex_lock(&sound_lock);
 
     if (MuteFlag) {
-        memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
-        return;
+        memset(p, 0, len * sample_size);
+        goto out;
     }
 
-    if (LENGTH_OUT() < 39873)
-        return;
-
-    for (i = 0; i < AUDIO_BUFFER_SIZE; i++) {
+    for (i = 0; i < len; i++) {
         sum = 0;
+
+        queue_wait(tout);
 
         for (j = 0; j < ticks_per_sample; j++) {
             SHIFT_OUT(&tickval);
@@ -501,26 +504,26 @@ void MakeSound()
             left_numerator += reminder;
         }
 
-        SOUNDBUF[i] = sum;
+        p[i] = sum;
 
         /*
          * try to make smooth wave instead of original 0/1 trigger
          * implementation
          */
         if (sum != 0)
-            SOUNDBUF[i] = sum * 128 / (ticks_per_sample + 1);
+            p[i] = sum * 128 / (ticks_per_sample + 1);
         /* avoid uneven sampling artifacts */
-        if (SOUNDBUF[i] >= (128 - DAMPING_LEVEL))
-            SOUNDBUF[i] = 128;
-        else if (SOUNDBUF[i] <= DAMPING_LEVEL)
-            SOUNDBUF[i] = 0;
+        if (p[i] >= (128 - DAMPING_LEVEL))
+            p[i] = 128;
+        else if (p[i] <= DAMPING_LEVEL)
+            p[i] = 0;
     }
-    if (ticks != 39872)
-        pr_info("%d ticks fetched, buffer %u\n", ticks, LENGTH_OUT());
+    pr_info("len %d, %d ticks fetched, buffer %u\n",
+            len, ticks, LENGTH_OUT());
 
-    DRAIN_OUT();
+out:
+    host_mutex_unlock(&sound_lock);
 }
-
 
 void _MakeSound()
 {
@@ -580,7 +583,7 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = queue_new(MAXBUF * 3 - 1, sizeof(uint8_t));
+    tout = queue_new(MAXBUF * 10 - 1, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }

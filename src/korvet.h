@@ -177,7 +177,7 @@ void InitTimer(void);
 void DestroyTimer(void);
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
-void MakeSound(void);
+void MakeSound(uint8_t *p, unsigned len);
 void DoTimer(void);
 void Timer50HzTick(void);
 #ifdef TRACETIMER

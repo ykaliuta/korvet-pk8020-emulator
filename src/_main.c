@@ -49,8 +49,6 @@ struct main_ctx {
     int counter50hz;
     host_mutex_t counter50hz_lock;
     host_cond_t counter50hz_cond;
-    volatile bool sound_ready;
-    host_cond_t sound_cond;
 };
 
 int verbose;
@@ -247,40 +245,18 @@ static bool turbo_enabling(struct main_ctx *ctx, bool changed)
 
 #ifdef SOUND
 
-static void main_wait_sound_ready(struct main_ctx *ctx)
-{
-    host_mutex_t m = HOST_MUTEX_INITIALIZER;
-
-    /*
-     * No need for the mutex here,
-     * operations on sound_ready are atomic.
-     */
-    host_mutex_lock(&m);
-    while (!ctx->sound_ready)
-        host_cond_wait(&ctx->sound_cond, &m);
-    host_mutex_unlock(&m);
-}
-
 static void sound_callback(uint8_t *p, unsigned len, void *a)
 {
-    struct main_ctx *ctx = a;
+    MakeSound(p, len);
 
-    main_wait_sound_ready(ctx);
-
-    memcpy(p,SOUNDBUF,AUDIO_BUFFER_SIZE);
 #ifdef WAV
     AddWAV(p,AUDIO_BUFFER_SIZE);
 #endif
-    ctx->sound_ready = false;
 }
 
 static void sound_update(bool in_turbo, struct main_ctx *ctx)
 {
     sound_mute_set(in_turbo);
-    /* It updates counter's buffer even on mute */
-    MakeSound();
-    ctx->sound_ready = true;
-    host_cond_broadcast(&ctx->sound_cond);
 }
 
 #else
@@ -551,12 +527,10 @@ static void main_ctx_init(struct main_ctx *ctx)
     host_mutex_init(&ctx->frame_counter_lock);
     host_mutex_init(&ctx->counter50hz_lock);
     host_cond_init(&ctx->counter50hz_cond);
-    host_cond_init(&ctx->sound_cond);
 };
 
 static void main_ctx_destroy(struct main_ctx *ctx)
 {
-    host_cond_destroy(&ctx->sound_cond);
     host_cond_destroy(&ctx->counter50hz_cond);
     host_mutex_destroy(&ctx->frame_counter_lock);
     host_mutex_destroy(&ctx->counter50hz_lock);
