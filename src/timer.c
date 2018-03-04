@@ -37,8 +37,8 @@ static FILE *F_TIMER;
 // Переменная из модуля Звука (Флаг разрешения звука)
 extern int SoundEnable;
 extern int Takt;
-static int MuteFlag;
 
+static int MuteFlag;
 static int PrevTakt; /* last processed CPU time */
 static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
 
