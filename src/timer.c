@@ -500,6 +500,7 @@ void MakeSound(uint8_t *p, unsigned len)
     int tickval;
     int sum;
     int sample_size = sizeof(uint8_t);
+    int ticks = 0;
 
     if (MuteFlag)
         goto flush;
@@ -513,6 +514,7 @@ void MakeSound(uint8_t *p, unsigned len)
             if (!SHIFT_OUT(&tickval))
                 goto flush;
             sum += tickval;
+            ticks++;
         }
 
         left_numerator += reminder;
@@ -521,12 +523,17 @@ void MakeSound(uint8_t *p, unsigned len)
             if (!SHIFT_OUT(&tickval))
                 goto flush;
             sum += tickval;
+            ticks++;
 
             left_numerator -= left_denominator;
         }
 
         p[i] = sum;
     }
+    if (ticks != 39872)
+        pr_info("%d ticks fetched, buffer %u\n", ticks, LENGTH_OUT());
+
+}
 
     UNLOCK_OUT();
     return;
