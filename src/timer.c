@@ -458,11 +458,60 @@ void Timer_Write(int Addr, byte Value)
     }
 }
 
-
 #define MAX_ERROR_SAMPLES   8
 #define DAMPING_LEVEL       3
 
 void MakeSound()
+{
+    int i;
+    unsigned timer_freq = 2000000;
+    unsigned sound_freq = SOUNDFREQ;
+    unsigned ticks_per_sample = timer_freq / sound_freq;
+    unsigned reminder = timer_freq % sound_freq;
+    static unsigned left_numerator = 0;
+    static unsigned left_denominator = 1;
+    int tickval;
+    int sum;
+    int j;
+
+    if (LENGTH_OUT() < 40000)
+        return;
+
+    for (i = 0; i < AUDIO_BUFFER_SIZE; i++) {
+        sum = 0;
+
+        for (j = 0; j < ticks_per_sample; j++) {
+            SHIFT_OUT(&tickval);
+            sum += tickval;
+        }
+
+        if (left_numerator / left_denominator >= 1) {
+            SHIFT_OUT(&tickval);
+            sum += tickval;
+
+            left_numerator -= left_denominator;
+        } else {
+            left_numerator += reminder;
+        }
+
+        SOUNDBUF[i] = sum;
+
+        /*
+         * try to make smooth wave instead of original 0/1 trigger
+         * implementation
+         */
+        if (sum != 0)
+            SOUNDBUF[i] = sum * 128 / (ticks_per_sample + 1);
+        /* avoid uneven sampling artifacts */
+        if (SOUNDBUF[i] >= (128 - DAMPING_LEVEL))
+            SOUNDBUF[i] = 128;
+        else if (SOUNDBUF[i] <= DAMPING_LEVEL)
+            SOUNDBUF[i] = 0;
+    }
+}
+
+
+void _MakeSound()
 {
     int nticks, tickval, sample, tick, error;
     int SampleIntegralAmplitude, TicksPerSample, SampleMaxAmplitude;
