@@ -21,7 +21,7 @@
  */
 #include "host.h"
 #include "korvet.h"
-#include "darray.h"
+#include "queue.h"
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -41,9 +41,9 @@ static int PrevTakt; /* last processed CPU time */
 static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
 
 // -------------------------------------------------------------------------
-// buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
+// ring buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
 // consider it private, use _OUT functions for access
-static struct darray *tout; /* timer output */
+static struct queue *tout; /* timer output */
 
 // buffer for Allegro play_audio_stream
 byte SOUNDBUF[MAXBUF*2];
@@ -90,19 +90,19 @@ static void ADD_OUT(int CH, int Value)
         return;
 
     v = (uint8_t)(Value & SoundEnable);
-    rc = darray_push(tout, &v);
+    rc = queue_push(tout, &v);
     if (rc == NULL) {
         pr_error("Timer buffer is full!\n");
         abort();
     }
 }
 
-static bool GET_OUT(int idx, int *Value)
+static bool SHIFT_OUT(int *Value)
 {
     uint8_t v;
     void *rc;
 
-    rc = darray_read(tout, idx, &v);
+    rc = queue_pop(tout, &v);
     if (rc == NULL) {
         pr_debug("Run out of timer buffer");
         return false;
@@ -113,12 +113,12 @@ static bool GET_OUT(int idx, int *Value)
 
 static inline void DRAIN_OUT(void)
 {
-    darray_reset(tout);
+    queue_reset(tout);
 }
 
 static unsigned LENGTH_OUT(void)
 {
-    return darray_count(tout);
+    return queue_count(tout);
 }
 
 // MODE 0: INTERRUPT ON TERMINAL COUNT ----------------------------------------
@@ -414,7 +414,7 @@ void InitTMR(void)                      // Инициализация при с�
     Init_TimerCntr(2);
     PrevTakt=0;
 
-    darray_reset(tout);
+    queue_reset(tout);
     memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
 /*
@@ -484,7 +484,7 @@ void MakeSound()
         TickWindowBegin = sample * nticks / AUDIO_BUFFER_SIZE;
         TickWindowEnd = (sample+1) * nticks / AUDIO_BUFFER_SIZE;
         for (tick = TickWindowBegin; tick < TickWindowEnd; tick++) {
-            if (GET_OUT(tick, &tickval) && tickval)
+            if (SHIFT_OUT(&tickval) && tickval)
                 SampleIntegralAmplitude++;
         }
         /* try to make smooth wave instead of original 0/1 trigger implementation */
@@ -520,14 +520,14 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = darray_new(MAXBUF, sizeof(uint8_t));
+    tout = queue_new(MAXBUF * 2 - 1, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }
 
 void DestroyTimer(void)
 {
-    darray_destroy(tout);
+    queue_destroy(tout);
 #ifdef TRACETIMER
     fclose(F_TIMER);
 #endif
