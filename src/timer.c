@@ -465,16 +465,16 @@ void MakeSound()
 {
     int i;
     unsigned timer_freq = 2000000;
-    unsigned sound_freq = SOUNDFREQ;
-    unsigned ticks_per_sample = timer_freq / sound_freq;
-    unsigned reminder = timer_freq % sound_freq;
+    unsigned ticks_per_sample = timer_freq / SOUNDFREQ;
+    unsigned reminder = timer_freq % SOUNDFREQ;
     static unsigned left_numerator = 0;
-    static unsigned left_denominator = 1;
+    static unsigned left_denominator = SOUNDFREQ;
     int tickval;
     int sum;
     int j;
+    int ticks = 0;
 
-    if (LENGTH_OUT() < 40000)
+    if (LENGTH_OUT() < 39873)
         return;
 
     for (i = 0; i < AUDIO_BUFFER_SIZE; i++) {
@@ -483,11 +483,13 @@ void MakeSound()
         for (j = 0; j < ticks_per_sample; j++) {
             SHIFT_OUT(&tickval);
             sum += tickval;
+            ticks++;
         }
 
         if (left_numerator / left_denominator >= 1) {
             SHIFT_OUT(&tickval);
             sum += tickval;
+            ticks++;
 
             left_numerator -= left_denominator;
         } else {
@@ -508,6 +510,9 @@ void MakeSound()
         else if (SOUNDBUF[i] <= DAMPING_LEVEL)
             SOUNDBUF[i] = 0;
     }
+    if (ticks != 39872)
+        pr_info("%d ticks fetched, buffer %u\n", ticks, LENGTH_OUT());
+
 }
 
 
@@ -569,7 +574,7 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = queue_new(MAXBUF * 2 - 1, sizeof(uint8_t));
+    tout = queue_new(MAXBUF * 3 - 1, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }
