@@ -533,6 +533,7 @@ void MakeSound(uint8_t *p, unsigned len)
     if (ticks != 39872)
         pr_info("%d ticks fetched, buffer %u\n", ticks, LENGTH_OUT());
 
+    DRAIN_OUT();
 }
 
     UNLOCK_OUT();
