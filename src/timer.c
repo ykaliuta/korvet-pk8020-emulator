@@ -515,14 +515,14 @@ void MakeSound(uint8_t *p, unsigned len)
             sum += tickval;
         }
 
+        left_numerator += reminder;
+
         if (left_numerator / left_denominator >= 1) {
             if (!SHIFT_OUT(&tickval))
                 goto flush;
             sum += tickval;
 
             left_numerator -= left_denominator;
-        } else {
-            left_numerator += reminder;
         }
 
         p[i] = sum;
