@@ -1,5 +1,5 @@
 
-TESTS := queue darray
+TESTS := queue darray MakeSound
 
 LDLIBS := -lcgreen
 OBJS := ../objs
