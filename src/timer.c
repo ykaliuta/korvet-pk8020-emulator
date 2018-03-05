@@ -33,6 +33,8 @@ extern int Takt;
 static FILE *F_TIMER;
 #endif
 
+static uint64_t timer_ticks;
+
 // -------------------------------------------------------------------------
 // Переменная из модуля Звука (Флаг разрешения звука)
 extern int SoundEnable;
@@ -93,6 +95,10 @@ static void ADD_OUT(int CH, int Value)
     rc = queue_push(tout, &v);
     if (rc == NULL)
         pr_error("Timer buffer is full!\n");
+
+    if (tout->pushes > timer_ticks)
+        pr_error("More timer ticks, then pushes!\n");
+
 }
 #else
 static inline void ADD_OUT(int CH, int Value) {};
@@ -429,16 +435,14 @@ void InitTMR(void)                      // Инициализация при с�
  * round.
  */
 
-static uint64_t timer_ticks;
-
 void DoTimer(void)
 {
     int tick = Takt; /* local copy from other threads */
     int to_process = tick - PrevTakt + LeftTakts;
 
-    DoTMR(0, to_process / 5 * 4);
-
     timer_ticks += to_process / 5 * 4;
+
+    DoTMR(0, to_process / 5 * 4);
 
     LeftTakts = to_process % 5;
     PrevTakt = tick;
@@ -495,6 +499,7 @@ void Timer_Write(int Addr, byte Value)
  */
 static uint64_t audio_buffers;
 static uint64_t mks_calls;
+static uint64_t mks_ticks;
 
 void MakeSound(uint8_t *p, unsigned len)
 {
@@ -524,6 +529,7 @@ void MakeSound(uint8_t *p, unsigned len)
             if (!SHIFT_OUT(&tickval))
                 goto flush;
             sum += tickval;
+            mks_ticks++;
             ticks++;
         }
 
@@ -533,6 +539,7 @@ void MakeSound(uint8_t *p, unsigned len)
             if (!SHIFT_OUT(&tickval))
                 goto flush;
             sum += tickval;
+            mks_ticks++;
             ticks++;
 
             left_numerator -= left_denominator;
@@ -541,7 +548,7 @@ void MakeSound(uint8_t *p, unsigned len)
         p[i] = sum;
     }
     /* pr_info("len %d, %d ticks fetched, buffer %u\n", */
-    /*         len, ticks, LENGTH_OUT()); */
+    /*         len, ticks, queue_count(tout)); */
 
     audio_buffers++;
 
@@ -578,13 +585,20 @@ void InitTimer(void)
         abort();
 }
 
-void DestroyTimer(void)
+static inline uint64_t timer_ticks_to_ns(uint64_t ticks)
 {
-    queue_destroy(tout);
-#ifdef TRACETIMER
-    fclose(F_TIMER);
-#endif
     uint64_t tick_len_ns = 1000000000 / 2000000;
+
+    return ticks * tick_len_ns;
+}
+
+static inline uint64_t timer_ticks_to_ms(uint64_t ticks)
+{
+    return timer_ticks_to_ns(ticks) / 1000 / 1000;
+}
+
+void timer_print_stat(void)
+{
     double audio_sample_len_ms = 1000.0 / SOUNDFREQ;
     uint64_t audio_samples;
 
@@ -595,13 +609,27 @@ void DestroyTimer(void)
     double audio_time_ms = audio_sample_len_ms * audio_samples;
 
     printf("Ticks len: %lu ns (%lu ms)\n",
-           timer_ticks * tick_len_ns,
-           timer_ticks * tick_len_ns / 1000 / 1000);
+           timer_ticks_to_ns(timer_ticks),
+           timer_ticks_to_ms(timer_ticks));
 
-    printf("Sound len: %f ms\n",
-           audio_time_ms);
+    printf("Sound len: %f ms, consumed %lu ticks %ld ms (diff %ld, %ld ms)\n",
+           audio_time_ms,
+           mks_ticks,
+           timer_ticks_to_ms(mks_ticks),
+           timer_ticks - mks_ticks,
+           timer_ticks_to_ms(timer_ticks - mks_ticks));
     printf("MakeSound calls %lu\n", mks_calls);
 
+
+}
+
+void DestroyTimer(void)
+{
+    queue_destroy(tout);
+#ifdef TRACETIMER
+    fclose(F_TIMER);
+#endif
+    timer_print_stat();
 }
 
 #ifdef TRACETIMER

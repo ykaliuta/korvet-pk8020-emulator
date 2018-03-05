@@ -565,6 +565,18 @@ static void timespec_diff(struct timespec *a,
     return;
 }
 
+void main_print_stat(void)
+{
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    printf("50Hz calls %lu (%lu ms)\n", t50hz_calls, t50hz_calls * 20);
+    printf("CPU time: %lu (%lu ms)\n", cpu_ticks, cpu_ticks * 400 / 1000 /1000 );
+
+    struct timespec diff;
+
+    timespec_diff(&end_time, &start_time, &diff);
+
+    printf("Exec time: %ld.%ld\n", diff.tv_sec, diff.tv_nsec);
+}
 
 int main(int argc,char **argv) {
 
@@ -622,6 +634,8 @@ int main(int argc,char **argv) {
 
     main_loop(&ctx);
 
+    main_print_stat();
+
     #ifdef WAV
     CloseWAV();
     #endif
@@ -640,16 +654,6 @@ int main(int argc,char **argv) {
     LAN_destroy();
 
     main_ctx_destroy(&ctx);
-
-    clock_gettime(CLOCK_MONOTONIC, &end_time);
-    printf("50Hz calls %lu (%lu ms)\n", t50hz_calls, t50hz_calls * 20);
-    printf("CPU time: %lu (%lu ms)\n", cpu_ticks, cpu_ticks * 400 / 1000 /1000 );
-
-    struct timespec diff;
-
-    timespec_diff(&end_time, &start_time, &diff);
-
-    printf("Exec time: %ld.%ld\n", diff.tv_sec, diff.tv_nsec);
 
     return 0;
 }
