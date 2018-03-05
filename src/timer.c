@@ -470,6 +470,7 @@ void Timer_Write(int Addr, byte Value)
 #define DAMPING_LEVEL       3
 
 static uint64_t audio_buffers;
+static uint64_t mks_calls;
 
 void MakeSound(uint8_t *p, unsigned len)
 {
@@ -484,6 +485,13 @@ void MakeSound(uint8_t *p, unsigned len)
     int j;
     int ticks = 0;
     int sample_size = sizeof(uint8_t);
+
+    mks_calls++;
+
+    /* if (pthread_mutex_trylock(&sound_lock) != 0) { */
+    /*     printf("Audio underflow\n"); */
+    /*     host_mutex_lock(&sound_lock); */
+    /* } */
 
     host_mutex_lock(&sound_lock);
 
@@ -591,7 +599,7 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = queue_new(MAXBUF * 100 - 1, sizeof(uint8_t));
+    tout = queue_new(MAXBUF * 1000 - 1, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }
@@ -618,6 +626,7 @@ void DestroyTimer(void)
 
     printf("Sound len: %f ms\n",
            audio_time_ms);
+    printf("MakeSound calls %lu\n", mks_calls);
 
 }
 
