@@ -41,7 +41,7 @@ static bool SHIFT_OUT(int *v)
 {
 	static int i;
 
-	if (i < TICKS_PER_EMUCLOCK) {
+	if (i < TIMERCLOCK) {
 		*v = 1;
 	} else {
 		*v = 0;
@@ -103,9 +103,10 @@ Ensure(consumes_all_ticks_from_one_sec)
 	uint8_t buf[AUDIO_BUFFER_SIZE];
 	int i;
 
-	MakeSound(buf, sizeof(buf));
+        for (i = 0; i < SOUNDFREQ / AUDIO_BUFFER_SIZE; i++)
+            MakeSound(buf, sizeof(buf));
 
-	assert_that(produced_ticks, is_equal_to(TICKS_PER_EMUCLOCK));
+	assert_that(produced_ticks, is_equal_to(TIMERCLOCK));
 }
 
 TestSuite *my_create_test_suite(void)
