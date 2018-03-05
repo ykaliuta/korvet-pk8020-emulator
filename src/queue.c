@@ -50,7 +50,8 @@ struct queue *queue_new(unsigned _size, unsigned elem_size)
     q->head = 0;
     q->tail = 0;
 
-    host_mutex_init(&q->lock);
+    host_mutex_init(&q->push_lock);
+    host_mutex_init(&q->pop_lock);
     host_cond_init(&q->cond);
 
     return q;
@@ -60,17 +61,17 @@ void queue_destroy(struct queue *q)
 {
     free(q->buf);
     host_cond_destroy(&q->cond);
-    host_mutex_destroy(&q->lock);
+    host_mutex_destroy(&q->pop_lock);
+    host_mutex_destroy(&q->push_lock);
     free(q);
 }
 
-void *queue_push(struct queue *q, void *elm)
+void *queue_push_locked(struct queue *q, void *elm)
 {
     void *ret = NULL;
 
-    queue_lock(q);
     if (queue_is_full_locked(q))
-        goto out;
+        return NULL;
 
     memcpy(q->buf + q->tail * q->elem_size,
            elm,
@@ -78,33 +79,30 @@ void *queue_push(struct queue *q, void *elm)
     q->tail = _queue_inc_ptr(q, q->tail);
     ret = elm;
     host_cond_broadcast(&q->cond);
-out:
-    queue_unlock(q);
+
     return ret;
 }
 
-void *queue_pop(struct queue *q, void *elm)
+void *queue_pop_locked(struct queue *q, void *elm)
 {
     void *ret = NULL;
     void *p;
 
-    queue_lock(q);
     if (queue_is_empty_locked(q))
-        goto out;
+        return NULL;
 
     p = q->buf + q->head * q->elem_size;
     memcpy(elm, p, q->elem_size);
     q->head = _queue_inc_ptr(q, q->head);
     ret = elm;
-out:
-    queue_unlock(q);
+
     return ret;
 }
 
 void queue_wait(struct queue *q)
 {
-    queue_lock(q);
+    queue_lock_pop(q);
     while (queue_is_empty_locked(q))
-        host_cond_wait(&q->cond, &q->lock);
-    queue_unlock(q);
+        host_cond_wait(&q->cond, &q->pop_lock);
+    queue_unlock_pop(q);
 }

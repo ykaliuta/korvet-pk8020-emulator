@@ -39,7 +39,8 @@ struct queue {
     unsigned head;
     unsigned tail;
     uint8_t *buf;
-    host_mutex_t lock;
+    host_mutex_t push_lock;
+    host_mutex_t pop_lock;
     host_cond_t cond;
 };
 
@@ -61,26 +62,68 @@ static inline unsigned _queue_inc_ptr(struct queue *q, unsigned ptr)
  */
 struct queue *queue_new(unsigned size, unsigned elem_size);
 void queue_destroy(struct queue *q);
-void *queue_push(struct queue *q, void *elm);
-void *queue_pop(struct queue *q, void *elm);
 void queue_wait(struct queue *q);
+void *queue_push_locked(struct queue *q, void *elm);
+void *queue_pop_locked(struct queue *q, void *elm);
 
-static inline void queue_lock(struct queue *q)
+static inline void _queue_lock(host_mutex_t *lock)
 {
     int rc;
 
-    rc = host_mutex_lock(&q->lock);
+    rc = host_mutex_lock(lock);
     if (rc != 0)
         abort();
 }
 
-static inline void queue_unlock(struct queue *q)
+static inline void _queue_unlock(host_mutex_t *lock)
 {
     int rc;
 
-    rc = host_mutex_unlock(&q->lock);
+    rc = host_mutex_unlock(lock);
     if (rc != 0)
         abort();
+}
+
+static inline void queue_lock_push(struct queue *q)
+{
+    _queue_lock(&q->push_lock);
+}
+
+static inline void queue_unlock_push(struct queue *q)
+{
+    _queue_unlock(&q->push_lock);
+}
+
+static inline void queue_lock_pop(struct queue *q)
+{
+    _queue_lock(&q->pop_lock);
+}
+
+static inline void queue_unlock_pop(struct queue *q)
+{
+    _queue_unlock(&q->pop_lock);
+}
+
+static inline void *queue_push(struct queue *q, void *elm)
+{
+    void *ret;
+
+    queue_lock_push(q);
+    ret = queue_push_locked(q, elm);
+    queue_unlock_push(q);
+
+    return ret;
+}
+
+static inline void *queue_pop(struct queue *q, void *elm)
+{
+    void *ret;
+
+    queue_lock_pop(q);
+    ret = queue_pop_locked(q, elm);
+    queue_unlock_pop(q);
+
+    return ret;
 }
 
 static inline bool queue_is_empty_locked(struct queue *q)
@@ -92,9 +135,9 @@ static inline bool queue_is_empty(struct queue *q)
 {
     bool ret;
 
-    queue_lock(q);
+    queue_lock_pop(q);
     ret = queue_is_empty_locked(q);
-    queue_unlock(q);
+    queue_unlock_pop(q);
     return ret;
 }
 
@@ -107,9 +150,9 @@ static inline bool queue_is_full(struct queue *q)
 {
     bool ret;
 
-    queue_lock(q);
+    queue_lock_push(q);
     ret = queue_is_full_locked(q);
-    queue_unlock(q);
+    queue_unlock_push(q);
     return ret;
 }
 
