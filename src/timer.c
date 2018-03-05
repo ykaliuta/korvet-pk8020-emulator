@@ -21,9 +21,11 @@
  */
 #include "host.h"
 #include "korvet.h"
-#include "darray.h"
+#include "queue.h"
 #include <stdarg.h>
 #include <stdio.h>
+
+#define TIMER_TICK_BUFSIZE (1024*1024-1)
 
 //extern screen,font;
 #ifdef TRACETIMER
@@ -43,10 +45,7 @@ static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
 // -------------------------------------------------------------------------
 // buffer for КР580ВИ53 (i8253) cnannel 0 (sound) samples per Takt
 // consider it private, use _OUT functions for access
-static struct darray *tout; /* timer output */
-
-// buffer for Allegro play_audio_stream
-byte SOUNDBUF[MAXBUF*2];
+static struct queue *tout; /* timer output */
 
 // -------------------------------------------------------------------------
 struct _TIMER {
@@ -77,6 +76,7 @@ struct _TIMER i8253[4];
  * carry the channel there.
  */
 
+#ifdef SOUND
 static void ADD_OUT(int CH, int Value)
 {
     uint8_t v;
@@ -90,35 +90,42 @@ static void ADD_OUT(int CH, int Value)
         return;
 
     v = (uint8_t)(Value & SoundEnable);
-    rc = darray_push(tout, &v);
+    rc = queue_push(tout, &v);
     if (rc == NULL) {
         pr_error("Timer buffer is full!\n");
         abort();
     }
 }
+#else
+static inline void ADD_OUT(int CH, int Value) {};
+#endif
 
-static bool GET_OUT(int idx, int *Value)
+static bool SHIFT_OUT(int *Value)
 {
     uint8_t v;
-    void *rc;
 
-    rc = darray_read(tout, idx, &v);
-    if (rc == NULL) {
-        pr_debug("Run out of timer buffer");
-        return false;
+    while (queue_pop_locked(tout, &v) == NULL) {
+        if (MuteFlag)
+            return false;
     }
+
     *Value = v;
     return true;
 }
 
 static inline void DRAIN_OUT(void)
 {
-    darray_reset(tout);
+    queue_reset(tout);
 }
 
-static unsigned LENGTH_OUT(void)
+static inline void LOCK_OUT(void)
 {
-    return darray_count(tout);
+    queue_lock_pop(tout);
+}
+
+static inline void UNLOCK_OUT(void)
+{
+    queue_unlock_pop(tout);
 }
 
 // MODE 0: INTERRUPT ON TERMINAL COUNT ----------------------------------------
@@ -414,8 +421,7 @@ void InitTMR(void)                      // Инициализация при с�
     Init_TimerCntr(2);
     PrevTakt=0;
 
-    darray_reset(tout);
-    memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
+    DRAIN_OUT();
 }
 /*
  * Timer speed is 4/5 of CPU speed (Takt), (2MHz vs 2.5MHz).  Or
@@ -458,44 +464,77 @@ void Timer_Write(int Addr, byte Value)
     }
 }
 
-
-#define MAX_ERROR_SAMPLES   8
-#define DAMPING_LEVEL       3
-
-void MakeSound()
+/*
+ * @len is length of the buffer @p in sound samples, not bytes
+ * (but the sample size now is 8 bit hardcoded).
+ *
+ * Converts timer ticks to PCM samples.
+ *
+ * The idea is pretty similar to the DoTimer() logic, but since
+ * the frequencies are not devisible so nicely, fraction
+ * arithmetic is used.
+ *
+ * It is driven by the sound clock, called from the sound
+ * callback.
+ *
+ * Since the timer tick length is 500ns, sound sample is
+ * ~22675.74ns, one sound sample contains ~90,7 ticks (where ~0.7
+ * is 15500 / 22050, 15500 the reminder of timer frequency /
+ * sound frequency, 2000000 % 22050 = 15500). Or, when even
+ * number of ticks consumed, an error of ~0.7 is introduced. The
+ * algorithm accumulates the error, and as soon as it is enough
+ * for an even tick, consumes one extra tick and corrects the
+ * error.
+ *
+ * Locking should not be needed, there is only one tick consumer.
+ * But in possible case of underrun, if sound subsystem invokes
+ * the callback, it looks better to wait the old one to finish.
+ */
+void MakeSound(uint8_t *p, unsigned len)
 {
-    int nticks, tickval, sample, tick, error;
-    int SampleIntegralAmplitude, TicksPerSample, SampleMaxAmplitude;
-    int TickWindowBegin, TickWindowEnd;
+    int i;
+    int j;
+    unsigned timer_freq = 2000000;
+    unsigned ticks_per_sample = timer_freq / SOUNDFREQ;
+    unsigned reminder = timer_freq % SOUNDFREQ;
+    static unsigned left_numerator = 0;
+    static unsigned left_denominator = SOUNDFREQ;
+    int tickval;
+    int sum;
+    int sample_size = sizeof(uint8_t);
 
-    nticks = LENGTH_OUT();
-    if (MuteFlag || nticks == 0) {
-        memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
-        return;
-    }
-    TicksPerSample = nticks / AUDIO_BUFFER_SIZE;
-    SampleMaxAmplitude = TicksPerSample;
-    error = (40000 - nticks) / (40000 / AUDIO_BUFFER_SIZE);
-    if (error > MAX_ERROR_SAMPLES)
-        pr_error("%d audio samples over/underrun, distortion possible. Please report.\n",
-                 error);
-    for (sample = 0; sample < AUDIO_BUFFER_SIZE; sample++) {
-        SampleIntegralAmplitude = 0;
-        TickWindowBegin = sample * nticks / AUDIO_BUFFER_SIZE;
-        TickWindowEnd = (sample+1) * nticks / AUDIO_BUFFER_SIZE;
-        for (tick = TickWindowBegin; tick < TickWindowEnd; tick++) {
-            if (GET_OUT(tick, &tickval) && tickval)
-                SampleIntegralAmplitude++;
+    if (MuteFlag)
+        goto flush;
+
+    LOCK_OUT();
+
+    for (i = 0; i < len; i++) {
+        sum = 0;
+
+        for (j = 0; j < ticks_per_sample; j++) {
+            if (!SHIFT_OUT(&tickval))
+                goto flush;
+            sum += tickval;
         }
-        /* try to make smooth wave instead of original 0/1 trigger implementation */
-        SOUNDBUF[sample] = SampleIntegralAmplitude * 128 / SampleMaxAmplitude;
-        /* avoid uneven sampling artifacts */
-        if (SOUNDBUF[sample] >= (128 - DAMPING_LEVEL))
-            SOUNDBUF[sample] = 128;
-        else if (SOUNDBUF[sample] <= DAMPING_LEVEL)
-            SOUNDBUF[sample] = 0;
+
+        if (left_numerator / left_denominator >= 1) {
+            if (!SHIFT_OUT(&tickval))
+                goto flush;
+            sum += tickval;
+
+            left_numerator -= left_denominator;
+        } else {
+            left_numerator += reminder;
+        }
+
+        p[i] = sum;
     }
-    DRAIN_OUT();
+
+    UNLOCK_OUT();
+    return;
+
+flush:
+    memset(p, 0, len * sample_size);
 }
 
 void sound_mute_set(bool enable)
@@ -505,7 +544,6 @@ void sound_mute_set(bool enable)
         return;
 
     DRAIN_OUT();
-    memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
 
 void Timer50HzTick(void)
@@ -520,14 +558,14 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = darray_new(MAXBUF, sizeof(uint8_t));
+    tout = queue_new(TIMER_TICK_BUFSIZE, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }
 
 void DestroyTimer(void)
 {
-    darray_destroy(tout);
+    queue_destroy(tout);
 #ifdef TRACETIMER
     fclose(F_TIMER);
 #endif

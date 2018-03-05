@@ -302,14 +302,6 @@ void ReadConfig(void) {
 }
 
 
-void MUTE_BUF(void) {
-    int i;
-
-    for(i=0; i<AUDIO_BUFFER_SIZE; i++) {
-        SOUNDBUF[i]=0;
-    }
-}
-
 void help(void) {
     printf("\nAvailable keys\n\n");
     printf("\t-h this help\n");

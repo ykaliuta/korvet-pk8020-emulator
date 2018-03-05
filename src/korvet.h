@@ -74,8 +74,6 @@
 #define SOUNDFREQ (44100/2)
 #define AUDIO_BUFFER_SIZE (SOUNDFREQ/50)
 
-#define MAXBUF 50000 	//audio buffer size
-
 #define LUT_BASE_COLOR 0x80
 
 extern int JoystickNumber;
@@ -177,7 +175,7 @@ void InitTimer(void);
 void DestroyTimer(void);
 void Timer_Write(int Addr, byte Value);
 byte Timer_Read(int Addr);
-void MakeSound(void);
+void MakeSound(uint8_t *p, unsigned len);
 void DoTimer(void);
 void Timer50HzTick(void);
 #ifdef TRACETIMER
@@ -205,7 +203,6 @@ void update_rus_lat(void);
 void Debug_LUT_start(void);
 void Debug_LUT_end(void);
 void Write_Dump(void);
-void MUTE_BUF(void);
 void ReadConfig(void);
 void parse_command_line(int argc,char **argv);
 void check_missing_images(void);

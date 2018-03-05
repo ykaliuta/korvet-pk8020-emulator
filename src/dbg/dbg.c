@@ -29,8 +29,6 @@ extern int SCREEN_OFFX;
 extern int SCREEN_OFFY;
 extern int OSD_LUT_Flag;
 
-void MUTE_BUF(void);
-
 extern int AllScreenUpdateFlag;
 extern int main_loop_run_flag;
 
@@ -200,10 +198,7 @@ void doDBG(void) {
     Update_Screen();
     _dbg[dbgMODE](-1);
 
-    for (i=0;i<10;i++) {
-        //TODO check if 10 required
-        MUTE_BUF();
-    }
+    sound_mute_set(true);
 
     AllScreenUpdateFlag=1;
     SCREEN_ShowScreen();
