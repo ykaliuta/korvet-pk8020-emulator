@@ -91,10 +91,8 @@ static void ADD_OUT(int CH, int Value)
 
     v = (uint8_t)(Value & SoundEnable);
     rc = queue_push(tout, &v);
-    if (rc == NULL) {
+    if (rc == NULL)
         pr_error("Timer buffer is full!\n");
-        abort();
-    }
 }
 #else
 static inline void ADD_OUT(int CH, int Value) {};
