@@ -427,12 +427,17 @@ void InitTMR(void)                      // Инициализация при с�
  * it, some (not multiple of 5) is left unprocessed till the next
  * round.
  */
+
+static uint64_t timer_ticks;
+
 void DoTimer(void)
 {
     int tick = Takt; /* local copy from other threads */
     int to_process = tick - PrevTakt + LeftTakts;
 
     DoTMR(0, to_process / 5 * 4);
+
+    timer_ticks += to_process / 5 * 4;
 
     LeftTakts = to_process % 5;
     PrevTakt = tick;
@@ -464,6 +469,8 @@ void Timer_Write(int Addr, byte Value)
 #define MAX_ERROR_SAMPLES   8
 #define DAMPING_LEVEL       3
 
+static uint64_t audio_buffers;
+
 void MakeSound(uint8_t *p, unsigned len)
 {
     int i;
@@ -484,8 +491,6 @@ void MakeSound(uint8_t *p, unsigned len)
         memset(p, 0, len * sample_size);
         goto out;
     }
-
-    pr_info("buffer %u\n", LENGTH_OUT());
 
     for (i = 0; i < len; i++) {
         sum = 0;
@@ -524,6 +529,7 @@ void MakeSound(uint8_t *p, unsigned len)
     /*         len, ticks, LENGTH_OUT()); */
 
 out:
+    audio_buffers++;
     host_mutex_unlock(&sound_lock);
 }
 
@@ -585,7 +591,7 @@ void InitTimer(void)
     F_TIMER=fopen("_timer.log","wb");
     setlinebuf(F_TIMER);
 #endif
-    tout = queue_new(MAXBUF * 10 - 1, sizeof(uint8_t));
+    tout = queue_new(MAXBUF * 100 - 1, sizeof(uint8_t));
     if (tout == NULL)
         abort();
 }
@@ -596,6 +602,23 @@ void DestroyTimer(void)
 #ifdef TRACETIMER
     fclose(F_TIMER);
 #endif
+    uint64_t tick_len_ns = 1000000000 / 2000000;
+    double audio_sample_len_ms = 1000.0 / SOUNDFREQ;
+    uint64_t audio_samples;
+
+    printf("Handled %lu timer ticks, %lu audio_buffers\n",
+           timer_ticks, audio_buffers);
+
+    audio_samples = audio_buffers * AUDIO_BUFFER_SIZE;
+    double audio_time_ms = audio_sample_len_ms * audio_samples;
+
+    printf("Ticks len: %lu ns (%lu ms)\n",
+           timer_ticks * tick_len_ns,
+           timer_ticks * tick_len_ns / 1000 / 1000);
+
+    printf("Sound len: %f ms\n",
+           audio_time_ms);
+
 }
 
 #ifdef TRACETIMER

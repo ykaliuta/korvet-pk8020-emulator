@@ -72,7 +72,7 @@
 #define SCR_DBG		2
 
 #define SOUNDFREQ (44100/2)
-#define AUDIO_BUFFER_SIZE (SOUNDFREQ/50)
+#define AUDIO_BUFFER_SIZE (SOUNDFREQ/100)
 
 #define MAXBUF 50000 	//audio buffer size
 

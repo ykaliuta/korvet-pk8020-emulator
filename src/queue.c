@@ -49,6 +49,8 @@ struct queue *queue_new(unsigned _size, unsigned elem_size)
     q->size = size;
     q->head = 0;
     q->tail = 0;
+    q->pushes = q->pops = 0;
+    q->max_count = 0;
 
     host_mutex_init(&q->push_lock);
     host_mutex_init(&q->pop_lock);
@@ -57,8 +59,15 @@ struct queue *queue_new(unsigned _size, unsigned elem_size)
     return q;
 }
 
+#include <stdio.h>
+
 void queue_destroy(struct queue *q)
 {
+    printf("Queue destroy: pushes %lu, pops %lu, diff %ld, "
+           "size %u, max_count %lu\n",
+           q->pushes, q->pops, q->pushes - q->pops,
+           queue_count(q), q->max_count);
+
     free(q->buf);
     host_cond_destroy(&q->cond);
     host_mutex_destroy(&q->pop_lock);
@@ -79,7 +88,9 @@ void *queue_push_locked(struct queue *q, void *elm)
     q->tail = _queue_inc_ptr(q, q->tail);
     ret = elm;
     host_cond_broadcast(&q->cond);
-
+    q->pushes++;
+    if (queue_count(q) > q->max_count)
+        q->max_count = queue_count(q);
     return ret;
 }
 
@@ -95,7 +106,7 @@ void *queue_pop_locked(struct queue *q, void *elm)
     memcpy(elm, p, q->elem_size);
     q->head = _queue_inc_ptr(q, q->head);
     ret = elm;
-
+    q->pops++;
     return ret;
 }
 
