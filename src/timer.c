@@ -35,7 +35,7 @@ static FILE *F_TIMER;
 // Переменная из модуля Звука (Флаг разрешения звука)
 extern int SoundEnable;
 extern int Takt;
-int MuteFlag=0;
+static int MuteFlag;
 
 static int PrevTakt; /* last processed CPU time */
 static int LeftTakts; /* unprocessed CPU time from DoTimer() run */
@@ -496,6 +496,16 @@ void MakeSound()
             SOUNDBUF[sample] = 0;
     }
     DRAIN_OUT();
+}
+
+void sound_mute_set(bool enable)
+{
+    MuteFlag = enable;
+    if (!MuteFlag)
+        return;
+
+    DRAIN_OUT();
+    memset(SOUNDBUF, 0, sizeof(SOUNDBUF));
 }
 
 void Timer50HzTick(void)

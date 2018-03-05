@@ -72,7 +72,6 @@ extern byte RAM[65535];
 extern int KeyboadUpdateFlag;   // =1 if need rebuld keyboard layout
 extern int KeyboardLayout;
 extern int LutUpdateFlag;
-extern int MuteFlag;
 extern int AllScreenUpdateFlag;  // Флаг необходимости обновть весь экран
 
 AUDIOSTREAM *stream;
@@ -248,11 +247,6 @@ static bool turbo_enabling(struct main_ctx *ctx, bool changed)
 
 #ifdef SOUND
 
-static void sound_mute_set(bool enable)
-{
-    MuteFlag = enable;
-}
-
 static void main_wait_sound_ready(struct main_ctx *ctx)
 {
     host_mutex_t m = HOST_MUTEX_INITIALIZER;
@@ -291,7 +285,6 @@ static void sound_update(bool in_turbo, struct main_ctx *ctx)
 
 #else
 static inline void sound_update(bool in_turbo, struct main_ctx *ctx) {};
-static void sound_mute_set(bool enable) {};
 #endif
 
 static void main_ctx_prepare(struct main_ctx *ctx)

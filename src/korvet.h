@@ -185,6 +185,7 @@ int TimerTrace(const char *fmt, ...);
 #else
 #define TimerTrace(...)
 #endif
+void sound_mute_set(bool enable);
 
 void InitOSD(void);
 void DestroyOSD(void);
