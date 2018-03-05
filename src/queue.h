@@ -42,6 +42,9 @@ struct queue {
     host_mutex_t push_lock;
     host_mutex_t pop_lock;
     host_cond_t cond;
+    uint64_t pushes;
+    uint64_t pops;
+    uint64_t max_count;
 };
 
 static inline unsigned _queue_inc_ptr(struct queue *q, unsigned ptr)
