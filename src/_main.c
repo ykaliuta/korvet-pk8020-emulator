@@ -27,6 +27,7 @@
 #include "vg.h"
 #include <assert.h>
 #include "lan.h"
+#include <time.h>
 
 #ifdef DBG
 #include "dbg/dbg.h"
@@ -76,6 +77,9 @@ AUDIOSTREAM *stream;
 extern const char AboutMSG[];
 
 static int initial_scale;
+
+static struct timespec start_time;
+static struct timespec end_time;
 
 static void main_50hz_tick(struct main_ctx *ctx);
 static bool in_turbomode(struct main_ctx *ctx);
@@ -447,11 +451,14 @@ static void main_wait_50hz_tick(struct main_ctx *ctx)
     }
 }
 
+static uint64_t cpu_ticks;
+
 static void main_loop(struct main_ctx *ctx)
 {
     /* hopefully will be moved to some local context */
     Takt=0;
     t50hz_calls = 0;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     main_ctx_prepare(ctx);
 
@@ -466,7 +473,11 @@ static void main_loop(struct main_ctx *ctx)
         /* can start debugger if hits breakpoint */
         dbg_tick();
 
-        Takt+=CPU_Exec1step();
+        int cpu_tmp;
+
+        cpu_tmp = CPU_Exec1step();
+        Takt += cpu_tmp;
+        cpu_ticks += cpu_tmp;
 
         LAN_poll();
 
@@ -538,6 +549,22 @@ static void main_ctx_destroy(struct main_ctx *ctx)
     host_mutex_destroy(&ctx->frame_counter_lock);
     host_mutex_destroy(&ctx->counter50hz_lock);
 }
+
+static void timespec_diff(struct timespec *a,
+                          struct timespec *b,
+                          struct timespec *res)
+{
+    if ((a->tv_nsec - b->tv_nsec) < 0) {
+        res->tv_sec = a->tv_sec - b->tv_sec - 1;
+        res->tv_nsec = a->tv_nsec - b->tv_nsec + 1000000000;
+    } else {
+        res->tv_sec = a->tv_sec - b->tv_sec;
+        res->tv_nsec = a->tv_nsec - b->tv_nsec;
+    }
+
+    return;
+}
+
 
 int main(int argc,char **argv) {
 
@@ -614,7 +641,15 @@ int main(int argc,char **argv) {
 
     main_ctx_destroy(&ctx);
 
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
     printf("50Hz calls %lu (%lu ms)\n", t50hz_calls, t50hz_calls * 20);
+    printf("CPU time: %lu (%lu ms)\n", cpu_ticks, cpu_ticks * 400 / 1000 /1000 );
+
+    struct timespec diff;
+
+    timespec_diff(&end_time, &start_time, &diff);
+
+    printf("Exec time: %ld.%ld\n", diff.tv_sec, diff.tv_nsec);
 
     return 0;
 }
