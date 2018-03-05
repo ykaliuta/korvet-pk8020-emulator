@@ -91,12 +91,15 @@ static void Timer_1S(void *c)
 }
 END_OF_FUNCTION(Timer_1S);
 
+static uint64_t t50hz_calls;
+
 static void Timer_50hz(void *c)
 {
     struct main_ctx *ctx = c;
 
     host_mutex_lock(&ctx->counter50hz_lock);
     ctx->counter50hz++;
+    t50hz_calls++;
     host_mutex_unlock(&ctx->counter50hz_lock);
     host_cond_broadcast(&ctx->counter50hz_cond);
 }
@@ -448,6 +451,7 @@ static void main_loop(struct main_ctx *ctx)
 {
     /* hopefully will be moved to some local context */
     Takt=0;
+    t50hz_calls = 0;
 
     main_ctx_prepare(ctx);
 
@@ -609,6 +613,8 @@ int main(int argc,char **argv) {
     LAN_destroy();
 
     main_ctx_destroy(&ctx);
+
+    printf("50Hz calls %lu (%lu ms)\n", t50hz_calls, t50hz_calls * 20);
 
     return 0;
 }

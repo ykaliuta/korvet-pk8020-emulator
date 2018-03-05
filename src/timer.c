@@ -494,6 +494,7 @@ void Timer_Write(int Addr, byte Value)
  * the callback, it looks better to wait the old one to finish.
  */
 static uint64_t audio_buffers;
+static uint64_t mks_calls;
 
 void MakeSound(uint8_t *p, unsigned len)
 {
@@ -508,6 +509,8 @@ void MakeSound(uint8_t *p, unsigned len)
     int sum;
     int sample_size = sizeof(uint8_t);
     int ticks = 0;
+
+    mks_calls++;
 
     if (MuteFlag)
         goto flush;
@@ -597,6 +600,7 @@ void DestroyTimer(void)
 
     printf("Sound len: %f ms\n",
            audio_time_ms);
+    printf("MakeSound calls %lu\n", mks_calls);
 
 }
 
