@@ -161,12 +161,27 @@ static inline bool queue_is_full(struct queue *q)
 
 static inline unsigned queue_count(struct queue *q)
 {
-    return (q->tail + q->size - q->head) % q->size;
+    unsigned res;
+    queue_lock_push(q);
+    queue_lock_pop(q);
+
+    res = (q->tail + q->size - q->head) % q->size;
+
+    queue_unlock_pop(q);
+    queue_unlock_push(q);
+
+    return res;
 }
 
 static inline void queue_reset(struct queue *q)
 {
+    queue_lock_push(q);
+    queue_lock_pop(q);
+
     q->tail = q->head = 0;
+
+    queue_unlock_pop(q);
+    queue_unlock_push(q);
 }
 
 #endif
