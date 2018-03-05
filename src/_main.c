@@ -624,6 +624,8 @@ int main(int argc,char **argv) {
 
     DestroyOSD();
     DestroyPrinter();
+    /* before timer, the callback uses the queue from timer */
+    host_sound_shutdown();
     DestroyTimer();
     SCREEN_destroy();
 
