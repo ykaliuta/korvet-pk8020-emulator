@@ -96,6 +96,9 @@ static void ADD_OUT(int CH, int Value)
         pr_error("Timer buffer is full!\n");
         abort();
     }
+#ifndef SOUND
+    queue_pop(tout, &v);
+#endif
 }
 
 static bool SHIFT_OUT(int *Value)
@@ -103,7 +106,7 @@ static bool SHIFT_OUT(int *Value)
     uint8_t v;
     void *rc;
 
-    while (queue_pop(tout, &v) == NULL)
+    while (queue_pop_locked(tout, &v) == NULL)
         ;
 
     /* if (rc == NULL) { */
@@ -488,12 +491,8 @@ void MakeSound(uint8_t *p, unsigned len)
 
     mks_calls++;
 
-    /* if (pthread_mutex_trylock(&sound_lock) != 0) { */
-    /*     printf("Audio underflow\n"); */
-    /*     host_mutex_lock(&sound_lock); */
-    /* } */
-
     host_mutex_lock(&sound_lock);
+    queue_lock_pop(tout);
 
     if (MuteFlag) {
         memset(p, 0, len * sample_size);
@@ -538,6 +537,7 @@ void MakeSound(uint8_t *p, unsigned len)
 
 out:
     audio_buffers++;
+    queue_unlock_pop(tout);
     host_mutex_unlock(&sound_lock);
 }
 
