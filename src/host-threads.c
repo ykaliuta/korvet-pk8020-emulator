@@ -42,21 +42,49 @@ static void host_thread_add(struct host_thread *t)
     threads = t;
 }
 
+struct thread_wrapper_arg {
+    void *(*f)(void *);
+    void *a;
+};
+
+static void *thread_func_wrapper(void *arg)
+{
+    struct thread_wrapper_arg *a = arg;
+    void *ret;
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    ret = (*a->f)(a->a);
+
+    free(arg);
+    return ret;
+}
+
 struct host_thread *host_thread_create(void *(*f)(void *), void *a)
 {
     struct host_thread *t;
     pthread_attr_t *no_attr = NULL;
     int rc;
+    struct thread_wrapper_arg *wa;
 
     t = malloc(sizeof(*t));
     if (t == NULL)
         return NULL;
     t->next = NULL;
 
-    rc = pthread_create(&t->tid, no_attr, f, a);
+    wa = malloc(sizeof(*wa));
+    if (wa == NULL) {
+        free(t);
+        return NULL;
+    }
+
+    wa->f = f;
+    wa->a = a;
+
+    rc = pthread_create(&t->tid, no_attr, thread_func_wrapper, wa);
     if (rc != 0) {
         pr_error("Could not create thread for function %p\n", f);
         free(t);
+        free(wa);
         return NULL;
     }
 
