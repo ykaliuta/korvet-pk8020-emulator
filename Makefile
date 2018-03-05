@@ -63,6 +63,9 @@ objs/libconfini/confini.o: | objs/libconfini
 objs/%.o:	%.c | objs objs/dbg
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+objs/%.i: %.c
+	$(CC) $(CFLAGS) -dD -E -o $@ $<
+
 
 kdbg:	$(objs)
 	$(CC) $^ -o $@ $(LDLIBS)
