@@ -501,6 +501,8 @@ static uint64_t audio_buffers;
 static uint64_t mks_calls;
 static uint64_t mks_ticks;
 
+#define DAMPING_LEVEL       3
+
 void MakeSound(uint8_t *p, unsigned len)
 {
     int i;
@@ -544,6 +546,18 @@ void MakeSound(uint8_t *p, unsigned len)
 
             left_numerator -= left_denominator;
         }
+
+        /*
+         * try to make smooth wave instead of original 0/1 trigger
+         * implementation
+         */
+        if (sum != 0)
+            p[i] = sum * 128 / (ticks_per_sample + 1);
+        /* avoid uneven sampling artifacts */
+        if (p[i] >= (128 - DAMPING_LEVEL))
+            p[i] = 128;
+        else if (p[i] <= DAMPING_LEVEL)
+            p[i] = 0;
 
         p[i] = sum;
     }
